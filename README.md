@@ -1,1 +1,1 @@
-# pixelwise
+# hailo-segmentation
