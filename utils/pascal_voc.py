@@ -2,6 +2,11 @@ import skimage.io as io
 import numpy as np
 import os
 
+# default mode == 2 (see get_augmented_pascal_image_annotation_filename_pairs() below):
+#  904 validation images, 11127 training images
+PASCAL12_VALIDATION_WO_BERKELEY_TRAINING = 904
+BERKELY_U_PASCAL12_TRAINING = 11127
+
 
 def pascal_segmentation_lut():
     """Return look-up table with number and correspondng class names
@@ -456,6 +461,7 @@ def get_pascal_selected_image_annotation_filenames_pairs(pascal_root, selected_n
     
     return image_annotation_pairs
 
+
 def get_augmented_pascal_image_annotation_filename_pairs(pascal_root, pascal_berkeley_root, mode=2):
     """Returns image/annotation filenames pairs train/val splits from combined Pascal VOC.
     Returns two arrays with train and validation split respectively that has
@@ -528,7 +534,7 @@ def get_augmented_pascal_image_annotation_filename_pairs(pascal_root, pascal_ber
 
     if mode == 2:
 
-        # 904 validatioin images, 11127 training images
+        # 904 validation images, 11127 training images
         validation = pascal_val_name_set - berkeley_train_name_set
 
     if mode == 3:

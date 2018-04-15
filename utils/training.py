@@ -48,6 +48,7 @@ def get_labels_from_annotation(annotation_tensor, class_labels):
     
     return labels_2d_stacked_float
 
+
 def get_labels_from_annotation_batch(annotation_batch_tensor, class_labels):
     """Returns tensor of size (batch_size, width, height, num_classes) derived
     from annotation batch tensor. The function returns tensor that is of a size
@@ -79,6 +80,7 @@ def get_labels_from_annotation_batch(annotation_batch_tensor, class_labels):
                              dtype=tf.float32)
     
     return batch_labels
+
 
 def get_valid_entries_indices_from_annotation_batch(annotation_batch_tensor, class_labels):
     """Returns tensor of size (num_valid_eintries, 3).
@@ -154,7 +156,6 @@ def get_valid_logits_and_labels(annotation_batch_tensor,
     (valid_labels_batch_tensor, valid_logits_batch_tensor) : Two Tensors of size (num_valid_eintries, num_classes).
         Tensors that represent valid labels and logits.
     """
-    
     
     labels_batch_tensor = get_labels_from_annotation_batch(annotation_batch_tensor=annotation_batch_tensor,
                                                            class_labels=class_labels)

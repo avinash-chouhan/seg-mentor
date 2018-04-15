@@ -152,8 +152,7 @@ def random_rescale(img_tensor,
     annotation_batched = tf.to_int32(annotation_batched)
 
     # Get height and width tensors
-    input_shape = tf.shape(img_batched)[1:3] # AF WTF how did it work...
-    #input_shape = tf.shape(img_batched)
+    input_shape = tf.shape(img_batched)[1:3]
 
     input_shape_float = tf.to_float(input_shape)
 

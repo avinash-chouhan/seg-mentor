@@ -145,12 +145,16 @@ def fcn(image_batch_tensor,
 
             # Perform the partial trainable upsampling and (optionally) add skip branch:
 
-            # print end_points.keys()
+            # print 'end_points.keys() : \n', end_points.keys()
             if narrowdeconv:
                 deconv_in_fcn32 = slim.conv2d(end_points[pre_fc_ep], number_of_classes, [1, 1], scope='1x1_fcn32',
                                               activation_fn=None, normalizer_fn=None)
-            else:  # wide deconv
-                deconv_in_fcn32 = end_points[pre_fc_ep]
+            else:  # wide deconv EXPERIMENTAL: also use wide post-pool context
+                global_and_local = tf.concat((end_points['pre_average_pool'], end_points['post_average_pool']), -1)
+                with slim.arg_scope([slim.batch_norm], is_training=is_training):
+                    deconv_in_fcn32 = slim.conv2d(global_and_local, 256, [1, 1], scope='1x1_fcn32_A')
+                    deconv_in_fcn32 = slim.conv2d(deconv_in_fcn32, 128, [1, 1], scope='1x1_fcn32_B',
+                                                  activation_fn=None, normalizer_fn=None)
 
             logits = slim.conv2d_transpose(deconv_in_fcn32, number_of_classes,
                                            kernel_size=[4, 4], stride=[2, 2], scope='deconv32')

@@ -31,7 +31,7 @@ def _discrete_matshow_adaptive(data, labels_names=[], orig_image=None, title="")
         plt.imshow(orig_image, alpha=0.2)
     # tell the colorbar to tick at integers
     cax = plt.colorbar(mat,
-                       ticks=np.arange(np.min(data),np.max(data)+1))
+                       ticks=np.arange(np.min(data), np.max(data)+1))
     
     # The names to be printed aside the colorbar
     if labels_names:

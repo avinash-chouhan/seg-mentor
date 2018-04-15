@@ -19,22 +19,25 @@ resnet18_checkpoint_path = os.path.join(checkpoints_dir, 'resnet_v1_18/model.ckp
 train_tfrec_fname = '/data/pascal_augmented_berkely/training.tfrecords'
 test_tfrec_fname = '/data/pascal_augmented_berkely/validation.tfrecords'
 
-# image_train_size = [384, 384] # basic
-# image_train_size = [600, 600] # doesn't work because not multiple of 32?
-# image_train_size = [608, 608]
-image_train_size = [512, 512]
 
+image_train_size = [512, 512]
 
 number_of_classes = 21
 
 pascal_voc_lut = utils.pascal_voc.pascal_segmentation_lut()
 class_labels = pascal_voc_lut.keys()
 
-DATASET_SIZE = 11127
+# ...follows from usage of "mode 2" in utils.pascal_voc.get_augmented_pascal_image_annotation_filename_pairs()
+TRAIN_DATASET_SIZE = 11127
 
-# For debug mode of "go overfit over first images" - set a number
-debug_loop_over_few_first_images = None
-# debug_loop_over_few_first_images = 30
+# ...assumes "mode 2" in utils.pascal_voc.get_augmented_pascal_image_annotation_filename_pairs()
+#     was used on creation of the tfrecord file
+TRAIN_DATASET_SIZE = utils.pascal_voc.BERKELY_U_PASCAL12_TRAINING  # 904
+
+# For mode of "go overfit over first images"
+#  (a.k.a "training convergence sanity test")
+#  - set a number here...
+debug_loop_over_few_first_images = None  # 30
 
 
 class Trainer:
@@ -67,20 +70,23 @@ class Trainer:
         cross_entropy_loss = tf.reduce_mean(cross_entropies)
 
         predictions = tf.argmax(self.upsampled_logits_batch, axis=3)
-        _probabilities = tf.nn.softmax(self.upsampled_logits_batch)
+        # _probabilities = tf.nn.softmax(self.upsampled_logits_batch)
 
         global_step = tf.Variable(0, trainable=False)
-        total_iterations = DATASET_SIZE * num_epochs / self.batch_size
+        total_iterations = TRAIN_DATASET_SIZE * num_epochs / self.batch_size
         if decaylr:
-            ds = 500
+            # ds = 15000
+            dr = 0.1  # simple: reduce x10 LR twice during train..
+            ds = total_iterations / 3.0
 
-            dr = 0.1 ** (ds*1.0 / total_iterations)
-            # decay x100 across the whole range, e.g. x10 base-lr down to x0.1 base-lr for the weak variant.
-            # TODO - parameterize?.... also note 0.1 vs. 0.01 workaround TODO figure out why..)
-            # (one hypothesis - maybe our steps below include two gobal steps somehow...
-            strong_learning_rate = tf.train.exponential_decay(learning_rate * 100, global_step=global_step,
+            # ds = 500			       # sophisticated - slowly reduce..
+            # dr = 0.01 ** (ds*1.0 / total_iterations)  # decay x100 across the whole range, e.g. 
+            # base-lr down to x0.01 base-lr for the weak variant.
+
+            # TODO consider exposing to runner with params...
+            strong_learning_rate = tf.train.exponential_decay(learning_rate * 10, global_step=global_step,
                                                               decay_steps=ds, decay_rate=dr, staircase=True)
-            weak_learning_rate = tf.train.exponential_decay(learning_rate * 10, global_step=global_step,
+            weak_learning_rate = tf.train.exponential_decay(learning_rate, global_step=global_step,
                                                             decay_steps=ds, decay_rate=dr, staircase=True)
         else:
             weak_learning_rate = learning_rate
@@ -90,11 +96,12 @@ class Trainer:
         with tf.control_dependencies(update_ops):
             with tf.variable_scope("adam_vars"):
                 if new_vars_to_learn_faster:
+                    # note momentum change 0.99->0.9 on Mar22
                     train_op1 = tf.train.AdamOptimizer(learning_rate=strong_learning_rate,
-                                                       epsilon=1e-3, beta1=0.99). \
+                                                       epsilon=1e-3, beta1=0.9). \
                         minimize(cross_entropy_loss, var_list=new_vars_to_learn_faster, global_step=global_step)
                     train_op2 = tf.train.AdamOptimizer(learning_rate=weak_learning_rate,
-                                                       epsilon=1e-3, beta1=0.99). \
+                                                       epsilon=1e-3, beta1=0.9). \
                         minimize(cross_entropy_loss, var_list=pretrained_vars, global_step=global_step)
 
                     train_step = tf.group(train_op1, train_op2)
@@ -118,8 +125,8 @@ class Trainer:
         learning_rate_summary_op = tf.summary.scalar('weak learning rate', weak_learning_rate)
 
         # Note: we can't use the merged summary because we want to separate the actual (forward/backward) run
-        # from the calculation of the metric because of the way TensorFlow works
-        # see http://ronny.rest/blog/post_2017_09_11_tf_metrics/
+        #   from the calculation of the metric because of the way TensorFlow works
+        #   see http://ronny.rest/blog/post_2017_09_11_tf_metrics/
         # merged_summary_op = tf.summary.merge_all()
 
         # Create the log folder if doesn't exist yet
@@ -165,9 +172,9 @@ class Trainer:
                 summary_string_writer.add_summary(cross_entropy_summary, trainstep)
                 summary_string_writer.add_summary(learnrate_summary, trainstep)
 
-                print("Batch loss: {0:.2f}, Batch mIOU (%): {1:.2f}".format(cross_entropy, miou_score*100))
+                print("Batch loss: {0:.2f}, Batch mIOU (%): {1:.2f}".format(cross_entropy, miou_score * 100))
                 periodic_test_eval_steps = 100
-                if (trainstep+1) % periodic_test_eval_steps == 0:
+                if (trainstep + 1) % periodic_test_eval_steps == 0:
                     save_path = saver.save(sess, chkpnt2save_path)
                     print("step ", trainstep, time.ctime(), "updated model in: %s" % save_path)
                     sess.run(running_metric_initializer)
@@ -184,17 +191,18 @@ class Trainer:
                     test_loss_summary.value.add(tag='test cross entropy loss', simple_value=test_loss)
                     for _prevstep in range(periodic_test_eval_steps)[::-1]:
                         # write same value for all prev. steps, for compatibility with filters, etc.
-                        summary_string_writer.add_summary(test_loss_summary, trainstep-_prevstep)
-                        summary_string_writer.add_summary(test_miou_summary, trainstep-_prevstep)
+                        summary_string_writer.add_summary(test_loss_summary, trainstep - _prevstep)
+                        summary_string_writer.add_summary(test_miou_summary, trainstep - _prevstep)
                     print("----test mIOU: ", test_miou_score)
                     print("----test loss: ", test_loss)
                     print("----finished test eval...", time.ctime())
                 # make a copy once in a while for case we start to overfit and model becomes worse...
                 if trainstep % 3000 == 0:
-                    saver.save(sess, chkpnt2save_path+'_{0}'.format(trainstep))
+                    saver.save(sess, chkpnt2save_path + '_{0}'.format(trainstep))
 
+                # Nice example of usage Dataset iterators advantage.. (with queues it would be way more messy)
                 if debug_loop_over_few_first_images and (trainstep + 1) % debug_loop_over_few_first_images == 0:
-                    print '-'
+                    print '---'
                     sess.run(self.train_iter.initializer)
 
             save_path = saver.save(sess, chkpnt2save_path)
@@ -295,7 +303,7 @@ if __name__ == "__main__":
                                        'resnet_v1_18': resnet18_checkpoint_path,
                                        'inception_v1': inception_checkpoint_path,
                                        'mobilenet_v1': mobilenet_checkpoint_path,
-                                     }[args.basenet]
+                                       }[args.basenet]
                    }
     except:
         raise Exception("Not yet supported feature extractor")
@@ -309,6 +317,7 @@ if __name__ == "__main__":
     trainer.setup()
 
     import datetime
+
     today = datetime.date.today().strftime('%b%d')
     prefix = '{today}_{net}__'.format(net=fe_dict['net_func'], today=today)
     thisrunnum = 1 + max([0] + [int(f[len(prefix):]) for f in os.listdir('./tmp') if prefix in f])
@@ -318,6 +327,7 @@ if __name__ == "__main__":
 
     # open(os.path.join(trainfolder, 'runargs'), 'w').write(str(args.__dict__))
     import json
+
     json.dump(args.__dict__, open(os.path.join(trainfolder, 'runargs'), 'w'), indent=2)
 
     # redirecting PRINT statements into log in same folder...
