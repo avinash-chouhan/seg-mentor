@@ -85,5 +85,5 @@ A similar work is [RTSeg](https://github.com/MSiam/TFSegmentation);
 
 ## References
 [0] [Fully Convolutional Networks for Semantic Segmentation', Long&Shelhamer et al., 2016](https://arxiv.org/pdf/1605.06211.pdf)
-[1] [Deep Residual Learning for Instrument Segmentation in Robotic Surgery, Pakhomov et al, 2017](https://arxiv.org/abs/1703.08580)
-[2] [RTSEG: REAL-TIME SEMANTIC SEGMENTATION COMPARATIVE STUDY, Mar 2018](https://arxiv.org/pdf/1803.02758.pdf)
+<br>[1] [Deep Residual Learning for Instrument Segmentation in Robotic Surgery, Pakhomov et al, 2017](https://arxiv.org/abs/1703.08580)
+<br>[2] [RTSEG: REAL-TIME SEMANTIC SEGMENTATION COMPARATIVE STUDY, Mar 2018](https://arxiv.org/pdf/1803.02758.pdf)
