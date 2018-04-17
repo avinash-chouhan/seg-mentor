@@ -1,5 +1,10 @@
 # Hailo-segmentation
 
+
+- [Architecture](#Net Architecture mix&match guide)
+- [Results & discussion ](#Baseline FCN Results)
+- [Credits & references, future work](#Credits)
+
 Welcome to segmentation framework by HailoTech ML team!
 <br> *(..standing on shoulders of [Daniil Pakhomov](http://warmspringwinds.github.io/about/), see Credits below)*
 
