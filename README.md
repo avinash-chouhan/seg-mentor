@@ -3,8 +3,9 @@
 
 - [MetaArchitecture](#architecture)
 - [Usage](#usage)
-- [Results & discussion](#results)
-- [Previous, similar and future work](#previous and similar work)
+- [Results](#results)
+- [Discussion](#results)
+- [Previous, similar and future work](#previous-and-similar-work)
 
 **Welcome to segmentation framework by HailoTech ML team!**
 <br> *(..standing on shoulders of [Daniil Pakhomov](http://warmspringwinds.github.io/about/), see Credits below)*
