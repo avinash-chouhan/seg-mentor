@@ -2,8 +2,9 @@
 
 
 - [MetaArchitecture](#architecture)
+- [Usage](#usage)
 - [Results & discussion](#results)
-- [Credits & references, future work](##aommunity)
+- [Previous, similar and future work](#previous and similar work)
 
 **Welcome to segmentation framework by HailoTech ML team!**
 <br> *(..standing on shoulders of [Daniil Pakhomov](http://warmspringwinds.github.io/about/), see Credits below)*
@@ -64,9 +65,9 @@ CUDA_VISIBLE_DEVICE=0 python fcn_train.py & ```
 to start training plain FCN16-VGG16 with default params (using only 1st GPU if your PC got a few). 
 
 1. Monitor your training by :
-...A. Sanity check - ```tail tmp/<today>_vgg16__<#run>/runlog ``` - verify loss goes down and mIoU goes up..:)
+  ..* Sanity check - ```tail tmp/<today>_vgg16__<#run>/runlog ``` - verify loss goes down and mIoU goes up..:)
      Note the folder under <repo>/tmp for each training run, in which all relevant outputs are saved - a basic log, config used (in **./runargs**), the checkpoint(s) (the bleeding edge and previous saved each few K iteration), events for tensorboard.
-...A. Tensorboard: - ```cd tboards && bash createlinks && tensorboard --logdir=. &```
+  ..*. Tensorboard: - ```cd tboards && bash createlinks && tensorboard --logdir=. &```
      This way you see all past and present runs under <repo>/tmp in tensorboard and you can use the checkboxes to see curves for a single run or several for side-by-side comparison. Check out the noise around the ***test mIoU*** curve, incorporating randomness of both instantaneous checkpoint and 1/4 of test set used for evaluation) as a crude proxy for the typical deviation of the mIoU a.k.a "error-bars" that would be reported in ideal world (w.o. high stakes on publishing a +0.5% improvement framed as a state-of-the-art advance).
 
 2. After a good night's sleep, run ```python fcn_test.py``` (...or you can test in parallel on second GPU if you were lucky to have it on the PC you stole in stage 1.. try a few different checkpoints from the saturated portion of the training, to get another estimate for robustness of results). 
@@ -116,8 +117,7 @@ the subclasses should implement (aka 'override') the decoding blocks as defined 
 ## Discussion
 ...Coming soon...
 
-## Community
-(a.k.a previous and similar work)
+## Previous and similar work
 Daniil Pakhomov from https://github.com/warmspringwinds/tf-image-segmentation,
 was a major inspiration and code contribution; our repo started as a fork of his one;
 most was heavily redesigned but ```/utils```  is still mostly his original.
