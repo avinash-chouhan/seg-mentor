@@ -1,9 +1,9 @@
 # Hailo-segmentation
 
 
-- [Architecture](##Net Architecture mix&match guide)
-- [Results & discussion](##Baseline FCN Results)
-- [Credits & references, future work](##Credits and similar work)
+- [Architecture](#Architecture)
+- [Results & discussion](#Results)
+- [Credits & references, future work](##Community)
 
 Welcome to segmentation framework by HailoTech ML team!
 <br> *(..standing on shoulders of [Daniil Pakhomov](http://warmspringwinds.github.io/about/), see Credits below)*
@@ -41,7 +41,9 @@ and with better accuracy.
 
 <br>As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
 
-### Net Architecture mix&match guide
+## Architecture
+
+### Net Architecture mix&match by OOP
 
 The architecture is implemented as an abstract class,
 which should be subclassed for each architecture (original FCN provided as an example);
@@ -51,7 +53,9 @@ the subclasses should implement (aka 'override') the decoding blocks as defined 
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/images/FCNgen.png" width="70%" height="70%"><br><br>
 </div>
 
-## Baseline FCN Results
+## Results
+
+### Baseline FCN Results
 
 | Net name      | GFLOPS        | Params  | Pascal <br>VOC mIoU  |
 | ------------- |:-------------:| -----:  | ---------------: |
@@ -62,7 +66,7 @@ the subclasses should implement (aka 'override') the decoding blocks as defined 
 | MobileNet V2  | coming        | soon    | (hopefully)      |
 
 
-## FCN+W results
+### FCN+W results
 ...Coming soon...
 
 #### Examples
@@ -70,10 +74,11 @@ the subclasses should implement (aka 'override') the decoding blocks as defined 
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/images/ResNet18_Apr02_HorseRider1.png" width="70%" height="70%"><br><br>
 </div>
 
-## Discussion and Insight
+## Discussion
 ...Coming soon...
 
-## Credits and similar work
+## Community
+(a.k.a previous and similar work)
 Daniil Pakhomov from https://github.com/warmspringwinds/tf-image-segmentation,
 was a major inspiration and code contribution; our repo started as a fork of his one;
 most was heavily redesigned but ```/utils```  is still mostly his original.
