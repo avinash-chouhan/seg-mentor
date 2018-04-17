@@ -43,14 +43,14 @@ and with better accuracy.
 
 In addition, discussion of practical issues are hard to come by. E.g. how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, what failure modes (possibly critical for certain application) are there and how the net can be architected/trained to handle them - or maybe handled at inference time by multiscale testing, etc.
 
-***We hope the repo will be useful for mix&match experimentation that will advance deeper understanding of above and similar issues, and inch the community closer to practical applications of segmentaion to Autonomous Driving and other tasks***
+**We hope the repo will be useful for mix&match experimentation that will advance deeper understanding of above and similar issues, and inch the community closer to practical applications of segmentaion to Autonomous Driving and other tasks**
 
-<br>As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
+As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
 
 ## Usage
 0. Steal a PC with GPU and tensorflow-gpu 1.3 installed.
 1. Clone side-by-side this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) : 
-```
+```bash
 git clone https://github.com/hailotech/hailo-segmentation
 git clone https://github.com/hailotech/tf-models-hailofork
 ```
@@ -130,7 +130,7 @@ A similar work is [RTSeg](https://github.com/MSiam/TFSegmentation);
 ## TODOs / "Coming"
 - Break mIoU by object types & **sizes**
 - Beyond PASCAL - KiTTY, Cityscapes, COCO, Mapillary, ApolloScape
-    ..transfer learning between the 3 
+  <br> ..transfer learning pipelines between those..?
 - More FEs - Mobilenet_V2, ShuffleNet ?
 - Dilation options
 - implement some basic architectures over the framework, reproduce published results and report on mix&match effects:
