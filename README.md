@@ -36,21 +36,49 @@ and with better accuracy.
  - *How to design simple, effective and efficient decoder blocks for seg' nets using lightweight (e.g. mobilenet) FEs*
  - *Beyond mIoU - how deeper vectorial performance metrics (e.g. per class, per object size) depend on FE or architecture in general.
     What about (..robustness to..) various failure modes? How that could be controlled?*
+ - *What about practical issues? how robust are the mIoU numbers to exact freeze point of training, test subset, etc.?
 
-***We hope the repo will be useful for mix&match experimentation that will advance deeper understanding of above and similar issues***
+In addition, discussion of practical issues are hard to come by. E.g. how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, what failure modes (possibly critical for certain application) are there and how the net can be architected/trained to handle them - or maybe handled at inference time by multiscale testing, etc.
+
+***We hope the repo will be useful for mix&match experimentation that will advance deeper understanding of above and similar issues, and inch the community closer to practical applications of segmentaion to Autonomous Driving and other tasks***
 
 <br>As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
 
 ## Usage
-
-You'll need to clone the [Hailo fork of tf models](https://github.com/hailotech/tf-models-hailofork) side-by-side with this repo, e.g.: 
+0. Steal a PC with GPU and tensorflow-gpu 1.3 installed.
+1. Clone side-by-side this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) : 
 ```
 git clone https://github.com/hailotech/hailo-segmentation
 git clone https://github.com/hailotech/tf-models-hailofork
 ```
-Segmentation code calls into slim FEs implementations in ```models/research/slim/nets```. 
+(to let seg net builder code call into slim FEs implementations in ```models/research/slim/nets```)
 
-To create the train/val Pascal data in tfrecords format, please follow instructions in (utils/pascal_voc_augmented_to_records.py)[#utils/pascal_voc_augmented_to_records.py]
+
+1. Edit and run (utils/pascal_voc_augmented_to_records.py)[#hailo-segmentation/utils/pascal_voc_augmented_to_records.py] according to instructions therein.  (to create the train/val Pascal data in tfrecords format)
+
+2. Download some ImageNet-pretrained slim FE checkpoints using links in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim) into  ```/data/models/```
+Download missing ones (ResNet18, ..) from TBD (translated from pytorch-vision by benevolent Hailo ML team). 
+
+3. Run ``` cd hailo-segmentaion && mkdir tmp 
+CUDA_VISIBLE_DEVICE=0 python fcn_train.py & ```
+to start training plain FCN16-VGG16 with default params (using only 1st GPU if your PC got a few). 
+
+1. Monitor your training by :
+..1. Sanity check - ```tail tmp/<today>_vgg16__<#run>/runlog ``` - verify loss goes down and mIoU goes up..:)
+     Note the folder under <repo>/tmp for each training run, in which all relevant outputs are saved - a basic log, config used (in **./runargs**), the checkpoint(s) (the bleeding edge and previous saved each few K iteration), events for tensorboard.
+..1. Tensorboard: - ```cd tboards && bash createlinks && tensorboard --logdir=. &```
+     This way you see all past and present runs under <repo>/tmp in tensorboard and you can use the checkboxes to see curves for a single run or several for side-by-side comparison. Check out the noise around the ***test mIoU*** curve, incorporating randomness of both instantaneous checkpoint and 1/4 of test set used for evaluation) as a crude proxy for the typical deviation of the mIoU a.k.a "error-bars" that would be reported in ideal world (w.o. high stakes on publishing a +0.5% improvement framed as a state-of-the-art advance).
+
+2. After a good night's sleep, run ```python fcn_test.py``` (...or you can test in parallel on second GPU if you were lucky to have it on the PC you stole in stage 1.. try a few different checkpoints from the saturated portion of the training, to get another estimate for robustness of results). 
+
+1. Check out the command line options, and train another net(s), e.g.
+```
+python fcn_train.py --basenet=resnet_v1_18 --batch_size=20 --learnrate=3e-4 --decaylr=True &
+```
+
+1. Check out the ```BaseFcnArch``` interface and train you brand net with modified decoding path. 
+1. ...
+1 [Profit!!!](http://knowyourmeme.com/memes/profit)
 
 ## Architecture
 
