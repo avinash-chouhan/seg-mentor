@@ -128,11 +128,14 @@ A similar work is [RTSeg](https://github.com/MSiam/TFSegmentation);
 <br> they use Cityscapes and differs a bit in approach to modularization.
 
 ## TODOs / "Coming"
-- Mobilenet_V2
+- Break mIoU by object types & **sizes**
+- Beyond PASCAL - KiTTY, Cityscapes, COCO, Mapillary, ApolloScape
+    ..transfer learning between the 3 
+- More FEs - Mobilenet_V2, ShuffleNet ?
 - Dilation options
-- implement some basic architectures over the framework:
-    - simple (w.o. ASPP and other bells&whistles) DeepLab(3?)
-    - LinkNet - original ResNet18 and Mobilenet_V1/2
+- implement some basic architectures over the framework, reproduce published results and report on mix&match effects:
+    - DeepLab(3?) - barebones w.o. ASPP and other bells&whistles. Test Mobilenets 1/2, ResNet18
+    - LinkNet - original ResNet18, then add Mobilenet_V1/2
 
 ## References
 [0] [Fully Convolutional Networks for Semantic Segmentation', Long&Shelhamer et al., 2016](https://arxiv.org/pdf/1605.06211.pdf)
