@@ -45,8 +45,9 @@ In addition, discussion of practical issues are hard to come by. E.g. how to mon
 
 #### We hope the repo will be useful for mix&match experimentation that may make the following DIFF:
 ```diff
-+ PROMOTE DEEPER UNDERSTANDING OF ABOVE ISSUESPromote deeper understanding of above and similar issues
-+ PROMOTE ROBUSTNESS OF SEGMENTATION TECH AND ITS READYNESS TO PRACTICAL APPLICATIONS IN VEHICLES AND OTHER DOMAINS
++ PROMOTE DEEPER UNDERSTANDING OF ABOVE ISSUES
++ PROMOTE ROBUSTNESS OF SEGMENTATION TECH,
+  AND ITS READYNESS TO PRACTICAL APPLICATIONS IN VEHICLES AND OTHER DOMAINS
 ```
 
 As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
