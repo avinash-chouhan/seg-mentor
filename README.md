@@ -5,7 +5,7 @@
 - [Results & discussion](#results)
 - [Credits & references, future work](##aommunity)
 
-Welcome to segmentation framework by HailoTech ML team!
+**Welcome to segmentation framework by HailoTech ML team!**
 <br> *(..standing on shoulders of [Daniil Pakhomov](http://warmspringwinds.github.io/about/), see Credits below)*
 
 We embrace Tensorflow and specifically tf-slim api and classification nets implementation,
