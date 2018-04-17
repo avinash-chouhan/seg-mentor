@@ -32,9 +32,9 @@ and with better accuracy.
  - *Beyond mIoU - how deeper vectorial performance metrics (e.g. per class, per object size) depend on FE or architecture in general.
     What about (..robustness to..) various failure modes? How that could be controlled?*
 
-We hope the repo will be useful for mix&match experimentation that will advance deeper understanding of above and similar issues.
-<br>We report here some example results suggesting minimal decode-path enhancements (***FCN+W***) making FCN based off Lightweight FEs perform
-on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
+***We hope the repo will be useful for mix&match experimentation that will advance deeper understanding of above and similar issues***
+
+<br>As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
 
 ### Net Architecture mix&match guide
 
@@ -69,8 +69,8 @@ the subclasses should implement (aka 'override') the decoding blocks as defined 
 ...Coming soon...
 
 ## Credits and similar work:
-Daniil ?? from https://github.com/warmspringwinds/tf-image-segmentation,
-was a major inspiration; our repo started as a fork of his one,
+Daniil Pakhomov from https://github.com/warmspringwinds/tf-image-segmentation,
+was a major inspiration and code contribution; our repo started as a fork of his one;
 most was heavily redesigned but ```/utils```  is still mostly his original.
 
 A similar work is [RTSeg](https://github.com/MSiam/TFSegmentation);
