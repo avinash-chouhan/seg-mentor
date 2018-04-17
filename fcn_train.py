@@ -4,7 +4,8 @@ import os, sys, time, argparse
 # os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 
 # (!!) needed for code inside fcn_arch, utils..
-sys.path.append("/home/finkel/hailo_repos/phase2-dl-research/slim_models/")
+#sys.path.append("/home/finkel/hailo_repos/phase2-dl-research/slim_models/")
+sys.path.append("../tf-models-hailofork/research/slim/")
 
 import fcn_arch, utils
 
@@ -42,20 +43,18 @@ debug_loop_over_few_first_images = None  # 30
 
 class Trainer:
 
-    def __init__(self, net_func, checkpoint_path, narrowdeconv=False, batch_size=16):
-        self.net_func = net_func
-        self.narrowdeconv = narrowdeconv
+    def __init__(self, args, checkpoint_path):
+        self.args = args
         self.checkpoint_path = checkpoint_path
-        self.batch_size = batch_size
+
+        self.fcn_builder = fcn_arch.FcnArch(number_of_classes=number_of_classes, is_training=True, net=args.basenet,
+                                            trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
 
     def run_training(self, trainfolder, num_epochs=10, learning_rate=1e-6, decaylr=True,
                      new_vars_to_learn_faster=None, pretrained_vars=None):
 
-        # timestamp = time.ctime().replace(' ', '-').replace(':', '_')
-        # summary_string_writer = tf.summary.FileWriter(log_folder+'/'+timestamp+'/trainsummary')
         summary_string_writer = tf.summary.FileWriter(trainfolder + '/trainboard')
-        # val_writer = tf.summary.FileWriter(log_folder + '/' + timestamp + '/validation')
-        chkpnt2save_path = trainfolder + '/fcn32.ckpt'
+        chkpnt2save_path = trainfolder + '/fcn.ckpt'
 
         valid_labels_batch_tensor, valid_logits_batch_tensor = \
             utils.training.get_valid_logits_and_labels(annotation_batch_tensor=self.annotation_batch,
@@ -73,17 +72,16 @@ class Trainer:
         # _probabilities = tf.nn.softmax(self.upsampled_logits_batch)
 
         global_step = tf.Variable(0, trainable=False)
-        total_iterations = TRAIN_DATASET_SIZE * num_epochs / self.batch_size
+        total_iterations = TRAIN_DATASET_SIZE * num_epochs / self.args.batch_size
         if decaylr:
-            # ds = 15000
-            dr = 0.1  # simple: reduce x10 LR twice during train..
+            # Simple: reduce x10 LR twice during train..
+            dr = 0.1
             ds = total_iterations / 3.0
-
-            # ds = 500			       # sophisticated - slowly reduce..
+            # Sophisticated - slowly reduce.. (didn't help but you're invited to retry..)
+            # ds = 500
             # dr = 0.01 ** (ds*1.0 / total_iterations)  # decay x100 across the whole range, e.g. 
             # base-lr down to x0.01 base-lr for the weak variant.
 
-            # TODO consider exposing to runner with params...
             strong_learning_rate = tf.train.exponential_decay(learning_rate * 10, global_step=global_step,
                                                               decay_steps=ds, decay_rate=dr, staircase=True)
             weak_learning_rate = tf.train.exponential_decay(learning_rate, global_step=global_step,
@@ -179,7 +177,7 @@ class Trainer:
                     print("step ", trainstep, time.ctime(), "updated model in: %s" % save_path)
                     sess.run(running_metric_initializer)
                     num_test_images = 240  # 15 batches, ~1/4 of valid. set (shuffled..)
-                    num_test_batches = num_test_images / self.batch_size
+                    num_test_batches = num_test_images / self.args.batch_size
                     test_cross_entropy_arr = np.zeros(num_test_batches)
                     for _tb in range(num_test_batches):
                         _, test_cross_entropy_arr[_tb] = \
@@ -222,7 +220,7 @@ class Trainer:
                                               utils.augmentation.random_horiz_flip(image_, annotation_))
             train_dataset = train_dataset.map(lambda image_, annotation_:
                                               utils.augmentation.random_rescale(image_, annotation_, image_train_size))
-            # TODO - consider the distort-color (disabled in Daniil's too,) and maybe other augmentations...
+            # TODO - reconsider the distort-color (originally disabled in Daniil's too) and maybe other augmentations...
             # train_dataset = train_dataset.map(lambda image_, annotation_:
             #                       (utils.augmentation.distort_randomly_image_color(image_), annotation_))
             train_dataset = train_dataset.map(lambda image_, annotation_: (image_, tf.squeeze(annotation_)))
@@ -231,13 +229,13 @@ class Trainer:
             train_dataset = train_dataset.map(lambda image_, annotation_:
                                               utils.augmentation.nonrandom_rescale(image_, annotation_,
                                                                                    image_train_size))
-        train_dataset = train_dataset.batch(self.batch_size)
+        train_dataset = train_dataset.batch(self.args.batch_size)
 
         test_dataset = tf.contrib.data.TFRecordDataset([test_tfrec_fname]).map(utils.tf_records.parse_record)
         test_dataset = test_dataset.map(lambda img, ann:
                                         utils.augmentation.nonrandom_rescale(img, ann, image_train_size))
         test_dataset = test_dataset.map(lambda image_, annotation_: (image_, tf.squeeze(annotation_)))
-        test_dataset = test_dataset.shuffle(buffer_size=300).batch(self.batch_size)
+        test_dataset = test_dataset.shuffle(buffer_size=300).batch(self.args.batch_size)
 
         self.train_iter = train_dataset.repeat().make_initializable_iterator()
         self.test_iter = test_dataset.repeat().make_initializable_iterator()
@@ -246,13 +244,10 @@ class Trainer:
         switching_iterator = tf.contrib.data.Iterator.from_string_handle(
             self.masterhandle, train_dataset.output_types, train_dataset.output_shapes)
 
-        # image_batch, self.annotation_batch = self.train_iter.get_next()
         image_batch, self.annotation_batch = switching_iterator.get_next()
 
-        self.upsampled_logits_batch, self.feat_extractor_variables_mapping, self.new_vars = \
-            fcn_arch.fcn(image_batch_tensor=image_batch, number_of_classes=number_of_classes,
-                         is_training=True, net_func=self.net_func,
-                         narrowdeconv=self.narrowdeconv, fcn16=self.fcn16)
+        self.upsampled_logits_batch = self.fcn_builder.build_net(image_batch_tensor=image_batch)
+        self.feat_extractor_variables_mapping, self.new_vars = self.fcn_builder.get_pretrained_and_new_vars()
 
         self.init_fn = slim.assign_from_checkpoint_fn(model_path=self.checkpoint_path,
                                                       var_list=self.feat_extractor_variables_mapping)
@@ -260,74 +255,66 @@ class Trainer:
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
+    parser = argparse.ArgumentParser(description='Train a FCN(-based) segmentation net')
     parser.add_argument('--basenet', dest='basenet', type=str,
                         help='the base feature extractor',
-                        default='mobilenet')
-    parser.add_argument('--narrowdeconv', dest='narrowdeconv', type=bool,
-                        help='if True use 1K->21 1x1 then 21->21 deconv rather than wide 1K->21 deconv',
+                        default='vgg_16')
+    parser.add_argument('--extended_arch', dest='extended_arch', type=bool,
+                        help='if True use extended architecture',
+                        default=False)
+    parser.add_argument('--trainable_upsampling', dest='trainable_upsampling', type=bool,
+                        help='if True use trainable_upsampling in the basic FCN architecture',
                         default=False)
     parser.add_argument('--fcn16', dest='fcn16', type=bool,
                         help='if True add the fcn16 skip connection',
                         default=False)
-    parser.add_argument('--batchsize', dest='batchsize', type=int,
+    parser.add_argument('--batch_size', dest='batch_size', type=int,
                         help='batch size',
                         default=16)
     parser.add_argument('--epochs', dest='epochs', type=int,
                         help='num of epochs to train for',
-                        default=40)
+                        default=30)
     parser.add_argument('--learnrate', dest='learnrate', type=float,
                         help='base learning rate',
-                        default=1e-6)
+                        default=1e-4)
     parser.add_argument('--difflr', dest='difflr', type=bool,
                         help='if True use x10 learning rate for new layers w.r.t pretrained',
-                        default=False)  # ?? does it become true at any --difflr option value, even without one?
+                        default=False)  # if decaying rate - decay with same schedule retaining ratio
     parser.add_argument('--decaylr', dest='decaylr', type=bool,
                         help='if True decay learn rate from x10 to x0.1 base LR',
-                        default=False)
+                        default=True)
     parser.add_argument('--pixels', dest='pixels', type=int,
-                        help=' preprocess (interpolate&crop) each image (and annotation)'
+                        help=' preprocess (interpolate large side & pad) each image (and annotation)'
                              ' to (pixels)X(pixels) size for the train',
-                        default=384)
+                        default=512)
 
     if len(sys.argv) == 1:
-        print "No args, running with defaults..."
+        print("No args, running with defaults...")
         parser.print_help()
 
     args = parser.parse_args()
 
-    try:
-        fe_dict = {'net_func': args.basenet,
-                   'checkpoint_path': {'vgg': vgg_checkpoint_path,
-                                       'resnet_v1_50': resnet50_checkpoint_path,
-                                       'resnet_v1_18': resnet18_checkpoint_path,
-                                       'inception_v1': inception_checkpoint_path,
-                                       'mobilenet_v1': mobilenet_checkpoint_path,
-                                       }[args.basenet]
-                   }
-    except:
+    checkpoint_path = {'vgg_16': vgg_checkpoint_path,
+                       'resnet_v1_50': resnet50_checkpoint_path,
+                       'resnet_v1_18': resnet18_checkpoint_path,
+                       'inception_v1': inception_checkpoint_path,
+                       'mobilenet_v1': mobilenet_checkpoint_path,
+                       }.get(args.basenet)
+    if not checkpoint_path:
         raise Exception("Not yet supported feature extractor")
 
-    fe_dict['batch_size'] = args.batchsize
-    fe_dict['narrowdeconv'] = args.narrowdeconv
-
-    trainer = Trainer(**fe_dict)
-    trainer.fcn16 = args.fcn16
     image_train_size = [args.pixels, args.pixels]
+
+    trainer = Trainer(args, checkpoint_path)
     trainer.setup()
 
-    import datetime
-
+    # Create a folder for this training and save configuration..
+    import datetime, json
     today = datetime.date.today().strftime('%b%d')
-    prefix = '{today}_{net}__'.format(net=fe_dict['net_func'], today=today)
+    prefix = '{today}_{net}__'.format(net=args.basenet, today=today)
     thisrunnum = 1 + max([0] + [int(f[len(prefix):]) for f in os.listdir('./tmp') if prefix in f])
     trainfolder = './tmp/' + prefix + str(thisrunnum)
-
     os.makedirs(trainfolder)
-
-    # open(os.path.join(trainfolder, 'runargs'), 'w').write(str(args.__dict__))
-    import json
-
     json.dump(args.__dict__, open(os.path.join(trainfolder, 'runargs'), 'w'), indent=2)
 
     # redirecting PRINT statements into log in same folder...
@@ -338,7 +325,7 @@ if __name__ == "__main__":
                              learning_rate=args.learnrate,
                              decaylr=args.decaylr,
                              new_vars_to_learn_faster=trainer.new_vars,
-                             pretrained_vars=trainer.feat_extractor_variables_mapping.values())  # , learning_rate=lr)
+                             pretrained_vars=trainer.feat_extractor_variables_mapping.values())
     else:
         trainer.run_training(trainfolder=trainfolder, num_epochs=args.epochs,
                              learning_rate=args.learnrate,

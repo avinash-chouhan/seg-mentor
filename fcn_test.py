@@ -8,7 +8,9 @@ slim = tf.contrib.slim
 #os.environ["CUDA_VISIBLE_DEVICES"] = '1'
 
 # (!!) needed for code inside fcn_arch, utils..
-sys.path.append("/home/finkel/hailo_repos/phase2-dl-research/slim_models/")
+#sys.path.append("/home/finkel/hailo_repos/phase2-dl-research/slim_models/")
+sys.path.append("../tf-models-hailofork/research/slim/")
+
 import fcn_arch, utils
 
 sys.path.append("/home/finkel/hailo_repos/phase2-dl-research")
@@ -123,7 +125,7 @@ def single_image_feed(image_path):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Test a Fast R-CNN network')
+    parser = argparse.ArgumentParser(description='Test a FCN(-based) segmentation net')
     parser.add_argument('--basenet', dest='basenet', type=str,
                         help='the base feature extractor',
                         default='mobilenet')
