@@ -41,6 +41,17 @@ and with better accuracy.
 
 <br>As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
 
+## Usage
+
+You'll need to clone the [Hailo fork of tf models](https://github.com/hailotech/tf-models-hailofork) side-by-side with this repo, e.g.: 
+```
+git clone https://github.com/hailotech/hailo-segmentation
+git clone https://github.com/hailotech/tf-models-hailofork
+```
+Segmentation code calls into slim FEs implementations in ```models/research/slim/nets```. 
+
+To create the train/val Pascal data in tfrecords format, please follow instructions in (utils/pascal_voc_augmented_to_records.py)[#utils/pascal_voc_augmented_to_records.py]
+
 ## Architecture
 
 ### Net Architecture mix&match by OOP
