@@ -1,9 +1,9 @@
 # Hailo-segmentation
 
 
-- [Architecture](#Architecture)
-- [Results & discussion](#Results)
-- [Credits & references, future work](##Community)
+- [MetaArchitecture](#architecture)
+- [Results & discussion](#results)
+- [Credits & references, future work](##aommunity)
 
 Welcome to segmentation framework by HailoTech ML team!
 <br> *(..standing on shoulders of [Daniil Pakhomov](http://warmspringwinds.github.io/about/), see Credits below)*
