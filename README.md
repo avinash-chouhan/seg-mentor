@@ -2,8 +2,8 @@
 
 
 - [Architecture](#Net Architecture mix&match guide)
-- [Results & discussion ](#Baseline FCN Results)
-- [Credits & references, future work](#Credits)
+- [Results & discussion](#Baseline FCN Results)
+- [Credits & references, future work](#Credits and similar work)
 
 Welcome to segmentation framework by HailoTech ML team!
 <br> *(..standing on shoulders of [Daniil Pakhomov](http://warmspringwinds.github.io/about/), see Credits below)*
@@ -73,7 +73,7 @@ the subclasses should implement (aka 'override') the decoding blocks as defined 
 ## Discussion and Insight
 ...Coming soon...
 
-## Credits and similar work:
+## Credits and similar work
 Daniil Pakhomov from https://github.com/warmspringwinds/tf-image-segmentation,
 was a major inspiration and code contribution; our repo started as a fork of his one;
 most was heavily redesigned but ```/utils```  is still mostly his original.
