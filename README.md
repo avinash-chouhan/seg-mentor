@@ -43,9 +43,9 @@ and with better accuracy.
 
 In addition, discussion of practical issues are hard to come by. E.g. how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, what failure modes (possibly critical for certain application) are there and how the net can be architected/trained to handle them - or maybe handled at inference time by multiscale testing, etc.
 
-#### We hope the repo will be useful for mix&match experimentation that may **:
-* **Promote deeper understanding of above and similar issues**
-* **Promote robustness and readiness of segmentation technology to practical applications in vehicles and other domains**
+#### We hope the repo will be useful for mix&match experimentation that may :
+* <span style="color:blue">Promote deeper understanding of above and similar issues</span>.*
+* <span style="color:blue">Promote robustness and readiness of segmentation technology to practical applications in vehicles and other domains</span>.*
 
 As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
 
