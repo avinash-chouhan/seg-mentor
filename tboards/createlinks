@@ -1,0 +1,4 @@
+rm board*
+ls ../tmp | xargs -L1 bash -c 'ln -s $PWD/../tmp/$1/trainboard board_$1' bash
+rm -r ../tmp/*/trainboard/trainboard
+rm board_logs* 

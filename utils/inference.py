@@ -49,23 +49,16 @@ def adapt_network_for_any_size_input(network_definition, multiple):
         resized_images_batch = tf.image.resize_images(image_batch_tensor, image_height_width_multiple)
         
         kwargs['image_batch_tensor'] = resized_images_batch
-        
-        all_outputs = network_definition(*args, **kwargs)
-        
-        all_outputs = list(all_outputs)
-        
-        upsampled_logits_batch = all_outputs[0]
-        
-        # TODO: check if it works with logits, maybe there is no need
-        # to do argmax
+
+        upsampled_logits_batch = network_definition(*args, **kwargs)
+
+        # TODO: check if it works with logits, maybe there is no need to do argmax
         pred = tf.argmax(upsampled_logits_batch, dimension=3)
 
         temp_pred = tf.expand_dims(pred, 3)
 
         original_size_predictions = tf.image.resize_nearest_neighbor(images=temp_pred, size=image_height_width)
-        
-        all_outputs[0] = original_size_predictions
 
-        return all_outputs
+        return original_size_predictions
     
     return new_network_definition

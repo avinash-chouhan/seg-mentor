@@ -53,7 +53,6 @@ class Trainer:
     def run_training(self, trainfolder, num_epochs=10, learning_rate=1e-6, decaylr=True,
                      new_vars_to_learn_faster=None, pretrained_vars=None):
 
-        summary_string_writer = tf.summary.FileWriter(trainfolder + '/trainboard')
         chkpnt2save_path = trainfolder + '/fcn.ckpt'
 
         valid_labels_batch_tensor, valid_logits_batch_tensor = \
@@ -94,18 +93,18 @@ class Trainer:
         with tf.control_dependencies(update_ops):
             with tf.variable_scope("adam_vars"):
                 if new_vars_to_learn_faster:
-                    # note momentum change 0.99->0.9 on Mar22
+                    # TODO - do we need to do smth special to include regularization losses?
                     train_op1 = tf.train.AdamOptimizer(learning_rate=strong_learning_rate,
-                                                       epsilon=1e-3, beta1=0.9). \
+                                                       epsilon=1e-3, beta1=self.args.momentum). \
                         minimize(cross_entropy_loss, var_list=new_vars_to_learn_faster, global_step=global_step)
                     train_op2 = tf.train.AdamOptimizer(learning_rate=weak_learning_rate,
-                                                       epsilon=1e-3, beta1=0.9). \
+                                                       epsilon=1e-3, beta1=self.args.momentum). \
                         minimize(cross_entropy_loss, var_list=pretrained_vars, global_step=global_step)
 
                     train_step = tf.group(train_op1, train_op2)
                 else:
                     train_step = tf.train.AdamOptimizer(learning_rate=weak_learning_rate,
-                                                        epsilon=1e-3, beta1=0.99). \
+                                                        epsilon=1e-3, beta1=self.args.momentum). \
                         minimize(cross_entropy_loss, global_step=global_step)
 
         mask = tf.to_int32(tf.not_equal(self.annotation_batch, 255))
@@ -142,6 +141,8 @@ class Trainer:
         saver = tf.train.Saver(model_variables)
 
         with tf.Session() as sess:
+
+            summary_string_writer = tf.summary.FileWriter(trainfolder + '/trainboard', graph=sess.graph)
 
             training_handle = sess.run(self.train_iter.string_handle())
             test_handle = sess.run(self.test_iter.string_handle())
@@ -206,7 +207,7 @@ class Trainer:
             save_path = saver.save(sess, chkpnt2save_path)
             print("Model saved in file: %s" % save_path)
 
-        summary_string_writer.close()
+            summary_string_writer.close()
 
     def setup(self):
 
@@ -267,6 +268,9 @@ if __name__ == "__main__":
                         default=False)
     parser.add_argument('--fcn16', dest='fcn16', type=bool,
                         help='if True add the fcn16 skip connection',
+                        default=True)
+    parser.add_argument('--fcn8', dest='fcn8', type=bool,
+                        help='if True add the fcn8 skip connection',
                         default=False)
     parser.add_argument('--batch_size', dest='batch_size', type=int,
                         help='batch size',
@@ -277,6 +281,9 @@ if __name__ == "__main__":
     parser.add_argument('--learnrate', dest='learnrate', type=float,
                         help='base learning rate',
                         default=1e-4)
+    parser.add_argument('--momentum', dest='momentum', type=float,
+                        help='momentum - the beta1 of the Adam optimizer',
+                        default=0.9)
     parser.add_argument('--difflr', dest='difflr', type=bool,
                         help='if True use x10 learning rate for new layers w.r.t pretrained',
                         default=False)  # if decaying rate - decay with same schedule retaining ratio

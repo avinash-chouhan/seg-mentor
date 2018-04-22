@@ -86,7 +86,7 @@ class BaseFcnArch:
                                     'preproc_func': pytorch_resnet_preprocessing.normalize_gen,
                                     # ..last s16 - out of block 3,
                                     #   just before stride to /32 in first unit of block4
-                                    'tname_s16_skipconn': '{0}/resnet_v1_18/block3/unit_2/res_block_v1'
+                                    'tname_s16_skipconn': '{0}/resnet_v1_18/block3'
                                     # TODO FCN8
                                     #'logits_opname': 'resnet_v1_18/logits'
                                     },
@@ -180,15 +180,16 @@ class BaseFcnArch:
 
             post_upsample_16s = self.upsample_x2_32s(post_decode_32s)
 
-            s16skip_ep_name_ = self.fe['tname_s16_skipconn'].format(self.base_fe_scope.name)
-            skip_conn_16s = end_points.get()
-            if not skip_conn_16s:
-                print(end_points.keys())
-                raise Exception('ERROR: Couldn''t find end point '+s16skip_ep_name_+' in above endpoints ')
+            s16skip_ep_name = self.fe['tname_s16_skipconn'].format(self.base_fe_scope.name)
+            skip_conn_16s = end_points.get(s16skip_ep_name)
+            if skip_conn_16s is None:
+                for k in end_points.keys():
+		    print k
+                raise Exception('ERROR: Couldn''t find end point '+s16skip_ep_name+' in above endpoints ')
 
             post_decode_16s = self.decode_16s(post_upsample_16s, skip_conn_16s)
             if not self.fcn8:
-                return self._upsample_fixed_bilinear(post_decode_16s, upsample_factor=164194304)
+                return self._upsample_fixed_bilinear(post_decode_16s, upsample_factor=16)
 
             raise NotImplemented
             # TODO FCN8
