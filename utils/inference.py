@@ -39,25 +39,24 @@ def adapt_network_for_any_size_input(network_definition, multiple):
         input_image_shape = tf.shape(image_batch_tensor)
 
         image_height_width = input_image_shape[1:3]
-
         image_height_width_float = tf.to_float(image_height_width)
 
         image_height_width_multiple = tf.round(image_height_width_float / multiple) * multiple
-
         image_height_width_multiple = tf.to_int32(image_height_width_multiple)
 
-        resized_images_batch = tf.image.resize_images(image_batch_tensor, image_height_width_multiple)
-        
-        kwargs['image_batch_tensor'] = resized_images_batch
+        kwargs['image_batch_tensor'] = tf.image.resize_images(image_batch_tensor, image_height_width_multiple)
 
+        # DO tTHE WRAPPED OP
         upsampled_logits_batch = network_definition(*args, **kwargs)
 
-        # TODO: check if it works with logits, maybe there is no need to do argmax
-        pred = tf.argmax(upsampled_logits_batch, dimension=3)
+        original_size_logits = tf.image.resize_nearest_neighbor(images=upsampled_logits_batch, size=image_height_width)
+        original_size_predictions = tf.argmax(original_size_logits, dimension=3)
+        original_size_predictions = tf.expand_dims(original_size_predictions, 3)
 
-        temp_pred = tf.expand_dims(pred, 3)
-
-        original_size_predictions = tf.image.resize_nearest_neighbor(images=temp_pred, size=image_height_width)
+        # # TODO: check if it works with logits, maybe there is no need to do argmax
+        # pred = tf.argmax(upsampled_logits_batch, dimension=3)
+        # temp_pred = tf.expand_dims(pred, 3)
+        # original_size_predictions = tf.image.resize_nearest_neighbor(images=temp_pred, size=image_height_width)
 
         return original_size_predictions
     

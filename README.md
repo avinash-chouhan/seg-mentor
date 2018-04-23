@@ -9,7 +9,7 @@
 
 ## Welcome!
 **...to segmentation framework by HailoTech ML team!**
-<br> *(..standing on shoulders of [Daniil Pakhomov](http://warmspringwinds.github.io/about/), see Credits below)*
+<br> *(..standing on shoulders of giants, e.g. [Pakhomov](http://warmspringwinds.github.io/about/), see full *[Credits](#previous-and-similar-work)* below)*
 
 We embrace Tensorflow and specifically tf-slim api and classification nets implementation,
 <br>and offer a modular code supporting the classic FCN and various enhancements on top of it:
@@ -134,8 +134,8 @@ most was heavily redesigned but ```/utils```  is still mostly his original.
 A similar work is [RTSeg](https://github.com/MSiam/TFSegmentation);
 <br> they use Cityscapes and differs a bit in approach to modularization.
 
-## TODOs / "Coming"
-- Break mIoU by object types & **sizes**
+## "Coming" / "Future Work" / "Contributions Welcome" (TODO choose messaging:)
+- Break mIoU by object **sizes** (beyond class breakup), compute weighted (m)iIoU
 - Beyond PASCAL - KiTTY, Cityscapes, COCO, Mapillary, ApolloScape
   <br> ..transfer learning pipelines between those..?
 - More FEs - Mobilenet_V2, ShuffleNet ?

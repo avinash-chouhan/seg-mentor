@@ -46,23 +46,22 @@ def test(image, annotation, predictions, checkpoint, iterator,
     """
     annotation_batch_tensor = tf.expand_dims(annotation, axis=0)
 
-    # Take away the masked out values from evaluation
-    weights = tf.to_float(tf.not_equal(annotation_batch_tensor, 255))
+    # Prepare mask to exclude some pixels from evaluation - 
+    # e.g. "padding margins" (=255) or "ambiguous" (=num_classes (additional class))
+    weights = tf.to_float(tf.less_equal(annotation_batch_tensor, number_of_classes-1))
+    # ...below line is redundant but mean_iou won't work without it somehow..
+    annotation_batch_tensor = annotation_batch_tensor*tf.cast(weights, tf.int32) #tf.cast(annotation_batch_tensor*tf.cast(weights, tf.int32), tf.int32)
 
-    # validations set annotations seem to have "22" as an additional "ambiguous/borederline pixels" class
-    #  gotta patch this out
-    if validation:
-        annotation_batch_tensor = tf.cast(annotation_batch_tensor, tf.int32)
-        annotation_batch_tensor = annotation_batch_tensor * \
-           tf.cast(tf.less_equal(annotation_batch_tensor, number_of_classes-1), tf.int32) # zero out bad guys
-
-    # Define the accuracy metric: Mean Intersection Over Union
-
-    # miou, update_op = slim.metrics.streaming_mean_iou(predictions=predictions,
     miou, update_op = tf.metrics.mean_iou(predictions=predictions,
                                           labels=annotation_batch_tensor,
                                           num_classes=number_of_classes,
                                           weights=weights)
+
+    conf_op = tf.confusion_matrix(tf.reshape(predictions, [-1]),
+                                  tf.reshape(annotation_batch_tensor, [-1]),
+                                  num_classes=number_of_classes,
+                                  weights=tf.reshape(weights, [-1]))
+    conf_mtx = np.zeros([number_of_classes]*2)
 
     initializer = tf.local_variables_initializer()
     saver = tf.train.Saver()
@@ -74,28 +73,42 @@ def test(image, annotation, predictions, checkpoint, iterator,
         saver.restore(sess, checkpoint)
 
         for i in xrange(num_images):
-            # Optionally display the image and the segmentation result
+            # note a bit different run for visualization vs. evaluation purposes...
             if (i+1) % X_as_in_visualize_each_Xth_seg == 0:
-                image_np, annotation_np, pred_np, tmp = sess.run([image, annotation, predictions, update_op])
-
-                upsampled_predictions = pred_np.squeeze()
-                plt.figure(figsize=(30, 10))
-                plt.suptitle('image #{0}'.format(i))
-                plt.subplot(131)
-                plt.imshow(image_np)
-                plt.subplot(132)
-                utils.visualization.visualize_segmentation_adaptive(upsampled_predictions, pascal_voc_lut, image_np)
-                plt.subplot(133)
-                utils.visualization.visualize_segmentation_adaptive(annotation_np.squeeze(), pascal_voc_lut, image_np)
-                plt.show()
+                image_np, annotation_np, pred_np, _, conf_tmp = \
+                    sess.run([image, annotation, predictions, update_op, conf_op])
+                visualize(image_np, annotation_np, pred_np.squeeze())
             else:
-                _eval_res = sess.run([update_op]+more_tensors_to_eval)
+                _eval_res = sess.run([conf_op, update_op]+more_tensors_to_eval)
+                conf_tmp = _eval_res[0]
                 if callback: # a placeholder to
-                    callback(_eval_res[1:])
-        res = sess.run(miou)
-        if num_images > 50:
-            print("Final mIoU: " + str(res))
+                    callback(_eval_res[2:])
+            conf_mtx += conf_tmp
 
+            final_miou = sess.run(miou)
+
+        diag = conf_mtx.diagonal()
+        err1 = conf_mtx.sum(axis=1) - conf_mtx.diagonal()
+        err2 = conf_mtx.sum(axis=0) - conf_mtx.diagonal()
+        iou = diag / (0.0 + diag + err1 + err2)
+
+        print("Final mIoU for {0} images is {1:.2f}%".format(num_images, final_miou*100))
+        print("\n\n ---- Breakup by class: ----")
+        print(pascal_voc_lut)
+        for i, x in enumerate(iou):
+            print(pascal_voc_lut[i]+': {0:.2f}%'.format(x*100))
+        print np.mean(iou) # a nice sanity check is to verify that it's the same as final_miou
+
+def visualize(image_np, annotation_np, upsampled_predictions):
+    plt.figure(figsize=(30, 10))
+    plt.suptitle('image #{0}'.format(i))
+    plt.subplot(131)
+    plt.imshow(image_np)
+    plt.subplot(132)
+    utils.visualization.visualize_segmentation_adaptive(upsampled_predictions, pascal_voc_lut, image_np)
+    plt.subplot(133)
+    utils.visualization.visualize_segmentation_adaptive(annotation_np.squeeze(), pascal_voc_lut, image_np)
+    plt.show()
 
 def get_data_feed():
     dataset = tf.contrib.data.TFRecordDataset([validation_records]).map(utils.tf_records.parse_record)  # .batch(1)
@@ -113,11 +126,12 @@ def single_image_feed(image_path):
     input_shape = tf.to_float(tf.shape(image))[:2]
     image = tf.expand_dims(image, 0)
 
-    scale = tf.reduce_min(args.pixels / input_shape)
+    pixels = args.pixels or tf.reduce_max(input_shape)
+    scale = tf.reduce_min(pixels / input_shape)
     image = tf.image.resize_nearest_neighbor(image, tf.cast(tf.round(input_shape * scale), tf.int32))
-    image = tf.image.resize_image_with_crop_or_pad(image, args.pixels, args.pixels)
-    image = tf.reshape(image, [1, args.pixels, args.pixels, 3])
-    annotation = tf.zeros([1, args.pixels, args.pixels, 1])
+    image = tf.image.resize_image_with_crop_or_pad(image, pixels, pixels)
+    image = tf.reshape(image, [1, pixels, pixels, 3])
+    annotation = tf.zeros([1, pixels, pixels, 1])
 
     dataset = tf.contrib.data.Dataset.from_tensor_slices((image, annotation))
     iterator = dataset.repeat().make_initializable_iterator()
@@ -149,7 +163,7 @@ if __name__ == "__main__":
                         help='set to X < size(val.set) to draw visualization each X images',
                         default=5555)
     parser.add_argument('--hquant', dest='hquant', type=bool,
-                        help='set to True to do a quantized run...',
+                        help='set to True to do a Hailo-quantized run...',
                         default=False)
     parser.add_argument('--single_image', dest='single_image', type=str,
                         help='set to a path in order to run on a single image',
@@ -160,8 +174,6 @@ if __name__ == "__main__":
 
     if args.basenet not in ['vgg_16', 'resnet_v1_50', 'resnet_v1_18', 'inception_v1', 'mobilenet_v1']:
         raise Exception("Not yet supported feature extractor")
-
-    # run_test(net_func_str=args.basenet, narrowdeconv=args.narrowdeconv, checkpoint=args.checkpoint32)
 
     tf.reset_default_graph()
 

@@ -108,6 +108,7 @@ class Trainer:
                         minimize(cross_entropy_loss, global_step=global_step)
 
         mask = tf.to_int32(tf.not_equal(self.annotation_batch, 255))
+        # TODO mean_iou is doing flattening! is it OK?
         miou_score_op, miou_update_op = tf.metrics.mean_iou(predictions=predictions,
                                                             labels=tf.multiply(self.annotation_batch, mask),
                                                             num_classes=number_of_classes,
