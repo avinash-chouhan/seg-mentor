@@ -1,6 +1,6 @@
 # Hailo-segmentation
 
-- [Contribution](Contribution)
+- [Contribution](#contribution)
 - [MetaArchitecture](#architecture)
 - [Usage](#usage)
 - [Results](#results)
