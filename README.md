@@ -1,6 +1,6 @@
 # Hailo-segmentation
 
-
+- [Contribution](Contribution)
 - [MetaArchitecture](#architecture)
 - [Usage](#usage)
 - [Results](#results)
@@ -42,6 +42,8 @@ and with better accuracy.
  - *What about practical issues? how robust are the mIoU numbers to exact freeze point of training, test subset, etc.?
 
 In addition, discussion of practical issues are hard to come by. E.g. how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, what failure modes (possibly critical for certain application) are there and how the net can be architected/trained to handle them - or maybe handled at inference time by multiscale testing, etc.
+
+## Contribution
 
 #### We hope the repo will be useful for mix&match experimentation that may make the following DIFF:
 ```diff
