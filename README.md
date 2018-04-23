@@ -7,8 +7,8 @@
 - [Discussion](#results)
 - [Previous, similar and future work](#previous-and-similar-work)
 
-## Welcome!
-**...to segmentation framework by HailoTech ML team!**
+## WELCOME!
+** to segmentation framework by HailoTech ML team!**
 <br> *(..standing on shoulders of giants, e.g. [Pakhomov](http://warmspringwinds.github.io/about/), see full *[Credits](#previous-and-similar-work)* below)*
 
 We embrace Tensorflow and specifically tf-slim api and classification nets implementation,
@@ -30,16 +30,15 @@ Now, sure, the state-of-the-art in semantic segmentation took long strides (pun 
 and there are many nets which are both faster (some claiming "real-time" - but that depends on HW of course),
 and with better accuracy.
 <br>However, understanding is still lacking, (even as the researchers do take care to perform ablation studies on their brand new nets), e.g.
-**
- - *What's the influence of the base Feature Extractor (FE)?
+ - ***What's the influence of the base Feature Extractor (FE)?
    To which extent the relative classification performance of per-trained (.e.g ImageNet) FE
    is a predictor of the relative accuracy of a segmentation net using it, per same meta-architecture?
-   What will be a good predictor? Can one design a FE specifically for downstream segmentation usage?*
- - *Do specific FEs play better with specific training hyperparams, or specific decode-path enhancements?*
- - *How to design simple, effective and efficient decoder blocks for seg' nets using lightweight (e.g. mobilenet) FEs*
- - *Beyond mIoU - how deeper vectorial performance metrics (e.g. per class, per object size) depend on FE or architecture in general.
-    What about (..robustness to..) various failure modes? How that could be controlled?*
- - *What about practical issues? how robust are the mIoU numbers to exact freeze point of training, test subset, etc.?
+   What will be a good predictor? Can one design a FE specifically for downstream segmentation usage?***
+ - ***Do specific FEs play better with specific training hyperparams, or specific decode-path enhancements?***
+ - ***How to design simple, effective and efficient decoder blocks for seg' nets using lightweight (e.g. mobilenet) FEs***
+ - ***Beyond mIoU - how deeper vectorial performance metrics (e.g. per class, per object size) depend on FE or architecture in general.
+    What about (..robustness to..) various failure modes? How that could be controlled?***
+ - ***What about practical issues? how robust are the mIoU numbers to exact freeze point of training, test subset, etc.?***
 
 In addition, discussion of practical issues are hard to come by. E.g. how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, what failure modes (possibly critical for certain application) are there and how the net can be architected/trained to handle them - or maybe handled at inference time by multiscale testing, etc.
 
