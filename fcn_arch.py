@@ -62,8 +62,8 @@ class BaseFcnArch:
                            'arg_scope_func': vgg.vgg_arg_scope,
                            'preproc_func': vgg_preprocess,
                            # Note first s16 - in contrast to last s16 in other nets..
-                           'tname_s16_skipconn': 'pool4',
-                           'tname_s8_skipconn': 'pool3'
+                           'tname_s16_skipconn': 'first_s16',
+                           'tname_s8_skipconn': 'first_s8'
                            #'logits_opname': 'fc8'
                             },
                    'inception_v1': {'net_func': inception_v1.inception_v1,

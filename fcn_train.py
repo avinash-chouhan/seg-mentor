@@ -108,7 +108,7 @@ class Trainer:
                         minimize(cross_entropy_loss, global_step=global_step)
 
         mask = tf.to_int32(tf.not_equal(self.annotation_batch, 255))
-        # TODO mean_iou is doing flattening! is it OK?
+
         miou_score_op, miou_update_op = tf.metrics.mean_iou(predictions=predictions,
                                                             labels=tf.multiply(self.annotation_batch, mask),
                                                             num_classes=number_of_classes,
@@ -167,14 +167,20 @@ class Trainer:
                 # this was helpful to get the mIOU metric work:
                 #   http://ronny.rest/blog/post_2017_09_11_tf_metrics/
                 miou_score, miou_summary = sess.run([miou_score_op, miou_summary_op])
-                print 'post miou sess run ', time.time() - t0
-                summary_string_writer.add_summary(miou_summary, trainstep)
+                #print 'post miou sess run ', time.time() - t0
                 summary_string_writer.add_summary(cross_entropy_summary, trainstep)
                 summary_string_writer.add_summary(learnrate_summary, trainstep)
+                # summary_string_writer.add_summary(miou_summary, trainstep).
+                """ NOTE: on second thought, this "single batch train mIoU" computed on line above is meanignless,
+                  and the low-pass filter in tensorboard (this was the first thought...) doesn't help.
+                  The correct aggregation is over the confusion matrix, with subsequent mIoU calculation."""
 
                 print("Batch loss: {0:.2f}, Batch mIOU (%): {1:.2f}".format(cross_entropy, miou_score * 100))
                 periodic_test_eval_steps = 100
                 if (trainstep + 1) % periodic_test_eval_steps == 0:
+                    """ Here we do a periodic evaluation on a valdiation (SUB)set,
+                      on each step running the miou update op (updating the confusion matrix under the hood),
+                      and computing the loss (which, in contrast to mIoU, is OK to just average over the batches)"""
                     save_path = saver.save(sess, chkpnt2save_path)
                     print("step ", trainstep, time.ctime(), "updated model in: %s" % save_path)
                     sess.run(running_metric_initializer)
@@ -278,7 +284,7 @@ if __name__ == "__main__":
                         default=16)
     parser.add_argument('--epochs', dest='epochs', type=int,
                         help='num of epochs to train for',
-                        default=30)
+                        default=36)
     parser.add_argument('--learnrate', dest='learnrate', type=float,
                         help='base learning rate',
                         default=1e-4)
