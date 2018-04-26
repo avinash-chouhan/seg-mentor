@@ -10,6 +10,12 @@ sys.path.append("../tf-models-hailofork/research/slim/")
 import fcn_arch, utils
 
 slim = tf.contrib.slim
+#make small fixes to work with older version of TF
+tf_ver = float('.'.join(tf.__version__.split('.')[:2]))
+if tf_ver >= 1.4:
+    data = tf.data
+else:
+    data = tf.contrib.data
 checkpoints_dir = '/data/models'
 log_folder = "tmp/logs"
 vgg_checkpoint_path = os.path.join(checkpoints_dir, 'vgg_16.ckpt')
@@ -212,7 +218,7 @@ class Trainer:
 
     def setup(self):
 
-        train_dataset = tf.contrib.data.TFRecordDataset([train_tfrec_fname])
+        train_dataset = data.TFRecordDataset([train_tfrec_fname])
         train_dataset = train_dataset.map(utils.tf_records.parse_record)
 
         # do data augmentation (unless we're in the debug mode of "go overfit over first images")
@@ -233,7 +239,7 @@ class Trainer:
                                                                                    image_train_size))
         train_dataset = train_dataset.batch(self.args.batch_size)
 
-        test_dataset = tf.contrib.data.TFRecordDataset([test_tfrec_fname]).map(utils.tf_records.parse_record)
+        test_dataset = data.TFRecordDataset([test_tfrec_fname]).map(utils.tf_records.parse_record)
         test_dataset = test_dataset.map(lambda img, ann:
                                         utils.augmentation.nonrandom_rescale(img, ann, image_train_size))
         test_dataset = test_dataset.map(lambda image_, annotation_: (image_, tf.squeeze(annotation_)))
@@ -243,7 +249,7 @@ class Trainer:
         self.test_iter = test_dataset.repeat().make_initializable_iterator()
 
         self.masterhandle = tf.placeholder(tf.string, shape=[])
-        switching_iterator = tf.contrib.data.Iterator.from_string_handle(
+        switching_iterator = data.Iterator.from_string_handle(
             self.masterhandle, train_dataset.output_types, train_dataset.output_shapes)
 
         image_batch, self.annotation_batch = switching_iterator.get_next()
@@ -295,12 +301,17 @@ if __name__ == "__main__":
                         help=' preprocess (interpolate large side & pad) each image (and annotation)'
                              ' to (pixels)X(pixels) size for the train',
                         default=512)
+    parser.add_argument('--gpu', '-g', type=int,
+                        default=0,
+                        help='which GPU to run on')
 
     if len(sys.argv) == 1:
         print("No args, running with defaults...")
         parser.print_help()
 
+
     args = parser.parse_args()
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
 
     checkpoint_path = {'vgg_16': vgg_checkpoint_path,
                        'resnet_v1_50': resnet50_checkpoint_path,
