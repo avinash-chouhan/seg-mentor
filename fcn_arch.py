@@ -184,7 +184,7 @@ class BaseFcnArch:
             skip_conn_16s = end_points.get(s16skip_ep_name)
             if skip_conn_16s is None:
                 for k in end_points.keys():
-		    print k
+                    print k
                 raise Exception('ERROR: Couldn''t find end point '+s16skip_ep_name+' in above endpoints ')
 
             post_decode_16s = self.decode_16s(post_upsample_16s, skip_conn_16s)
@@ -225,7 +225,7 @@ class BaseFcnArch:
 
 class FcnArch(BaseFcnArch):
     '''
-        Default implementation as in paper
+        Default implementation per our understanding of the paper
     '''
     def __init__(self, *args, **kwargs):
         BaseFcnArch.__init__(self, *args, **kwargs)
@@ -242,7 +242,8 @@ class FcnArch(BaseFcnArch):
 
     def decode_16s(self, post_upsample_16s, skip_conn_16s):
         skip_conn_16s_logits = slim.conv2d(skip_conn_16s, self.number_of_classes, [1, 1], scope='1x1_fcn16_logits',
-                                           activation_fn=None, normalizer_fn=None)
+                                           activation_fn=None, normalizer_fn=None,
+                                           weights_initializer=tf.zeros_initializer) # added on 25/04..
         combined = skip_conn_16s_logits + post_upsample_16s
         return combined
 
