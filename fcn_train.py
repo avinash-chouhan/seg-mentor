@@ -23,8 +23,6 @@ mobilenet_checkpoint_path = os.path.join(checkpoints_dir, 'mobilenet_v1_224/mobi
 inception_checkpoint_path = os.path.join(checkpoints_dir, 'inception_v1.ckpt')
 resnet50_checkpoint_path = os.path.join(checkpoints_dir, 'resnet_v1_50.ckpt')
 resnet18_checkpoint_path = os.path.join(checkpoints_dir, 'resnet_v1_18/model.ckpt')
-train_tfrec_fname = '/data/pascal_augmented_berkely/training.tfrecords'
-test_tfrec_fname = '/data/pascal_augmented_berkely/validation.tfrecords'
 
 
 image_train_size = [512, 512]
@@ -52,6 +50,8 @@ class Trainer:
     def __init__(self, args, checkpoint_path):
         self.args = args
         self.checkpoint_path = checkpoint_path
+        self.train_tfrec = self.args.datapath + 'training.tfrecords'
+        self.test_tfrec = self.args.datapath + 'validation.tfrecords'
 
         self.fcn_builder = fcn_arch.FcnArch(number_of_classes=number_of_classes, is_training=True, net=args.basenet,
                                             trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
@@ -224,7 +224,7 @@ class Trainer:
 
     def setup(self):
 
-        train_dataset = data.TFRecordDataset([train_tfrec_fname])
+        train_dataset = data.TFRecordDataset([self.train_tfrec])
         train_dataset = train_dataset.map(utils.tf_records.parse_record)
 
         # do data augmentation (unless we're in the debug mode of "go overfit over first images")
@@ -245,7 +245,7 @@ class Trainer:
                                                                                    image_train_size))
         train_dataset = train_dataset.batch(self.args.batch_size)
 
-        test_dataset = data.TFRecordDataset([test_tfrec_fname]).map(utils.tf_records.parse_record)
+        test_dataset = data.TFRecordDataset([self.test_tfrec]).map(utils.tf_records.parse_record)
         test_dataset = test_dataset.map(lambda img, ann:
                                         utils.augmentation.nonrandom_rescale(img, ann, image_train_size))
         test_dataset = test_dataset.map(lambda image_, annotation_: (image_, tf.squeeze(annotation_)))
@@ -307,9 +307,12 @@ if __name__ == "__main__":
                         help=' preprocess (interpolate large side & pad) each image (and annotation)'
                              ' to (pixels)X(pixels) size for the train',
                         default=512)
+    parser.add_argument('--datapath', dest='datapath', type=str,
+                        help='path where tfrecords are located',
+                        default='/data/TFrec/')
     parser.add_argument('--gpu', '-g', type=int,
-                        default=0,
-                        help='which GPU to run on')
+                        help='which GPU to run on',
+                        default=0)
 
     if len(sys.argv) == 1:
         print("No args, running with defaults...")
