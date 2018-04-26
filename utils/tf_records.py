@@ -18,7 +18,7 @@ def _int64_feature(value):
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 
-def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename):
+def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename, max_files=4e4):
     """Writes given image/annotation pairs to the tfrecords file.
     The function reads each image/annotation pair given filenames
     of image and respective annotation and writes it to the tfrecord
@@ -32,8 +32,11 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename)
     """
     writer = tf.python_io.TFRecordWriter(tfrecords_filename)
 
+    i = 0
     for img_path, annotation_path in filename_pairs:
-
+        i += 1
+        if i > max_files:
+            break
         img = np.array(Image.open(img_path))
         annotation = np.array(Image.open(annotation_path))
         # Unomment this one when working with surgical data
@@ -205,3 +208,25 @@ def parse_record(serialized_example):
     if squeeze_annotation:  # possibly used for train. how it is different from annotation_dims=2 - kill me. but it works.
         annotation = tf.squeeze(annotation)
     return image, annotation
+
+
+def process_coco_stuff_things(imgsdir = '/data/coco',
+                              traindir='train2017', valdir='val2017',
+                              labelsdir='/data/coco/stuffthings_pixellabels'):
+    import os
+    trainpairs = [(os.path.join(imgsdir, traindir, fname.replace('png', 'jpg')),
+                   os.path.join(labelsdir, traindir, fname)) \
+                    for fname in os.listdir(os.path.join(labelsdir, traindir))]
+
+    valpairs = [(os.path.join(imgsdir, valdir, fname.replace('png', 'jpg')), \
+                 os.path.join(labelsdir, valdir, fname)) \
+                    for fname in os.listdir(os.path.join(labelsdir, valdir))]
+
+    write_image_annotation_pairs_to_tfrecord(filename_pairs=trainpairs,
+                                            tfrecords_filename=imgsdir+'/training.tfrecords')
+
+    write_image_annotation_pairs_to_tfrecord(filename_pairs=valpairs,
+                                             tfrecords_filename=imgsdir+'/val.tfrecords')
+
+if __name__ == "__main__":
+    process_coco_stuff_things()
