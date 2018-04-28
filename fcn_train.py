@@ -275,7 +275,7 @@ if __name__ == "__main__":
                         default=False)
     parser.add_argument('--fcn16', dest='fcn16', type=bool,
                         help='if True add the fcn16 skip connection',
-                        default=True)
+                        default=False)
     parser.add_argument('--fcn8', dest='fcn8', type=bool,
                         help='if True add the fcn8 skip connection',
                         default=False)
@@ -294,9 +294,9 @@ if __name__ == "__main__":
     parser.add_argument('--difflr', dest='difflr', type=bool,
                         help='if True use x10 learning rate for new layers w.r.t pretrained',
                         default=False)  # if decaying rate - decay with same schedule retaining ratio
-    parser.add_argument('--decaylr', dest='decaylr', type=bool,
+    parser.add_argument('--decaylr', type=bool,
                         help='if True decay learn rate from x10 to x0.1 base LR',
-                        default=True)
+                        default=False)
     parser.add_argument('--pixels', dest='pixels', type=int,
                         help=' preprocess (interpolate large side & pad) each image (and annotation)'
                              ' to (pixels)X(pixels) size for the train',

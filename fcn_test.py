@@ -143,12 +143,12 @@ if __name__ == "__main__":
     parser.add_argument('--basenet', dest='basenet', type=str,
                         help='the base feature extractor',
                         default='mobilenet')
-    parser.add_argument('--trainable_upsampling', dest='trainable_upsampling', type=bool,
+    parser.add_argument('--trainable_upsampling', type=bool,
                         help='if True use trainable_upsampling in the basic FCN architecture',
                         default=False)
-    parser.add_argument('--fcn16', dest='fcn16', type=bool,
+    parser.add_argument('--fcn16', type=bool,
                         help='if True add the fcn16 skip connection',
-                        default=True)
+                        default=False)
     parser.add_argument('--extended_arch', dest='extended_arch', type=bool,
                         help='if True use extended architecture',
                         default=False)
