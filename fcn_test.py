@@ -5,11 +5,9 @@ from matplotlib import pyplot as plt
 import numpy as np
 slim = tf.contrib.slim
 
-#os.environ["CUDA_VISIBLE_DEVICES"] = '1'
-
 # (!!) needed for code inside fcn_arch, utils..
-#sys.path.append("/home/finkel/hailo_repos/phase2-dl-research/slim_models/")
 sys.path.append("../tf-models-hailofork/research/slim/")
+
 tf_ver = float('.'.join(tf.__version__.split('.')[:2]))
 if tf_ver >= 1.4:
     data = tf.data
@@ -115,23 +113,23 @@ def visualize(image_np, annotation_np, upsampled_predictions):
     utils.visualization.visualize_segmentation_adaptive(annotation_np.squeeze(), pascal_voc_lut, image_np)
     plt.show()
 
-def get_data_feed():
+def get_data_feed(pixels):
     dataset = data.TFRecordDataset([validation_records]).map(utils.tf_records.parse_record)  # .batch(1)
-    if args.pixels:
+    if pixels != 0:
         dataset = dataset.map(lambda img, ann:
-                              utils.augmentation.nonrandom_rescale(img, ann, [args.pixels, args.pixels]))
+                              utils.augmentation.nonrandom_rescale(img, ann, [pixels, pixels]))
 
     iterator = dataset.repeat().make_initializable_iterator()
     return iterator
 
 
-def single_image_feed(image_path):
+def single_image_feed(image_path, pixels):
     image = tf.read_file(image_path)
     image = tf.image.decode_jpeg(image)
     input_shape = tf.to_float(tf.shape(image))[:2]
     image = tf.expand_dims(image, 0)
 
-    pixels = args.pixels or tf.reduce_max(input_shape)
+    pixels = pixels or tf.reduce_max(input_shape)
     scale = tf.reduce_min(pixels / input_shape)
     image = tf.image.resize_nearest_neighbor(image, tf.cast(tf.round(input_shape * scale), tf.int32))
     image = tf.image.resize_image_with_crop_or_pad(image, pixels, pixels)
@@ -148,23 +146,11 @@ if __name__ == "__main__":
     parser.add_argument('--traindir', type=str,
                         help='the folder in which the results of the training run reside..',
                         default='')
-    # parser.add_argument('--basenet', dest='basenet', type=str,
-    #                     help='the base feature extractor',
-    #                     default='mobilenet')
-    #
-    # parser.add_argument('--fcn16', type=bool,
-    #                     help='if True add the fcn16 skip connection',
-    #                     default=False)
-    # parser.add_argument('--extended_arch', dest='extended_arch', type=bool,
-    #                     help='if True use extended architecture',
-    #                     default=False)
-    # parser.add_argument('--checkpoint', dest='checkpoint', type=str,
-    #                     help='path to checkpoint of the FCN',
-    #                     default="tmp/resnet_v1_18_dynDiffLR_bs16/fcn32.ckpt")
-    # parser.add_argument('--pixels', dest='pixels', type=int,
-    #                     help='if not zero, normalize (interpolate&crop) image (and annotation)'
-    #                          ' to pixels X pixels before inference',
-    #                     default=0)
+    # TODO add back an option to run without preprocessing... ("native")
+    parser.add_argument('--pixels', dest='pixels', type=int,
+                         help='if not zero, normalize (interpolate&crop) image (and annotation)'
+                              ' to pixels X pixels before inference... otherwise use the training setting',
+                         default=0)
     parser.add_argument('--vizstep', type=int,
                         help='set to X < size(val.set) to draw visualization each X images',
                         default=5555)
@@ -174,24 +160,40 @@ if __name__ == "__main__":
     parser.add_argument('--single_image', type=str,
                         help='set to a path in order to run on a single image',
                         default=None)
+    parser.add_argument('--gpu', '-g', type=int,
+                        help='which GPU to run on (note: opposite to nvidia-smi)',
+                        default=0)
+    parser.add_argument('--afteriter', type=int,
+                        help='if nonzero, use an intermediate checkpoint after such and such training batches',
+                        default=0)
+
+    if len(sys.argv) == 1:
+        print("No args, running with defaults...")
+        parser.print_help()
 
     args = parser.parse_args()
-    X_as_in_visualize_each_Xth_seg = args.vizstep
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
 
+    X_as_in_visualize_each_Xth_seg = args.vizstep
+    checkpoint = args.traindir+'/fcn.ckpt' 
+    if args.afteriter!=0 :
+	checkpoint += ('_'+str(args.afteriter))
+    testpixels = args.pixels
+
+    # get the architecture configuration from the training run folder..
     import json
     trainargs = json.load(open(args.traindir+'/runargs'))
     args.__dict__.update(trainargs)
 
-    #if args.basenet not in ['vgg_16', 'resnet_v1_50', 'resnet_v1_18', 'inception_v1', 'mobilenet_v1']:
-    #    raise Exception("Not yet supported feature extractor")
+    pixels = testpixels or args.pixels # use what's given, with the training as default.
 
     tf.reset_default_graph()
 
     if args.single_image:
-        iterator = single_image_feed(args.single_image)
+        iterator = single_image_feed(args.single_image, pixels)
         X_as_in_visualize_each_Xth_seg = 1
     else:
-        iterator = get_data_feed()
+        iterator = get_data_feed(pixels)
 
     image, annotation = iterator.get_next()
 
@@ -203,6 +205,6 @@ if __name__ == "__main__":
 
     if not args.hquant:
         predictions = fcnfunc(image_batch_tensor=tf.expand_dims(image, axis=0))
-        test(image, annotation, predictions, args.checkpoint, iterator)
+        test(image, annotation, predictions, checkpoint, iterator)
     else: 
-	    print "Please contact Hailo to enter Early Access Program and gain access to Hailo-quantized version of this net"
+	print("Please contact Hailo to enter Early Access Program and gain access to Hailo-quantized version of this net")

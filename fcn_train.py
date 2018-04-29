@@ -16,15 +16,8 @@ if tf_ver >= 1.4:
     data = tf.data
 else:
     data = tf.contrib.data
-checkpoints_dir = '/data/models'
+#checkpoints_dir = '/data/models'
 log_folder = "tmp/logs"
-vgg_checkpoint_path = os.path.join(checkpoints_dir, 'vgg_16.ckpt')
-mobilenet_checkpoint_path = os.path.join(checkpoints_dir, 'mobilenet_v1_224/mobilenet_v1_1.0_224.ckpt')
-inception_checkpoint_path = os.path.join(checkpoints_dir, 'inception_v1.ckpt')
-resnet50_checkpoint_path = os.path.join(checkpoints_dir, 'resnet_v1_50.ckpt')
-resnet18_checkpoint_path = os.path.join(checkpoints_dir, 'resnet_v1_18/model.ckpt')
-
-
 image_train_size = [512, 512]
 
 number_of_classes = 21
@@ -270,48 +263,51 @@ class Trainer:
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Train a FCN(-based) segmentation net')
-    parser.add_argument('--basenet', dest='basenet', type=str,
+    parser.add_argument('--basenet', type=str,
                         help='the base feature extractor',
                         default='vgg_16')
-    parser.add_argument('--extended_arch', dest='extended_arch', type=bool,
-                        help='if True use extended architecture',
+    parser.add_argument('--extended_arch', type=bool,
+                        help='if True use extended architecturei (TBD)',
                         default=False)
-    parser.add_argument('--trainable_upsampling', dest='trainable_upsampling', type=bool,
+    parser.add_argument('--trainable_upsampling', type=bool,
                         help='if True use trainable_upsampling in the basic FCN architecture',
                         default=False)
-    parser.add_argument('--fcn16', dest='fcn16', type=bool,
+    parser.add_argument('--fcn16', type=bool,
                         help='if True add the fcn16 skip connection',
                         default=False)
-    parser.add_argument('--fcn8', dest='fcn8', type=bool,
+    parser.add_argument('--fcn8', type=bool,
                         help='if True add the fcn8 skip connection',
                         default=False)
-    parser.add_argument('--batch_size', dest='batch_size', type=int,
+    parser.add_argument('--batch_size', type=int,
                         help='batch size',
                         default=16)
-    parser.add_argument('--epochs', dest='epochs', type=int,
+    parser.add_argument('--epochs', type=int,
                         help='num of epochs to train for',
                         default=36)
-    parser.add_argument('--learnrate', dest='learnrate', type=float,
+    parser.add_argument('--learnrate', type=float,
                         help='base learning rate',
                         default=1e-4)
-    parser.add_argument('--momentum', dest='momentum', type=float,
+    parser.add_argument('--momentum', type=float,
                         help='momentum - the beta1 of the Adam optimizer',
                         default=0.9)
-    parser.add_argument('--difflr', dest='difflr', type=bool,
+    parser.add_argument('--difflr', type=bool,
                         help='if True use x10 learning rate for new layers w.r.t pretrained',
                         default=False)  # if decaying rate - decay with same schedule retaining ratio
     parser.add_argument('--decaylr', type=bool,
                         help='if True decay learn rate from x10 to x0.1 base LR',
                         default=False)
-    parser.add_argument('--pixels', dest='pixels', type=int,
+    parser.add_argument('--pixels', type=int,
                         help=' preprocess (interpolate large side & pad) each image (and annotation)'
                              ' to (pixels)X(pixels) size for the train',
                         default=512)
-    parser.add_argument('--datapath', dest='datapath', type=str,
+    parser.add_argument('--datapath', type=str,
                         help='path where tfrecords are located',
                         default='/data/TFrec/')
+    parser.add_argument('--modelspath', type=str,
+                        help='path where imagenet-pretrained FE checkpoints are located',
+                        default='/data/models/')
     parser.add_argument('--gpu', '-g', type=int,
-                        help='which GPU to run on',
+                        help='which GPU to run on (note: possibly opposite of nvidia-smi..)',
                         default=0)
 
     if len(sys.argv) == 1:
@@ -321,6 +317,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
+
+    vgg_checkpoint_path = os.path.join(args.modelspath, 'vgg_16.ckpt')
+    mobilenet_checkpoint_path = os.path.join(args.modelspath, 'mobilenet_v1_224/mobilenet_v1_1.0_224.ckpt')
+    inception_checkpoint_path = os.path.join(args.modelspath, 'inception_v1.ckpt')
+    resnet50_checkpoint_path = os.path.join(args.modelspath, 'resnet_v1_50.ckpt')
+    resnet18_checkpoint_path = os.path.join(args.modelspath, 'resnet_v1_18/model.ckpt')
 
     checkpoint_path = {'vgg_16': vgg_checkpoint_path,
                        'resnet_v1_50': resnet50_checkpoint_path,
