@@ -216,7 +216,7 @@ The resources needed by additional bilinear interpolations are negligible, as we
 <br>For example, in dataflow architectures, special resource allocation is needed for buffering the skip connections.
  <br>That's the reason we don't care to train FCN8 variants since returns are negligible w.r.t the costs.
 
-
+The inceptionv-v1 comes close but not surpassing as apparently possible for similar attempt on CityScapes (see [RealTime-FCN](http://tuprints.ulb.tu-darmstadt.de/6893/1/20171023_dissertationMariusCordts.pdf#page=115) ).
 
 ### FCN+W results
 ...Coming soon...
@@ -257,15 +257,23 @@ Big chunks of our code are borrowed from Daniil Pakhomov's a little bit dated [t
 especially in the ```/utils```  package.
 
 Beyond those, it was very useful as a headstart; we went far beyond a fork though, 
- since we felt a better design will make this more widely and deeply useful.
+ since we felt a better design will yield a repo more widely and deeply useful.
 We hope the current repo will be useful for development and research projects without serious redesign, 
 
 An up-to-date work similar to ours is [RTSeg](https://github.com/MSiam/TFSegmentation) (see also ref. to paper below);
 Their 'SkipNet' architecture is in fact an FCN, 
   so when they marry that to ResNet18 and Mobilenet_V1 it's similar to corresponding subset of our work. 
-<br> They however use Cityscapes and differ a bit in approach to modularization and software design.
+<br> They however use Cityscapes, which takes them more towards dataset-specific issues, e.g. additional coarse labels incorporation, etc. They also differ a bit in approach to modularization and software design, hence our separate project.
 
-Last Year
+Many nets making progress towards high-performance high-resolution real-time segmentation were published since just an year ago, let's mention a few milestones that feel seminal to us: 
+
+- [RealTime-FCN](http://tuprints.ulb.tu-darmstadt.de/6893/1/20171023_dissertationMariusCordts.pdf#page=115) - created as baseline for CityScapes by its main curator. Inception-V1 based, surpassing VGG, then improving to >70% mIoU with coarse labels and architecture augmentation ("context modules").
+   
+- [LinkNet](https://codeac29.github.io/projects/linknet/) - >70% mIoU on CityScapes, ResNet-18 based.
+- [MobilenetV2 (+stripped DeepLabV3)](https://arxiv.org/pdf/1801.04381.pdf), see Table7 - >70% mIoU on CityScapes with ~2M params, ~3Gops. As efficient as it gets...
+
+Implementing these and more in the framework defined here is one of the next steps for this repo...
+
 ## Future Work
 
 ### Coming soon:
@@ -279,7 +287,7 @@ Last Year
 - implement some known architectures over the framework:
     - DeepLab(3?) - barebones w.o. ASPP and other bells&whistles. Test Mobilenets 1/2, ResNet18
     - LinkNet - original ResNet18, then attempt to switch FE?
-    - U-net
+    - U-net - similarly..
   <br>reproduce published results and start testing and reporting on mix&match effects (e.g. LinkNet + Mobilenet V2).
 
 ## References
@@ -293,8 +301,9 @@ FCN based Semantic Segmentation
 1. ['Fully Convolutional Networks for Semantic Segmentation', Long&Shelhamer et al., 2015](https://people.eecs.berkeley.edu/~jonlong/long_shelhamer_fcn.pdf)
 1. ['Fully Convolutional Networks for Semantic Segmentation' (B), Long&Shelhamer et al., 2016](https://arxiv.org/pdf/1605.06211.pdf)
 1. ['Deep Residual Learning for Instrument Segmentation in Robotic Surgery', Pakhomov et al, 2017](https://arxiv.org/abs/1703.08580)
+1. [Understanding Cityscapes, Ph.D. thesis, Marius Cordts, 2017](http://tuprints.ulb.tu-darmstadt.de/6893/1/20171023_dissertationMariusCordts.pdf)
 1. ['RTSEG: Real-time semantic segmentation comparative study', Mar 2018](https://arxiv.org/pdf/1803.02758.pdf)
-
+1. [LinkNet: Exploiting Encoder Representations for Efficient Semantic Segmentation, Chaurasia et. al., 2017](https://arxiv.org/abs/1707.03718)
 
 ## Appendix A: Dataset Rants
 
