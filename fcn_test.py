@@ -10,6 +10,11 @@ slim = tf.contrib.slim
 # (!!) needed for code inside fcn_arch, utils..
 #sys.path.append("/home/finkel/hailo_repos/phase2-dl-research/slim_models/")
 sys.path.append("../tf-models-hailofork/research/slim/")
+tf_ver = float('.'.join(tf.__version__.split('.')[:2]))
+if tf_ver >= 1.4:
+    data = tf.data
+else:
+    data = tf.contrib.data
 
 import fcn_arch, utils
 
@@ -111,7 +116,7 @@ def visualize(image_np, annotation_np, upsampled_predictions):
     plt.show()
 
 def get_data_feed():
-    dataset = tf.contrib.data.TFRecordDataset([validation_records]).map(utils.tf_records.parse_record)  # .batch(1)
+    dataset = data.TFRecordDataset([validation_records]).map(utils.tf_records.parse_record)  # .batch(1)
     if args.pixels:
         dataset = dataset.map(lambda img, ann:
                               utils.augmentation.nonrandom_rescale(img, ann, [args.pixels, args.pixels]))
@@ -133,7 +138,7 @@ def single_image_feed(image_path):
     image = tf.reshape(image, [1, pixels, pixels, 3])
     annotation = tf.zeros([1, pixels, pixels, 1])
 
-    dataset = tf.contrib.data.Dataset.from_tensor_slices((image, annotation))
+    dataset = data.Dataset.from_tensor_slices((image, annotation))
     iterator = dataset.repeat().make_initializable_iterator()
     return iterator
 
