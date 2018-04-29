@@ -192,7 +192,7 @@ Some flip and strech augmentations were applied...
 | VGG16 - FCN16 [^ts1] (**) |   ~840         |  ~135    | ...               |
 | VGG16 - FCN32 [^ts1] (***) |   ~840         |  ~135    | **65.4**               |
 | Inception V1 - FCN16 [^ts1]  |   62.3         |  5.85   | **63.7**               |
-| Inception V1 - FCN32 [^ts1]  |   62.1         |  5.83    | ...               |
+| Inception V1 - FCN32 [^ts1]  |   62.1         |  5.83    | **62.0**               |
 | ResNet_v1_18 - FCN16 [^ts1]   |   72.5       |  10.91    | **60.4**           |
 | ResNet_v1_18 - FCN32 [^ts1]   |   72.4         |  10.9    | **59.5**           |
 | MobileNet V1 - FCN16 [^ts1]   |   22.7         | 3.12  | **57.6**            |
@@ -206,29 +206,21 @@ Some flip and strech augmentations were applied...
 
 [ts2]: ..coming soon..
 
+#### Discussion
+
 So VGG is significantly better than others, but it's impractical for real-time deployments,
  blowing both memory- and computations- (at high resolutions) requirements.
 
 The inceptionv-v1 comes close to VGG - but not surpassing as apparently proven possible on CityScapes (see [RealTime-FCN](http://tuprints.ulb.tu-darmstadt.de/6893/1/20171023_dissertationMariusCordts.pdf#page=115) ).
 
+The FCN16 skip-connection generally gives a +1-2% mIoU improvement, 
+ which is non-negligible but smaller than for original FCN as reported in paper (Adam is good for FCN32 health?), 
+ and in fact not much larger than the noise (w.r.t to test (sub)set choice, and exact params checkpoint) which we estimate to be ~0.5-1% (see tensorboard plots). So we have to conclude that the skip-connection contribution is **minor** - as long as it's used if used as simple linear addition after classification layer contracting #channels to 21 (classes)... 
+
 The resources needed by additional bilinear interpolations are negligible, as well as those for the FCN16 skip-connection;
 <br>Note however that params&ops don't tell the whole story, and there are HW-architecture-dependent issues.
 <br>For example, in dataflow architectures, special resource allocation is needed for buffering the skip connections.
  <br>That's the reason we don't care to train FCN8 variants since returns are negligible w.r.t the costs.
-
-### FCN + wide-context results
-...Coming soon...
-
-#### Examples
-<div align="center">
-<img src="https://github.com/hailotech/hailo-segmentation/blob/master/images/ResNet18_Apr02_HorseRider1.png" width="70%" height="70%"><br><br>
-</div>
-
-## Discussion
-
-### Basic Training
-..See [Results](#results) for some discussion of training hyperparams and schedules that worked,
-and sensitivites therein.
 
 #### Stuff we tried and didn't give improvement
 Note these are still coded and can be enabled via command-line params.
@@ -246,10 +238,19 @@ Note that all params mentioned are involved in how gradients computed with diffe
 <br> We couldn't hit a low hanging fruit with the few runs we've made -
 but that doesn't mean some metric improvement (and insight on the side) couldn't be found with a disciplined parameter scan :)
 
-Contributions welcome! :)
 
-### FCN + wide-context discussion
+Contributions are welcome! :)
+
+### FCN + wide-context results
 ...Coming soon...
+
+#### Discussion 
+...Coming soon...
+
+#### Examples
+<div align="center">
+<img src="https://github.com/hailotech/hailo-segmentation/blob/master/images/ResNet18_Apr02_HorseRider1.png" width="70%" height="70%"><br><br>
+</div>
 
 
 ## Previous and similar work
