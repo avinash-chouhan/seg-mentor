@@ -141,9 +141,8 @@ but it's different in spirit,
  <br>Here we try to make a small first step towards *segmentation-models*, using the shoulders of **slim** giants as a launchpad.
  
  ----------------
- Anyways.
-
-The architecture is implemented as an abstract class (```BaseFcnArch```),
+ 
+So, the architecture is implemented as an abstract class (```BaseFcnArch```),
 which should be subclassed for each architecture;
 the subclasses should implement (aka 'override') the decoding blocks as defined in following drawing:
 
@@ -176,9 +175,7 @@ All nets trained with similar hyperparams to decent results which were quite rob
  (very roughly) simulates a two-stage process of optimize-FCN32 then finesse with skip-connection..
 
 The other FEs also have BatchNorm which seem to add more robustness - to higher LR, random init of skip-conn., etc.
-It does require a significant (>1!) batch size for train, note
-
-we tried to look for schedules that work better for
+It does (naturally) require a >1 batch size for train - which is fine, it's also good for GPU efficiency.
 
 Input images were scaled so larger side becomes 512 pixels, then padded to 512x512
  <br>* *Note - that's a parameter, you can change that - inc. just for test time;
@@ -191,14 +188,14 @@ Some flip and strech augmentations were applied...
 
 | Net name      | GOPS @FHD        | Params (*1e6)  | Pascal <br>mIoU %  |
 | ------------- |:-------------:| -----:  | ---------------: |
-| VGG16 - FCN16 [[^ts1] (**)]|   ~840         |  ~135    | ...               |
-| VGG16 - FCN32 [ [^ts1] (***)] |   ~840         |  ~135    | **65.4**               |
-| Inception V1 - FCN16 [ [^ts1] ]  |   62.3         |  5.85   | **63.7**               |
-| Inception V1 - FCN32 [ [^ts1] ]  |   62.1         |  5.83    | ...               |
-| ResNet_v1_18 - FCN16 [ [^ts1] ]   |   72.5       |  10.91    | **60.4**           |
-| ResNet_v1_18 - FCN32 [ [^ts1] ]   |   72.4         |  10.9    | **59.5**           |
-| MobileNet V1 - FCN16 [ [^ts1] ]   |   22.7         | 3.12  | **57.6**            |
-| MobileNet V1 - FCN32 [ [^ts1] ]   |   22.5         | 3.1   | **55.5**            |
+| VGG16 - FCN16 [^ts1] (**) |   ~840         |  ~135    | ...               |
+| VGG16 - FCN32 [^ts1] (***) |   ~840         |  ~135    | **65.4**               |
+| Inception V1 - FCN16 [^ts1]  |   62.3         |  5.85   | **63.7**               |
+| Inception V1 - FCN32 [^ts1]  |   62.1         |  5.83    | ...               |
+| ResNet_v1_18 - FCN16 [^ts1]   |   72.5       |  10.91    | **60.4**           |
+| ResNet_v1_18 - FCN32 [^ts1]   |   72.4         |  10.9    | **59.5**           |
+| MobileNet V1 - FCN16 [^ts1]   |   22.7         | 3.12  | **57.6**            |
+| MobileNet V1 - FCN32 [^ts1]   |   22.5         | 3.1   | **55.5**            |
 | MobileNet V2  | coming        | soon    | (hopefully)      |
 
 [ts1]: Adam (std.), LR=3e-4, /=10@15,30ep, bs=16, ~40 epochs.
@@ -211,14 +208,14 @@ Some flip and strech augmentations were applied...
 So VGG is significantly better than others, but it's impractical for real-time deployments,
  blowing both memory- and computations- (at high resolutions) requirements.
 
+The inceptionv-v1 comes close to VGG - but not surpassing as apparently proven possible on CityScapes (see [RealTime-FCN](http://tuprints.ulb.tu-darmstadt.de/6893/1/20171023_dissertationMariusCordts.pdf#page=115) ).
+
 The resources needed by additional bilinear interpolations are negligible, as well as those for the FCN16 skip-connection;
 <br>Note however that params&ops don't tell the whole story, and there are HW-architecture-dependent issues.
 <br>For example, in dataflow architectures, special resource allocation is needed for buffering the skip connections.
  <br>That's the reason we don't care to train FCN8 variants since returns are negligible w.r.t the costs.
 
-The inceptionv-v1 comes close but not surpassing as apparently possible for similar attempt on CityScapes (see [RealTime-FCN](http://tuprints.ulb.tu-darmstadt.de/6893/1/20171023_dissertationMariusCordts.pdf#page=115) ).
-
-### FCN+W results
+### FCN + wide-context results
 ...Coming soon...
 
 #### Examples
@@ -236,6 +233,8 @@ and sensitivites therein.
 Note these are still coded and can be enabled via command-line params.
 You're invited to get inspired and retry (possibly adding your ideas on top..)
 
+- Modified schedules that would work better for some FEs but not others - some signs of effect but nothing drastic..
+
 - Differential learning rate - large (X constant factor) for the "new" layers vs. the pre-trained.
 
 - "Heavy" (high-momentum) optimizer, as prescribed in [FCN paper](https://arxiv.org/pdf/1605.06211.pdf).
@@ -243,12 +242,12 @@ You're invited to get inspired and retry (possibly adding your ideas on top..)
   from 0.9 to 0.99, with various concurrent changes to batch size and learning rate.
 
 Note that all params mentioned are involved in how gradients computed with different images and different param points are averaged.
-<br> We couldn't hit a low hanging fruit the the few runs we've made -
+<br> We couldn't hit a low hanging fruit with the few runs we've made -
 but that doesn't mean some metric improvement (and insight on the side) couldn't be found with a disciplined parameter scan :)
 
 Contributions welcome! :)
 
-### FCN+W discussion
+### FCN + wide-context discussion
 ...Coming soon...
 
 
