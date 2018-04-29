@@ -133,13 +133,13 @@ DL community is keen on opensourcing net (inc. segmentation) implementations whi
  since so much of code (and procedures!) is the same (or ain't but should be!) and can be shared.
 
 Within the **Tensorflow** realm -
-[**Slim-models**](https://github.com/tensorflow/models/tree/master/research/slim) is a laudable attempt to bring implementations of some feature extractors to the same ground.
-Beyond classification, you got the [**Object Detection API**](https://github.com/tensorflow/models/tree/master/research/object_detection)
+**[Slim-models](https://github.com/tensorflow/models/tree/master/research/slim)** is a laudable attempt to bring implementations of some feature extractors to the same ground.
+Beyond classification, you got the **[Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection)**
 but it's different in spirit,
  catering to high-level-adapt&deploy users,
  while discouraging tinkering with architecture.
- <br>Here we try to make a small first step towards *segmentation-models*, using the shoulders of **slim**
- giants as a launchpad.
+ <br>Here we try to make a small first step towards *segmentation-models*, using the shoulders of **slim** giants as a launchpad.
+ 
  ----------------
  Anyways.
 
@@ -280,7 +280,7 @@ Last Year
     - DeepLab(3?) - barebones w.o. ASPP and other bells&whistles. Test Mobilenets 1/2, ResNet18
     - LinkNet - original ResNet18, then attempt to switch FE?
     - U-net
-  reproduce published results and start testing and reporting on mix&match effects (e.g. LinkNet + Mobilenet V2).
+  <br>reproduce published results and start testing and reporting on mix&match effects (e.g. LinkNet + Mobilenet V2).
 
 ## References
 Feature extractors:
