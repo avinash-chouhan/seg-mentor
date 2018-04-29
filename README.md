@@ -167,25 +167,38 @@ We trained with Adam, mostly with 15 epochs with initial learning rate, then red
 <br>  * *...Note - that claim is of course dependent on initial rate (and batch size, momentum, etc.),
        we use the (..very roughly..) largest that gives good initial convergence.*
 
+All nets trained with similar hyperparams to decent results which were quite robust to small param changes,
+<br> - except for VGG FE which was sensitive to learning rate, requiring smaller values of LR,
+ and, in FCN16 variant, was very sensitive to the init of skip-connection params, requiring a zero init.
+ <br>That is consistent with original FCN paper(s) which describe two-stage training or
+ "all-at-once" (like us) but with ad-hoc scaling of the skip-connections as a primitive normalization.
+ Relative to them, we here use Adam optimizer which makes stuff more robust, such that zero-init
+ (very roughly) simulates a two-stage process of optimize-FCN32 then finesse with skip-connection..
+
+The other FEs also have BatchNorm which seem to add more robustness - to higher LR, random init of skip-conn., etc.
+It does require a significant (>1!) batch size for train, note
+
+we tried to look for schedules that work better for
+
 Input images were scaled so larger side becomes 512 pixels, then padded to 512x512
  <br>* *Note - that's a parameter, you can change that - inc. just for test time;
-    buyunsurprizingly results are best for preprocessing same as train..
+    unsurprizingly results are best for preprocessing same as train..
     would be interesting to check with test-set of higher resolution though...)*
 
 Some flip and strech augmentations were applied...
 
 ### Baseline FCN Results
 
-| Net name      | GFLOPS        | Params  | Pascal <br>mIoU %  |
+| Net name      | GOPS @FHD        | Params (*1e6)  | Pascal <br>mIoU %  |
 | ------------- |:-------------:| -----:  | ---------------: |
-| VGG16 - FCN32 [[^ts1] (**)]|   ...         |  ...    | 65.4               |
-| VGG16 - FCN16 [ [^ts1] (***)] |   ...         |  ...    | ...               |
-| Inception V1 - FCN16 [ [^ts1] ]  |   ...         |  ...    | 63.7               |
-| Inception V1 - FCN16 [ [^ts1] ]  |   ...         |  ...    | ...               |
-| ResNet_v1_18 - FCN16 [ [^ts1] ]   |   ...         |  ...    | 60.4           |
-| ResNet_v1_18 - FCN32 [ [^ts1] ]   |   ...         |  ...    | 59.5           |
-| MobileNet V1 - FCN16 [ [^ts1] ]   |   ...         | ...   | 57.6            |
-| MobileNet V1 - FCN32 [ [^ts1] ]   |   ...         | ...   | 55.5            |
+| VGG16 - FCN16 [[^ts1] (**)]|   ~840         |  ~135    | ...               |
+| VGG16 - FCN32 [ [^ts1] (***)] |   ~840         |  ~135    | **65.4**               |
+| Inception V1 - FCN16 [ [^ts1] ]  |   62.3         |  5.85   | **63.7**               |
+| Inception V1 - FCN32 [ [^ts1] ]  |   62.1         |  5.83    | ...               |
+| ResNet_v1_18 - FCN16 [ [^ts1] ]   |   72.5       |  10.91    | **60.4**           |
+| ResNet_v1_18 - FCN32 [ [^ts1] ]   |   72.4         |  10.9    | **59.5**           |
+| MobileNet V1 - FCN16 [ [^ts1] ]   |   22.7         | 3.12  | **57.6**            |
+| MobileNet V1 - FCN32 [ [^ts1] ]   |   22.5         | 3.1   | **55.5**            |
 | MobileNet V2  | coming        | soon    | (hopefully)      |
 
 [ts1]: Adam (std.), LR=3e-4, /=10@15,30ep, bs=16, ~40 epochs.
@@ -193,8 +206,15 @@ Some flip and strech augmentations were applied...
 (* *): LR = 1e-4, const.
 ( * * *): LR(ini.) = 3e-5
 
-
 [ts2]: ..coming soon..
+
+So VGG is significantly better than others, but it's impractical for real-time deployments,
+ blowing both memory- and computations- (at high resolutions) requirements.
+
+The resources needed by additional bilinear interpolations are negligible, as well as those for the FCN16 skip-connection;
+<br>Note however that params&ops don't tell the whole story, and there are HW-architecture-dependent issues.
+<br>For example, in dataflow architectures, special resource allocation is needed for buffering the skip connections.
+ <br>That's the reason we don't care to train FCN8 variants since returns are negligible w.r.t the costs.
 
 
 
@@ -207,7 +227,30 @@ Some flip and strech augmentations were applied...
 </div>
 
 ## Discussion
+
+### Basic Training
+..See [Results](#results) for some discussion of training hyperparams and schedules that worked,
+and sensitivites therein.
+
+#### Stuff we tried and didn't give improvement
+Note these are still coded and can be enabled via command-line params.
+You're invited to get inspired and retry (possibly adding your ideas on top..)
+
+- Differential learning rate - large (X constant factor) for the "new" layers vs. the pre-trained.
+
+- "Heavy" (high-momentum) optimizer, as prescribed in [FCN paper](https://arxiv.org/pdf/1605.06211.pdf).
+  We tried to reproduce it by increasing the ```beta1``` parameter of Adam (analogous to SGD's momentum),
+  from 0.9 to 0.99, with various concurrent changes to batch size and learning rate.
+
+Note that all params mentioned are involved in how gradients computed with different images and different param points are averaged.
+<br> We couldn't hit a low hanging fruit the the few runs we've made -
+but that doesn't mean some metric improvement (and insight on the side) couldn't be found with a disciplined parameter scan :)
+
+Contributions welcome! :)
+
+### FCN+W discussion
 ...Coming soon...
+
 
 ## Previous and similar work
 Big chunks of our code are borrowed from Daniil Pakhomov's a little bit dated [tf-image-segmentation](https://github.com/warmspringwinds/tf-image-segmentation]) repo.
@@ -216,13 +259,13 @@ especially in the ```/utils```  package.
 Beyond those, it was very useful as a headstart; we went far beyond a fork though, 
  since we felt a better design will make this more widely and deeply useful.
 We hope the current repo will be useful for development and research projects without serious redesign, 
-but 
 
 An up-to-date work similar to ours is [RTSeg](https://github.com/MSiam/TFSegmentation) (see also ref. to paper below);
 Their 'SkipNet' architecture is in fact an FCN, 
   so when they marry that to ResNet18 and Mobilenet_V1 it's similar to corresponding subset of our work. 
-<br> They however use Cityscapes and differ a bit in approach to modularization.
+<br> They however use Cityscapes and differ a bit in approach to modularization and software design.
 
+Last Year
 ## Future Work
 
 ### Coming soon:
@@ -236,6 +279,7 @@ Their 'SkipNet' architecture is in fact an FCN,
 - implement some known architectures over the framework:
     - DeepLab(3?) - barebones w.o. ASPP and other bells&whistles. Test Mobilenets 1/2, ResNet18
     - LinkNet - original ResNet18, then attempt to switch FE?
+    - U-net
   reproduce published results and start testing and reporting on mix&match effects (e.g. LinkNet + Mobilenet V2).
 
 ## References
