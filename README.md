@@ -3,8 +3,7 @@
 - [Contribution](#contribution)
 - [MetaArchitecture](#architecture)
 - [Usage](#usage)
-- [Results](#results)
-- [Discussion](#results)
+- [Results & Discussion](#results)
 - [Previous, similar and future work](#previous-and-similar-work)
 
 ## WELCOME!
@@ -247,7 +246,7 @@ Contributions are welcome! :)
 #### Discussion 
 ...Coming soon...
 
-#### Examples
+### Examples
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/images/ResNet18_Apr02_HorseRider1.png" width="70%" height="70%"><br><br>
 </div>
