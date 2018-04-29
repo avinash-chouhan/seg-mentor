@@ -1,4 +1,4 @@
-# Hailo-segmentation
+# tf-slim-segmentation
 
 - [Contribution](#contribution)
 - [MetaArchitecture](#architecture)
@@ -8,8 +8,8 @@
 - [Previous, similar and future work](#previous-and-similar-work)
 
 ## WELCOME!
-**to segmentation framework by HailoTech ML team!**
-<br> (using some code by [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
+**to tf-slim-based flexible semantic segmentation framework**, brought to you by the jovial HailoTech ML team. 
+ (and some giants on whose shoulders we stand, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
 
 We embrace Tensorflow and specifically tf-slim API and classification nets implementation,
 <br>and offer a modular code supporting the classic FCN and various enhancements on top of it:
