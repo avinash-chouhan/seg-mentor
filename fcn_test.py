@@ -145,40 +145,45 @@ def single_image_feed(image_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Test a FCN(-based) segmentation net')
-    parser.add_argument('--basenet', dest='basenet', type=str,
-                        help='the base feature extractor',
-                        default='mobilenet')
-    parser.add_argument('--trainable_upsampling', type=bool,
-                        help='if True use trainable_upsampling in the basic FCN architecture',
-                        default=False)
-    parser.add_argument('--fcn16', type=bool,
-                        help='if True add the fcn16 skip connection',
-                        default=False)
-    parser.add_argument('--extended_arch', dest='extended_arch', type=bool,
-                        help='if True use extended architecture',
-                        default=False)
-    parser.add_argument('--checkpoint', dest='checkpoint', type=str,
-                        help='path to checkpoint of the FCN',
-                        default="tmp/resnet_v1_18_dynDiffLR_bs16/fcn32.ckpt")
-    parser.add_argument('--pixels', dest='pixels', type=int,
-                        help='if not zero, normalize (interpolate&crop) image (and annotation)'
-                             ' to pixels X pixels before inference',
-                        default=0)
-    parser.add_argument('--vizstep', dest='vizstep', type=int,
+    parser.add_argument('--traindir', type=str,
+                        help='the folder in which the results of the training run reside..',
+                        default='')
+    # parser.add_argument('--basenet', dest='basenet', type=str,
+    #                     help='the base feature extractor',
+    #                     default='mobilenet')
+    #
+    # parser.add_argument('--fcn16', type=bool,
+    #                     help='if True add the fcn16 skip connection',
+    #                     default=False)
+    # parser.add_argument('--extended_arch', dest='extended_arch', type=bool,
+    #                     help='if True use extended architecture',
+    #                     default=False)
+    # parser.add_argument('--checkpoint', dest='checkpoint', type=str,
+    #                     help='path to checkpoint of the FCN',
+    #                     default="tmp/resnet_v1_18_dynDiffLR_bs16/fcn32.ckpt")
+    # parser.add_argument('--pixels', dest='pixels', type=int,
+    #                     help='if not zero, normalize (interpolate&crop) image (and annotation)'
+    #                          ' to pixels X pixels before inference',
+    #                     default=0)
+    parser.add_argument('--vizstep', type=int,
                         help='set to X < size(val.set) to draw visualization each X images',
                         default=5555)
-    parser.add_argument('--hquant', dest='hquant', type=bool,
+    parser.add_argument('--hquant', type=bool,
                         help='set to True to do a Hailo-quantized run...',
                         default=False)
-    parser.add_argument('--single_image', dest='single_image', type=str,
+    parser.add_argument('--single_image', type=str,
                         help='set to a path in order to run on a single image',
                         default=None)
-    args = parser.parse_args()
 
+    args = parser.parse_args()
     X_as_in_visualize_each_Xth_seg = args.vizstep
 
-    if args.basenet not in ['vgg_16', 'resnet_v1_50', 'resnet_v1_18', 'inception_v1', 'mobilenet_v1']:
-        raise Exception("Not yet supported feature extractor")
+    import json
+    trainargs = json.load(open(args.traindir+'/runargs'))
+    args.__dict__.update(trainargs)
+
+    #if args.basenet not in ['vgg_16', 'resnet_v1_50', 'resnet_v1_18', 'inception_v1', 'mobilenet_v1']:
+    #    raise Exception("Not yet supported feature extractor")
 
     tf.reset_default_graph()
 
@@ -191,7 +196,7 @@ if __name__ == "__main__":
     image, annotation = iterator.get_next()
 
     fcn_builder = fcn_arch.FcnArch(number_of_classes=number_of_classes, is_training=False, net=args.basenet,
-                                        trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
+                                   trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
 
     # note: after adaptation, network returns final labels and not logits
     fcnfunc = utils.inference.adapt_network_for_any_size_input(fcn_builder.build_net, 32)
