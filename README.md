@@ -171,6 +171,7 @@ Input images were scaled so larger side becomes 512 pixels, then padded to 512x5
  <br>* *Note - that's a parameter, you can change that - inc. just for test time;
     buyunsurprizingly results are best for preprocessing same as train..
     would be interesting to check with test-set of higher resolution though...)*
+
 Some flip and strech augmentations were applied...
 
 ### Baseline FCN Results
@@ -178,7 +179,7 @@ Some flip and strech augmentations were applied...
 | Net name      | GFLOPS        | Params  | Pascal <br>mIoU %  |
 | ------------- |:-------------:| -----:  | ---------------: |
 | VGG16 - FCN32 [[^ts1] (**)]|   ...         |  ...    | 65.4               |
-| VGG16 - FCN16 [ [^ts2] (***)] |   ...         |  ...    | ...               |
+| VGG16 - FCN16 [ [^ts1] (***)] |   ...         |  ...    | ...               |
 | Inception V1 - FCN16 [ [^ts1] ]  |   ...         |  ...    | 63.7               |
 | Inception V1 - FCN16 [ [^ts1] ]  |   ...         |  ...    | ...               |
 | ResNet_v1_18 - FCN16 [ [^ts1] ]   |   ...         |  ...    | 60.4           |
@@ -187,13 +188,13 @@ Some flip and strech augmentations were applied...
 | MobileNet V1 - FCN32 [ [^ts1] ]   |   ...         | ...   | 55.5            |
 | MobileNet V2  | coming        | soon    | (hopefully)      |
 
-[^ts1]: Adam (std.), LR=3e-4, /=10@15,30ep, bs=16, ~40 epochs.
+[ts1]: Adam (std.), LR=3e-4, /=10@15,30ep, bs=16, ~40 epochs.
 
 (* *): LR = 1e-4, const.
 ( * * *): LR(ini.) = 3e-5
 
 
-[^ts2]: ..coming soon..
+[ts2]: ..coming soon..
 
 
 
