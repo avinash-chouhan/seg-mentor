@@ -10,7 +10,7 @@
 ## WELCOME!
 to **tf-slim-based flexible semantic segmentation framework**, 
 <br>brought to you by the jovial HailoTech ML team. 
- (and some giants on whose shoulders we stand, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
+<br>(and some giants on whose shoulders we stand, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
 
 We embrace Tensorflow and specifically tf-slim API and classification nets implementation,
 <br>and offer a modular code supporting the classic FCN and various enhancements on top of it:
