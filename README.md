@@ -286,17 +286,17 @@ Implementing these and more in the framework defined here is one of the next ste
 ## Future Work
 
 ### Coming soon:
-- train on [COCO stuff&things](https://github.com/nightrome/cocostuff), transfer to pascal
+- Train on [COCO stuff&things](https://github.com/nightrome/cocostuff), transfer to pascal
 - Mobilenet V2 as another FE option
 - Dilation as a parameter..
-- Implement a few known architectures over the framework:
-    - DeepLab(3?) - barebones w.o. ASPP and other bells&whistles. Test Mobilenets 1/2, ResNet18
+- Implement a (few) known architecture(s) over the framework:
+    - DeepLab(3?) - barebones w.o. ASPP branches. Test Mobilenets 1/2, ResNet18
     - LinkNet - original ResNet18, then attempt to switch FE?
     - U-net - similarly..
   <br>reproduce published results and start testing and reporting on mix&match effects (e.g. LinkNet + Mobilenet V2).
   
 ### Contributions welcome!
-- Road datasets - Cityscapes, Mapillary Vistas, ApolloScape, Nexet 
+- Road datasets - Cityscapes, Mapillary Vistas, ApolloScape 
 - Incorporate more FEs e.g. ShuffleNet - by finding or creating tf-slim implementation
 - Implement more architectures over the framework, upgrade base API if needed for more complex branching 
   (e.g. ASPP, PSP, ICnet, etc.)
