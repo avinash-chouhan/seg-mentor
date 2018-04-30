@@ -199,8 +199,8 @@ Some flip and strech augmentations were applied...
 | MobileNet V1 - FCN32 [ts1](#ts1)   |   22.5         | 3.1   | **55.5**            |
 | MobileNet V2  | coming        | soon    | (hopefully)      |
 
-##### ts1 
-**(training schedule 1):**
+#### ts1 :
+(training schedule 1): <br>
 Adam (std.), LR=3e-4, /=10@15,30ep, bs=16, ~40 epochs.
 
 (* *): LR = 1e-4, const.
