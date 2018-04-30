@@ -282,7 +282,7 @@ Many nets making progress towards high-performance high-resolution real-time seg
 Implementing these and more in the framework defined here is one of the next steps for this repo...
 
 ## Future Work
- ***( Contributions Welcome! )***
+ ***Contributions Welcome! :)***
 
 - Train on [COCO stuff&things](https://github.com/nightrome/cocostuff), transfer to pascal
 - Mobilenet V2 as another FE option
