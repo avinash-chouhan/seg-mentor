@@ -11,6 +11,10 @@ to **tf-slim-based flexible semantic segmentation framework**,
 <br>brought to you by the jovial HailoTech ML team. 
 <br>(and some code giants on whose shoulders we stand, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
 
+<div align="center">
+<img src="https://github.com/hailotech/hailo-segmentation/blob/master/images/ResNet18_Apr02_HorseRider1.png" width="70%" height="70%"><br><br>
+</div>
+
 We embrace Tensorflow and specifically tf-slim API and classification nets implementation,
 <br>and offer a modular code supporting the classic FCN and various enhancements on top of it:
  - Switching the base FE (feature extractor) out of imagenet-pretrained [slim-models selection](https://github.com/tensorflow/models/tree/master/research/slim)
@@ -255,12 +259,6 @@ Contributions are welcome! :)
 #### Discussion 
 ...Coming soon...
 
-### Examples
-<div align="center">
-<img src="https://github.com/hailotech/hailo-segmentation/blob/master/images/ResNet18_Apr02_HorseRider1.png" width="70%" height="70%"><br><br>
-</div>
-
-
 ## Previous and similar work
 Big chunks of our code are borrowed from Daniil Pakhomov's a little bit dated [tf-image-segmentation](https://github.com/warmspringwinds/tf-image-segmentation]) repo.
 especially in the ```/utils```  package.
@@ -284,8 +282,8 @@ Many nets making progress towards high-performance high-resolution real-time seg
 Implementing these and more in the framework defined here is one of the next steps for this repo...
 
 ## Future Work
+ ***( Contributions Welcome! )***
 
-### Coming soon:
 - Train on [COCO stuff&things](https://github.com/nightrome/cocostuff), transfer to pascal
 - Mobilenet V2 as another FE option
 - Dilation as a parameter..
@@ -294,8 +292,6 @@ Implementing these and more in the framework defined here is one of the next ste
     - LinkNet - original ResNet18, then attempt to switch FE?
     - U-net - similarly..
   <br>reproduce published results and start testing and reporting on mix&match effects (e.g. LinkNet + Mobilenet V2).
-  
-### Contributions welcome!
 - Road datasets - Cityscapes, Mapillary Vistas, ApolloScape 
 - Incorporate more FEs e.g. ShuffleNet - by finding or creating tf-slim implementation
 - Implement more architectures over the framework, upgrade base API if needed for more complex branching 
