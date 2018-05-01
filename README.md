@@ -16,7 +16,7 @@ to **tf-slim-based flexible semantic segmentation framework**,
 </div>
 
 <div align="center">
-<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="90%" height="90%"><br><br>
+<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
 </div>
 
 We embrace Tensorflow and specifically tf-slim API and classification nets implementation,
