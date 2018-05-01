@@ -189,7 +189,7 @@ class Trainer:
                     for _tb in range(num_test_batches):
                         _, test_cross_entropy_arr[_tb] = \
                             sess.run([miou_update_op, cross_entropy_loss],
-                                     feed_dict={self.masterhandle: test_handle})
+                                     feed_dict={self.masterhandle: c})
                     test_miou_score, test_miou_summary = sess.run([miou_score_op, test_miou_summary_op])
                     test_loss = np.mean(test_cross_entropy_arr)
                     test_loss_summary = tf.Summary()

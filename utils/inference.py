@@ -46,7 +46,7 @@ def adapt_network_for_any_size_input(network_definition, multiple):
 
         kwargs['image_batch_tensor'] = tf.image.resize_images(image_batch_tensor, image_height_width_multiple)
 
-        # DO tTHE WRAPPED OP
+        # Perform the wrapped operation
         upsampled_logits_batch = network_definition(*args, **kwargs)
 
         original_size_logits = tf.image.resize_nearest_neighbor(images=upsampled_logits_batch, size=image_height_width)
