@@ -3,13 +3,17 @@
 - [Contribution](#contribution)
 - [MetaArchitecture](#architecture)
 - [Usage](#usage)
-- [Results & Discussion](#results)
+- [Results & Discussion](#results-and-discussion)
 - [Previous, similar and future work](#previous-and-similar-work)
 
 ## WELCOME!
 to **tf-slim-based flexible semantic segmentation framework**, 
 <br>brought to you by the jovial HailoTech ML team. 
-<br>(and some giants on whose shoulders we stand, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
+<br>(and some code giants on whose shoulders we stand, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
+
+<div align="center">
+<img src="https://github.com/hailotech/hailo-segmentation/blob/master/images/ResNet18_Apr02_HorseRider1.png" width="70%" height="70%"><br><br>
+</div>
 
 We embrace Tensorflow and specifically tf-slim API and classification nets implementation,
 <br>and offer a modular code supporting the classic FCN and various enhancements on top of it:
@@ -109,6 +113,7 @@ using only 1st GPU if you're filthy rich and got a few of 'em.
 <br> leveraging your second GPU (first  one is busy training..), as you can't wait... <br>
 Now seriously, give it a **20-30 hours** of single-GPU training
 (use tensorboard to see *test-mIoU* flattening), then test and behold the converged IoU results.
+<br> Note: the mIoU of full test may surprise you with ~+5% discrepancy w.r.t the tensorboard plot. see Discussion below.
 Don't be shy and kill the process (find pid by ```ps aux | grep fcn_train```)
  if it burns your precious GPU cycles for no further improvements.
     1. If in doubt re convergence (or robusteness in general), run with ```--afteriter X```
@@ -153,7 +158,7 @@ the subclasses should implement (aka 'override') the decoding blocks as defined 
 Note that if you choose the red script across the decoder blocks, you get the original FCN.
 This is what's implemented in the ```FcnArch``` class, provided as the baseline example of the ```BaseFcnArch``` interface.
 
-## Results
+## Results and Discussion
 
 We report on results of train+test with the following breakup:
 - train with all SBD annotations (11K images)
@@ -186,24 +191,27 @@ Some flip and strech augmentations were applied...
 
 ### Baseline FCN Results
 
-| Net name      | GOPS @FHD        | Params (*1e6)  | Pascal <br>mIoU %  |
+| Net name      | GOPS @512pxl        | Params (*1e6)  | Pascal <br>mIoU %  |
 | ------------- |:-------------:| -----:  | ---------------: |
-| VGG16 - FCN16 [^ts1] (**) |   ~840         |  ~135    | ...               |
-| VGG16 - FCN32 [^ts1] (***) |   ~840         |  ~135    | **65.4**               |
-| Inception V1 - FCN16 [^ts1]  |   62.3         |  5.85   | **63.7**               |
-| Inception V1 - FCN32 [^ts1]  |   62.1         |  5.83    | **62.0**               |
-| ResNet_v1_18 - FCN16 [^ts1]   |   72.5       |  10.91    | **60.4**           |
-| ResNet_v1_18 - FCN32 [^ts1]   |   72.4         |  10.9    | **59.5**           |
-| MobileNet V1 - FCN16 [^ts1]   |   22.7         | 3.12  | **57.6**            |
-| MobileNet V1 - FCN32 [^ts1]   |   22.5         | 3.1   | **55.5**            |
+| VGG16 - FCN16 [ts1](#ts1) (**) |   ~92         |  ~135    | **66.5**               |
+| VGG16 - FCN32 [ts1](#ts1) (***) |   ~92        |  ~135    | **65.5**               |
+| Inception V1 - FCN16 [ts1](#ts1)  |   8.5        |  6.04   | **63.7**               |
+| Inception V1 - FCN32 [ts1](#ts1)  |   8.4        |  6.02    | **62.0**               |
+| ResNet_v1_18 - FCN16 [ts1](#ts1)   |   9.6       |  10.91    | **60.4**           |
+| ResNet_v1_18 - FCN32 [ts1](#ts1)   |   9.5         |  10.9    | **59.5**           |
+| MobileNet V1 - FCN16 [ts1](#ts1)   |   2.9         | 3.12  | **57.6**            |
+| MobileNet V1 - FCN32 [ts1](#ts1)   |   2.8         | 3.1   | **55.5**            |
 | MobileNet V2  | coming        | soon    | (hopefully)      |
 
-[ts1]: Adam (std.), LR=3e-4, /=10@15,30ep, bs=16, ~40 epochs.
+#### ts1
+(training schedule 1): <br>
+Adam (std.), LR=3e-4, /=10@15,30ep, bs=16, ~40 epochs.
 
 (* *): LR = 1e-4, const.
 ( * * *): LR(ini.) = 3e-5
 
-[ts2]: ..coming soon..
+##### ts2 
+..coming soon..
 
 #### Discussion
 
@@ -216,10 +224,15 @@ The FCN16 skip-connection generally gives a +1-2% mIoU improvement,
  which is non-negligible but smaller than for original FCN as reported in paper (Adam is good for FCN32 health?), 
  and in fact not much larger than the noise (w.r.t to test (sub)set choice, and exact params checkpoint) which we estimate to be ~0.5-1% (see tensorboard plots). So we have to conclude that the skip-connection contribution is **minor** - as long as it's used if used as simple linear addition after classification layer contracting #channels to 21 (classes)... 
 
-The resources needed by additional bilinear interpolations are negligible, as well as those for the FCN16 skip-connection;
+The resources needed by additional bilinear interpolations (for upsampling) are negligible, as well as those for the FCN16 skip-connection; so the ops and params are quite similar as for original imagenet classifiers, up to removal of final 1000-classes layer (-) and resolution change (+).
 <br>Note however that params&ops don't tell the whole story, and there are HW-architecture-dependent issues.
 <br>For example, in dataflow architectures, special resource allocation is needed for buffering the skip connections.
  <br>That's the reason we don't care to train FCN8 variants since returns are negligible w.r.t the costs.
+
+#### Technical issues:
+* Monitor vs. final result - we monitor *test-mIoU* estimate during training by running the net on a quarter (1/4) of the validation set; the resulting signal reflects both data(sub)set and param-point variability in its noise, thus giving a kinda-realistic rough estimate of the error bars on the value.
+ <br> However, we reused the same computational graph as the train, switching between train/val data feed - leveraging the  *[feedable iterator](https://www.tensorflow.org/programmers_guide/datasets)* of TF ```Datasets``` (probably designed for this exact purpose). This is different from what happens at real inference time, since the BatchNorm/Dropout use training settings (randomly zeroing activations / using this-batch-stats instead of freezed moving-average mean&std, respectively), and gives lower results, with the delta decreasing with batch size. 
+ <br>We may fix this in the future but currently we feel that it serves the purpose of monitoring - relative comparison, detect flattening etc. and in fact may be be an opportunity for insights..
 
 #### Stuff we tried and didn't give improvement
 Note these are still coded and can be enabled via command-line params.
@@ -227,7 +240,7 @@ You're invited to get inspired and retry (possibly adding your ideas on top..)
 
 - Modified schedules that would work better for some FEs but not others - some signs of effect but nothing drastic..
 
-- Differential learning rate - large (X constant factor) for the "new" layers vs. the pre-trained.
+- Differential learning rate - large (X constant factor) for the "new" (decoder) layers vs. the pre-trained (FE/encoder).
 
 - "Heavy" (high-momentum) optimizer, as prescribed in [FCN paper](https://arxiv.org/pdf/1605.06211.pdf).
   We tried to reproduce it by increasing the ```beta1``` parameter of Adam (analogous to SGD's momentum),
@@ -245,12 +258,6 @@ Contributions are welcome! :)
 
 #### Discussion 
 ...Coming soon...
-
-### Examples
-<div align="center">
-<img src="https://github.com/hailotech/hailo-segmentation/blob/master/images/ResNet18_Apr02_HorseRider1.png" width="70%" height="70%"><br><br>
-</div>
-
 
 ## Previous and similar work
 Big chunks of our code are borrowed from Daniil Pakhomov's a little bit dated [tf-image-segmentation](https://github.com/warmspringwinds/tf-image-segmentation]) repo.
@@ -270,25 +277,25 @@ Many nets making progress towards high-performance high-resolution real-time seg
 - [RealTime-FCN](http://tuprints.ulb.tu-darmstadt.de/6893/1/20171023_dissertationMariusCordts.pdf#page=115) - created as baseline for CityScapes by its main curator. Inception-V1 based, surpassing VGG, then improving to >70% mIoU with coarse labels and architecture augmentation ("context modules").
    
 - [LinkNet](https://codeac29.github.io/projects/linknet/) - >70% mIoU on CityScapes, ResNet-18 based.
-- [MobilenetV2 (+stripped DeepLabV3)](https://arxiv.org/pdf/1801.04381.pdf), see Table7 - >70% mIoU on CityScapes with ~2M params, ~3Gops. As efficient as it gets...
+- [MobilenetV2 (+stripped DeepLabV3)](https://arxiv.org/pdf/1801.04381.pdf), see Table7 - >70% mIoU on both CityScapes and Pascal with ~2M params, ~3Gops (@512pxl). Seems to be SoA in efficiency right now.. Note however that they also pre-train on COCO, and don't report an ablation study of the contribution of this (much bigger than pascal & cityscapes) dataset.
 
 Implementing these and more in the framework defined here is one of the next steps for this repo...
 
 ## Future Work
+ ***Contributions Welcome! :)***
 
-### Coming soon:
-- COCO training
-- Mobilenet V2
-- Dilation
-
-### Contributions welcome!
-- Road datasets - Cityscapes, Mapillary Vistas, ApolloScape  
-- Incorporate more FEs e.g. ShuffleNet - by finding or creating tf-slim implementation
-- implement some known architectures over the framework:
-    - DeepLab(3?) - barebones w.o. ASPP and other bells&whistles. Test Mobilenets 1/2, ResNet18
+- Train on [COCO stuff&things](https://github.com/nightrome/cocostuff), transfer to pascal
+- Mobilenet V2 as another FE option
+- Dilation as a parameter.. 
+- Implement a (few) known architecture(s) over the framework:
+    - DeepLab(3?) - barebones w.o. ASPP branches. Test Mobilenets 1/2, ResNet18
     - LinkNet - original ResNet18, then attempt to switch FE?
     - U-net - similarly..
   <br>reproduce published results and start testing and reporting on mix&match effects (e.g. LinkNet + Mobilenet V2).
+- Road datasets - Cityscapes, Mapillary Vistas, ApolloScape 
+- Incorporate more FEs e.g. ShuffleNet - by finding or creating tf-slim implementation
+- Implement more architectures over the framework, upgrade base API if needed for more complex branching 
+  (e.g. ASPP, PSP, ICnet, etc.)
 
 ## References
 Feature extractors:
