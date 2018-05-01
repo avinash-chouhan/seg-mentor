@@ -191,19 +191,19 @@ Some flip and strech augmentations were applied...
 
 ### Baseline FCN Results
 
-| Net name      | GOPS @FHD        | Params (*1e6)  | Pascal <br>mIoU %  |
+| Net name      | GOPS @512pxl        | Params (*1e6)  | Pascal <br>mIoU %  |
 | ------------- |:-------------:| -----:  | ---------------: |
-| VGG16 - FCN16 [ts1](#ts1) (**) |   ~840         |  ~135    | **66.5**               |
-| VGG16 - FCN32 [ts1](#ts1) (***) |   ~840         |  ~135    | **65.5**               |
-| Inception V1 - FCN16 [ts1](#ts1)  |   62.3         |  5.85   | **63.7**               |
-| Inception V1 - FCN32 [ts1](#ts1)  |   62.1         |  5.83    | **62.0**               |
-| ResNet_v1_18 - FCN16 [ts1](#ts1)   |   72.5       |  10.91    | **60.4**           |
-| ResNet_v1_18 - FCN32 [ts1](#ts1)   |   72.4         |  10.9    | **59.5**           |
-| MobileNet V1 - FCN16 [ts1](#ts1)   |   22.7         | 3.12  | **57.6**            |
-| MobileNet V1 - FCN32 [ts1](#ts1)   |   22.5         | 3.1   | **55.5**            |
+| VGG16 - FCN16 [ts1](#ts1) (**) |   ~92         |  ~135    | **66.5**               |
+| VGG16 - FCN32 [ts1](#ts1) (***) |   ~92        |  ~135    | **65.5**               |
+| Inception V1 - FCN16 [ts1](#ts1)  |   8.5        |  6.04   | **63.7**               |
+| Inception V1 - FCN32 [ts1](#ts1)  |   8.4        |  6.02    | **62.0**               |
+| ResNet_v1_18 - FCN16 [ts1](#ts1)   |   9.6       |  10.91    | **60.4**           |
+| ResNet_v1_18 - FCN32 [ts1](#ts1)   |   9.5         |  10.9    | **59.5**           |
+| MobileNet V1 - FCN16 [ts1](#ts1)   |   2.9         | 3.12  | **57.6**            |
+| MobileNet V1 - FCN32 [ts1](#ts1)   |   2.8         | 3.1   | **55.5**            |
 | MobileNet V2  | coming        | soon    | (hopefully)      |
 
-#### ts1 :
+#### ts1
 (training schedule 1): <br>
 Adam (std.), LR=3e-4, /=10@15,30ep, bs=16, ~40 epochs.
 
