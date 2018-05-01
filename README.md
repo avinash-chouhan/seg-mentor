@@ -15,7 +15,7 @@ to **tf-slim-based flexible semantic segmentation framework**,
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/ResNet18_Apr02_HorseRider1.png" width="90%" height="90%"><br><br>
 </div>
 Semantic segmentation is an extremely important part of upcoming ASSS (Autonomous Street Smarts Systems) :),
-<br> .e.g. tough parking necessitating out-of-the-box thinking, s.t. XY ortho-bbox object-detectors just don't cut it (multiple puns intended :) :
+<br> .e.g. for tough parking situations calling for out-of-the-box thinking, for which a vision solution based solely on XY ortho-bbox object-detectors just won't cut it (multiple puns intended :) :
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
 </div>
@@ -124,7 +124,7 @@ Don't be shy and kill the process (find pid by ```ps aux | grep fcn_train```)
     1. If in doubt re convergence (or robusteness in general), run with ```--afteriter X```
 to test an intermediate checkpoint after X batches (check out your options by ```ls tmp/<THIS-TRAIN-DIR>```).
     1. Get a feeling for what it means by visualizing results, rerunning with ```--vizstep 1```.
-    1. Segment a specific image of your fancy with ```--singleimagepath```
+    1. Segment a specific image of your fancy with ```--singleimagepath``` or a movie with ```--movie```
 
 
 1. **Customize** - check out ```fcn_train.py``` cli options, train other net(s) with modded process, e.g.:
@@ -162,6 +162,17 @@ the subclasses should implement (aka 'override') the decoding blocks as defined 
 
 Note that if you choose the red script across the decoder blocks, you get the original FCN.
 This is what's implemented in the ```FcnArch``` class, provided as the baseline example of the ```BaseFcnArch``` interface.
+
+Switching feature extractor (FE) is done **without code change among the currently supported ones** (VGG, ResNet18/50, Inception_V1 aka googlenet, Mobilenet_V1, ...). I can't commit to having this sentence updated, so just check out the dictionary in top of ```fcn_arch.py```. **Adding support for another FE** necessitates an incremental change in the dict and similar places (sure u can figure it out), AND a modification of the net in the sister repo (fork of slim-models) s.t. the net func signature is ```logits = net(images, ..., base_only=False, **kwargs)``` (the new part is after ...), 
+and in the body of the function you do :
+```
+...
+if base_only:
+  return net, end_points
+...
+```
+between feature extracting stage and global-pool/fully-connected head. 
+<br>Ok, just check it out in the nets already in game:)
 
 ## Results and Discussion
 
@@ -289,16 +300,16 @@ Implementing these and more in the framework defined here is one of the next ste
 ## Future Work
  ***Contributions Welcome! :)***
 
-- Train on [COCO stuff&things](https://github.com/nightrome/cocostuff), transfer to pascal
-- Mobilenet V2 as another FE option
 - Dilation as a parameter.. 
+- Incorporate more FEs - both those in slim-models, s.a. Mobilenet_V2, NASnet and others, e.g. ShuffleNet - by bringing/creating a tf-slim implementation into our slim-models fork.
+- Train on [COCO stuff&things](https://github.com/nightrome/cocostuff), transfer to pascal.. 
+- Road datasets - Cityscapes, Mapillary Vistas, ApolloScape.. check out cross-transfer..
 - Implement a (few) known architecture(s) over the framework:
     - DeepLab(3?) - barebones w.o. ASPP branches. Test Mobilenets 1/2, ResNet18
     - LinkNet - original ResNet18, then attempt to switch FE?
     - U-net - similarly..
   <br>reproduce published results and start testing and reporting on mix&match effects (e.g. LinkNet + Mobilenet V2).
-- Road datasets - Cityscapes, Mapillary Vistas, ApolloScape 
-- Incorporate more FEs e.g. ShuffleNet - by finding or creating tf-slim implementation
+- Multiple-scale (aka pyramid) testing, robustness exploration.
 - Implement more architectures over the framework, upgrade base API if needed for more complex branching 
   (e.g. ASPP, PSP, ICnet, etc.)
 
