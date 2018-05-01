@@ -157,7 +157,7 @@ which should be subclassed for each architecture;
 the subclasses should implement (aka 'override') the decoding blocks as defined in following drawing:
 
 <div align="center">
-<img src="https://github.com/hailotech/hailo-segmentation/blob/master/images/FCNgen.png" width="70%" height="70%"><br><br>
+<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/FCNgen.png" width="70%" height="70%"><br><br>
 </div>
 
 Note that if you choose the red script across the decoder blocks, you get the original FCN.
