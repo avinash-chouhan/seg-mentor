@@ -231,7 +231,7 @@ The resources needed by additional bilinear interpolations (for upsampling) are 
 
 #### Technical issues:
 * Monitor vs. final result - we monitor *test-mIoU* estimate during training by running the net on a quarter (1/4) of the validation set; the resulting signal reflects both data(sub)set and param-point variability in its noise, thus giving a kinda-realistic rough estimate of the error bars on the value.
- <br> However, we reused the same computational graph as the train, switching between train/val data feed - leveraging the  *switching iterator* of TF ```Datasets``` (probably designed for this exact purpose). This is different from what happens at real inference time, since the BatchNorm/Dropout use training settings (randomly zeroing activations / using this-batch-stats instead of freezed moving-average mean&std, respectively), and gives lower results, with the delta decreasing with batch size. 
+ <br> However, we reused the same computational graph as the train, switching between train/val data feed - leveraging the  *[feedable iterator](https://www.tensorflow.org/programmers_guide/datasets)* of TF ```Datasets``` (probably designed for this exact purpose). This is different from what happens at real inference time, since the BatchNorm/Dropout use training settings (randomly zeroing activations / using this-batch-stats instead of freezed moving-average mean&std, respectively), and gives lower results, with the delta decreasing with batch size. 
  <br>We may fix this in the future but currently we feel that it serves the purpose of monitoring - relative comparison, detect flattening etc. and in fact may be be an opportunity for insights..
 
 #### Stuff we tried and didn't give improvement
@@ -286,7 +286,7 @@ Implementing these and more in the framework defined here is one of the next ste
 
 - Train on [COCO stuff&things](https://github.com/nightrome/cocostuff), transfer to pascal
 - Mobilenet V2 as another FE option
-- Dilation as a parameter..
+- Dilation as a parameter.. 
 - Implement a (few) known architecture(s) over the framework:
     - DeepLab(3?) - barebones w.o. ASPP branches. Test Mobilenets 1/2, ResNet18
     - LinkNet - original ResNet18, then attempt to switch FE?
