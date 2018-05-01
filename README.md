@@ -12,11 +12,11 @@ to **tf-slim-based flexible semantic segmentation framework**,
 <br>(and some code giants on whose shoulders we stand, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
 
 <div align="center">
-<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/ResNet18_Apr02_HorseRider1.png" width="70%" height="70%"><br><br>
+<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/ResNet18_Apr02_HorseRider1.png" width="90%" height="90%"><br><br>
 </div>
 
 <div align="center">
-![Alt Text](https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif)
+<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="90%" height="90%"><br><br>
 </div>
 
 We embrace Tensorflow and specifically tf-slim API and classification nets implementation,
