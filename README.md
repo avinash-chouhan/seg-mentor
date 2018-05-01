@@ -14,7 +14,8 @@ to **tf-slim-based flexible semantic segmentation framework**,
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/ResNet18_Apr02_HorseRider1.png" width="90%" height="90%"><br><br>
 </div>
-
+Semantic segmentation is an extremely important part of upcoming ASSS (Autonomous Street Smarts Systems) :),
+<br> .e.g. tough parking necessitating out-of-the-box thinking, s.t. XY ortho-bbox object-detectors just don't cut it (multiple puns intended :) :
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
 </div>
