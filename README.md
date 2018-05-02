@@ -15,13 +15,22 @@ We're making the world a better place by offering a modular sandbox in which you
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/ResNet18_Apr02_HorseRider1.png" width="90%" height="90%"><br><br>
 </div>
-Semantic segmentation is an extremely important task for machice vision in genral and autonomus vehicles in particular. How important? 
-<br> Well some tasks just call for out-of-the-box thinking, in which a vision solution based solely on XY ortho-bbox object-detectors just won't cut it (multiple puns intended :) :
+
+```
+Left - original image || Center - segmented with ResNet18-FCN || Right - ground truth segmentation 
+```
+
+Semantic segmentation is a critical task in machine vision apps in general and street scene understanding in particular.
+<br> Because you know, sometimes perception based solely on XY ortho-b-box object-detectors just won't cut it, and you need to percept & think outside of the box: 
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
 </div>
 
-We embrace Tensorflow's tf-slim API and classification nets implementation,
+```
+purple shading - cars (segmented with GoogleNet-FCN)
+```
+
+We embrace Tensorflow and specifically tf-slim API and classification nets implementation,
 <br>and offer a modular code supporting the classic FCN and various enhancements on top of it:
  - Switching the base FE (feature extractor) out of imagenet-pretrained [slim-models selection](https://github.com/tensorflow/models/tree/master/research/slim)
  - Switching to more sophisticated decoding blocks (beyond s16, s8 skip connections and upsample)
