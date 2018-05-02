@@ -80,13 +80,14 @@ def test(image, annotation, predictions, checkpoint, iterator,
         for i in xrange(num_images):
             # note a bit different run for visualization vs. evaluation purposes...
             if (i+1) % X_as_in_visualize_each_Xth_seg == 0:
+                # TODO implement as a default callback..
                 image_np, annotation_np, pred_np, _, conf_tmp = \
                     sess.run([image, annotation, predictions, update_op, conf_op])
                 visualize(image_np, annotation_np, pred_np.squeeze())
             else:
                 _eval_res = sess.run([conf_op, update_op]+more_tensors_to_eval)
                 conf_tmp = _eval_res[0]
-                if callback: # a placeholder to
+                if callback: # a placeholder to inject more functionality w.o. changing this func
                     callback(_eval_res[2:])
             conf_mtx += conf_tmp
 
@@ -148,23 +149,6 @@ if __name__ == "__main__":
     parser.add_argument('--traindir', type=str,
                         help='the folder in which the results of the training run reside..',
                         default='')
-    # parser.add_argument('--basenet', dest='basenet', type=str,
-    #                     help='the base feature extractor',
-    #                     default='mobilenet')
-    #
-    # parser.add_argument('--fcn16', type=bool,
-    #                     help='if True add the fcn16 skip connection',
-    #                     default=False)
-    # parser.add_argument('--extended_arch', dest='extended_arch', type=bool,
-    #                     help='if True use extended architecture',
-    #                     default=False)
-    # parser.add_argument('--checkpoint', dest='checkpoint', type=str,
-    #                     help='path to checkpoint of the FCN',
-    #                     default="tmp/resnet_v1_18_dynDiffLR_bs16/fcn32.ckpt")
-    # parser.add_argument('--pixels', dest='pixels', type=int,
-    #                     help='if not zero, normalize (interpolate&crop) image (and annotation)'
-    #                          ' to pixels X pixels before inference',
-    #                     default=0)
     parser.add_argument('--vizstep', type=int,
                         help='set to X < size(val.set) to draw visualization each X images',
                         default=5555)
