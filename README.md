@@ -21,7 +21,7 @@ Left - original image || Center - segmented with ResNet18-FCN || Right - ground 
 ```
 
 Semantic segmentation is a critical task in machine vision apps in general and street scene understanding in particular.
-<br> Because you know, sometimes perception based solely on XY ortho-b-box object-detectors just won't cut it, and you need to percept & think outside of the box: 
+<br> Because you know, sometimes perception based solely on XY ortho-b-box object-detectors just won't cut it, and you need to ...(cringe alert) think outside of the box: 
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
 </div>
