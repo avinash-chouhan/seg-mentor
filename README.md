@@ -144,7 +144,7 @@ to test an intermediate checkpoint after X batches (check out your options by ``
     ```
     python fcn_train.py --basenet=resnet_v1_18 --batch_size=20 --learnrate=3e-4 --decaylr=True &
     ```
-Think of interesting variations to test, convince your boss/supervisor to buy you 1K gpu-hours on amazon, run hyperparameter scan, reach cool insights.. ..publish, credit our help:)
+    Think of interesting variations to test, convince your boss/supervisor to buy you 1K gpu-hours on amazon, run hyperparameter scan, reach cool insights.. ..publish, credit our help:)
 1. **Architect** - dive into ```fcn_arch.py``` code, check out the ```BaseFcnArch``` interface, write your own subclass, train you own brand new net - with decoding path augmented and modified to your fancy, reach record-breaking mIoU reflecting your unique genius.. ..publish, credit our help:)
 1. **Develop** - read ***future work*** below and lend a hand:)
 1. [...](http://knowyourmeme.com/memes/profit)
