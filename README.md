@@ -140,12 +140,14 @@ to test an intermediate checkpoint after X batches (check out your options by ``
     1. Get a feeling for what it means by visualizing results, rerunning with ```--vizstep 1```.
     1. Segment a specific image of your fancy with ```--singleimagepath``` or a movie with ```--movie```
 
-
-1. **Customize** - check out ```fcn_train.py``` cli options, train other net(s) with modded process, e.g.:
+1. **Tinker** - check out ```fcn_train.py``` cli options, train other net(s) with modded process, e.g.:
     ```
     python fcn_train.py --basenet=resnet_v1_18 --batch_size=20 --learnrate=3e-4 --decaylr=True &
     ```
-1. **Dive** into the code, check out the ```BaseFcnArch``` interface, write your own subclass, and train you own brand new net with modified decoding path.
+Think of interesting variations to test, convince your boss/supervisor to buy you 1K gpu-hours on amazon, run hyperparameter scan, reach cool insights.. ..publish, credit our help:)
+1. **Architect** - dive into ```fcn_arch.py``` code, check out the ```BaseFcnArch``` interface, write your own subclass, train you own brand new net - with decoding path augmented and modified to your fancy, reach record-breaking mIoU reflecting your unique genius.. ..publish, credit our help:)
+1. **Develop** - read ***future work*** below and lend a hand:)
+1. [...](http://knowyourmeme.com/memes/profit)
 1. [...](http://knowyourmeme.com/memes/profit)
 1. **[Profit!!!](http://knowyourmeme.com/memes/profit)**
 
