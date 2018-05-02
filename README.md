@@ -75,13 +75,17 @@ In addition, discussion of practical issues are hard to come by. E.g. how to mon
 As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
 
 ## Usage
-1. **Steal** a PC with GPU and tensorflow-gpu 1.3 installed.
-1. **Clone** side-by-side this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) :
+
+1. **Steal** a linux PC with GPU (+cuda drivers, cudnn, etc.), create python 2.7 virtualenv, activate and [install tensorflow-gpu](https://www.tensorflow.org/install/install_linux) (1.2 and up) inside. 
+<br> Run ```pip intstall -r requirements``` (to minimize need to *pip install* stuff when imports fail later).
+1. **Clone** this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) side-by-side, e.g. :
     ```bash
     git clone https://github.com/hailotech/hailo-segmentation
     git clone https://github.com/hailotech/tf-models-hailofork
     ```
-    (to let seg net builder code call into slim FEs implementations in ```models/research/slim/nets```)
+    (to let fcn net builder code call into slim FEs implementations in ```models/research/slim/nets```)
+
+1. **Play** with segmentation using with our pre-trained models, by downloading them from *releases*, and jumping to **test** below. Or, just [***jupyter***](http://jupyter.org/install) the #play-with-me.ipynb notebook..).
 
 1. **Download (&extract..)** :
     1. Checkpoints for ImageNet-pretrained slim FE checkpoints using links in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)
