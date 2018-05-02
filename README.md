@@ -16,7 +16,7 @@ to **tf-slim-based flexible semantic segmentation framework**,
 </div>
 
 ```
-Left - original image || Center - segmented with FCN+GoogleNet || Right - ground truth segmentation 
+Left - original image || Center - segmented with ResNet18-FCN || Right - ground truth segmentation 
 ```
 
 Semantic segmentation is a critical task in machine vision apps in general and street scene understanding in particular.
@@ -26,7 +26,7 @@ Semantic segmentation is a critical task in machine vision apps in general and s
 </div>
 
 ```
-purple shading - cars..
+purple shading - cars (segmented with GoogleNet-FCN)
 ```
 
 We embrace Tensorflow and specifically tf-slim API and classification nets implementation,
