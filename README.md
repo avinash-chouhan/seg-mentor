@@ -3,14 +3,32 @@
 - [Contribution](#contribution)
 - [MetaArchitecture](#architecture)
 - [Usage](#usage)
-- [Results](#results)
-- [Discussion](#results)
+- [Results & Discussion](#results-and-discussion)
 - [Previous, similar and future work](#previous-and-similar-work)
 
 ## WELCOME!
-to **tf-slim-based flexible semantic segmentation framework**, 
-<br>brought to you by the jovial HailoTech ML team. 
-<br>(and some giants on whose shoulders we stand, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
+to **tf-slim-segmentation** - a flexible semantic segmentation framework built in tensorflow.
+We're making the world a better place by offering a modular sandbox in which you can tinker with semantic segmentation networks.
+ 
+<br>The work here happily relies on some great open-source projects, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below
+
+<div align="center">
+<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/ResNet18_Apr02_HorseRider1.png" width="90%" height="90%"><br><br>
+</div>
+
+```
+Left - original image || Center - segmented with ResNet18-FCN || Right - ground truth segmentation 
+```
+
+Semantic segmentation is a critical task in machine vision apps in general and street scene understanding in particular.
+<br> Because you know, sometimes perception based solely on XY ortho-b-box object-detectors just won't cut it, and you need to ...(cringe alert) think outside of the box: 
+<div align="center">
+<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
+</div>
+
+```
+purple shading - cars (segmented with GoogleNet-FCN)
+```
 
 We embrace Tensorflow and specifically tf-slim API and classification nets implementation,
 <br>and offer a modular code supporting the classic FCN and various enhancements on top of it:
@@ -57,13 +75,17 @@ In addition, discussion of practical issues are hard to come by. E.g. how to mon
 As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
 
 ## Usage
-1. **Steal** a PC with GPU and tensorflow-gpu 1.3 installed.
-1. **Clone** side-by-side this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) :
+
+1. **Steal** a linux PC with GPU (+cuda drivers, cudnn, etc.), create python 2.7 virtualenv, activate and [install tensorflow-gpu](https://www.tensorflow.org/install/install_linux) (1.2 and up) inside. 
+<br> Run ```pip intstall -r requirements``` (to minimize need to *pip install* stuff when imports fail later).
+1. **Clone** this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) side-by-side, e.g. :
     ```bash
     git clone https://github.com/hailotech/hailo-segmentation
     git clone https://github.com/hailotech/tf-models-hailofork
     ```
-    (to let seg net builder code call into slim FEs implementations in ```models/research/slim/nets```)
+    (to let fcn net builder code call into slim FEs implementations in ```models/research/slim/nets```)
+
+1. **Play** with segmentation using with our pre-trained models, by downloading them from *releases*, and jumping to **test** below. Or, just [***jupyter***](http://jupyter.org/install) the #play-with-me.ipynb notebook..).
 
 1. **Download (&extract..)** :
     1. Checkpoints for ImageNet-pretrained slim FE checkpoints using links in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)
@@ -110,12 +132,13 @@ using only 1st GPU if you're filthy rich and got a few of 'em.
 <br> leveraging your second GPU (first  one is busy training..), as you can't wait... <br>
 Now seriously, give it a **20-30 hours** of single-GPU training
 (use tensorboard to see *test-mIoU* flattening), then test and behold the converged IoU results.
+<br> Note: the mIoU of full test may surprise you with ~+5% discrepancy w.r.t the tensorboard plot. see Discussion below.
 Don't be shy and kill the process (find pid by ```ps aux | grep fcn_train```)
  if it burns your precious GPU cycles for no further improvements.
     1. If in doubt re convergence (or robusteness in general), run with ```--afteriter X```
 to test an intermediate checkpoint after X batches (check out your options by ```ls tmp/<THIS-TRAIN-DIR>```).
     1. Get a feeling for what it means by visualizing results, rerunning with ```--vizstep 1```.
-    1. Segment a specific image of your fancy with ```--singleimagepath```
+    1. Segment a specific image of your fancy with ```--singleimagepath``` or a movie with ```--movie```
 
 
 1. **Customize** - check out ```fcn_train.py``` cli options, train other net(s) with modded process, e.g.:
@@ -148,13 +171,24 @@ which should be subclassed for each architecture;
 the subclasses should implement (aka 'override') the decoding blocks as defined in following drawing:
 
 <div align="center">
-<img src="https://github.com/hailotech/hailo-segmentation/blob/master/images/FCNgen.png" width="70%" height="70%"><br><br>
+<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/FCNgen.png" width="85%" height="85%"><br><br>
 </div>
 
 Note that if you choose the red script across the decoder blocks, you get the original FCN.
 This is what's implemented in the ```FcnArch``` class, provided as the baseline example of the ```BaseFcnArch``` interface.
 
-## Results
+Switching feature extractor (FE) is done **without code change among the currently supported ones** (VGG, ResNet18/50, Inception_V1 aka googlenet, Mobilenet_V1, ...). I can't commit to having this sentence updated, so just check out the dictionary in top of ```fcn_arch.py```. **Adding support for another FE** necessitates an incremental change in the dict and similar places (sure u can figure it out), AND a modification of the net in the sister repo (fork of slim-models) s.t. the net func signature is ```logits = net(images, ..., base_only=False, **kwargs)``` (the new part is after ...), 
+and in the body of the function you do :
+```
+...
+if base_only:
+  return net, end_points
+...
+```
+between feature extracting stage and global-pool/fully-connected head. 
+<br>Ok, just check it out in the nets already in game:)
+
+## Results and Discussion
 
 We report on results of train+test with the following breakup:
 - train with all SBD annotations (11K images)
@@ -187,56 +221,56 @@ Some flip and strech augmentations were applied...
 
 ### Baseline FCN Results
 
-| Net name      | GOPS @FHD        | Params (*1e6)  | Pascal <br>mIoU %  |
+| Net name      | GOPS (512x512 img)      | Params (*1e6)  | Pascal <br>mIoU %  |
 | ------------- |:-------------:| -----:  | ---------------: |
-| VGG16 - FCN16 [^ts1] (**) |   ~840         |  ~135    | ...               |
-| VGG16 - FCN32 [^ts1] (***) |   ~840         |  ~135    | **65.4**               |
-| Inception V1 - FCN16 [^ts1]  |   62.3         |  5.85   | **63.7**               |
-| Inception V1 - FCN32 [^ts1]  |   62.1         |  5.83    | ...               |
-| ResNet_v1_18 - FCN16 [^ts1]   |   72.5       |  10.91    | **60.4**           |
-| ResNet_v1_18 - FCN32 [^ts1]   |   72.4         |  10.9    | **59.5**           |
-| MobileNet V1 - FCN16 [^ts1]   |   22.7         | 3.12  | **57.6**            |
-| MobileNet V1 - FCN32 [^ts1]   |   22.5         | 3.1   | **55.5**            |
+| VGG16 - FCN16 [ts1](#ts1) (**) |   ~92         |  ~135    | **66.5**               |
+| VGG16 - FCN32 [ts1](#ts1) (***) |   ~92        |  ~135    | **65.5**               |
+| Inception V1 - FCN16 [ts1](#ts1)  |   8.5        |  6.04   | **63.7**               |
+| Inception V1 - FCN32 [ts1](#ts1)  |   8.4        |  6.02    | **62.0**               |
+| ResNet_v1_18 - FCN16 [ts1](#ts1)   |   9.6       |  10.91    | **60.4**           |
+| ResNet_v1_18 - FCN32 [ts1](#ts1)   |   9.5         |  10.9    | **59.5**           |
+| MobileNet V1 - FCN16 [ts1](#ts1)   |   2.9         | 3.12  | **57.6**            |
+| MobileNet V1 - FCN32 [ts1](#ts1)   |   2.8         | 3.1   | **55.5**            |
 | MobileNet V2  | coming        | soon    | (hopefully)      |
 
-[ts1]: Adam (std.), LR=3e-4, /=10@15,30ep, bs=16, ~40 epochs.
+#### ts1
+(training schedule 1): <br>
+Adam (std.), LR=3e-4, /=10@15,30ep, bs=16, ~40 epochs.
 
 (* *): LR = 1e-4, const.
 ( * * *): LR(ini.) = 3e-5
 
-[ts2]: ..coming soon..
+##### ts2 
+..coming soon..
+
+#### Discussion
 
 So VGG is significantly better than others, but it's impractical for real-time deployments,
  blowing both memory- and computations- (at high resolutions) requirements.
 
-The inceptionv-v1 comes close to VGG - but not surpassing as apparently proven possible on CityScapes (see [RealTime-FCN](http://tuprints.ulb.tu-darmstadt.de/6893/1/20171023_dissertationMariusCordts.pdf#page=115) ).
+The inception-v1 comes close to VGG - but not surpassing as apparently proven possible on CityScapes (see [RealTime-FCN](http://tuprints.ulb.tu-darmstadt.de/6893/1/20171023_dissertationMariusCordts.pdf#page=115) ).
 
-The resources needed by additional bilinear interpolations are negligible, as well as those for the FCN16 skip-connection;
+The FCN16 skip-connection generally gives a +1-2% mIoU improvement, 
+ which is non-negligible but smaller than for original FCN as reported in paper (Adam is good for FCN32 health?), 
+ and in fact not much larger than the noise (w.r.t to test (sub)set choice, and exact params checkpoint) which we estimate to be ~0.5-1% (see tensorboard plots). So we have to conclude that the skip-connection contribution is **minor** - as long as it's used if used as simple linear addition after classification layer contracting #channels to 21 (classes)... 
+
+The resources needed by additional bilinear interpolations (for upsampling) are negligible, as well as those for the FCN16 skip-connection; so the ops and params are quite similar as for original imagenet classifiers, up to removal of final 1000-classes layer (-) and resolution change (+).
 <br>Note however that params&ops don't tell the whole story, and there are HW-architecture-dependent issues.
 <br>For example, in dataflow architectures, special resource allocation is needed for buffering the skip connections.
  <br>That's the reason we don't care to train FCN8 variants since returns are negligible w.r.t the costs.
 
-### FCN + wide-context results
-...Coming soon...
+#### Technical issues:
+* Monitor vs. final result - we monitor *test-mIoU* estimate during training by running the net on a quarter (1/4) of the validation set; the resulting signal reflects both data(sub)set and param-point variability in its noise, thus giving a kinda-realistic rough estimate of the error bars on the value.
+ <br> However, we reused the same computational graph as the train, switching between train/val data feed - leveraging the  *[feedable iterator](https://www.tensorflow.org/programmers_guide/datasets)* of TF ```Datasets``` (probably designed for this exact purpose). This is different from what happens at real inference time, since the BatchNorm/Dropout use training settings (randomly zeroing activations / using this-batch-stats instead of freezed moving-average mean&std, respectively), and gives lower results, with the delta decreasing with batch size. 
+ <br>We may fix this in the future but currently we feel that it serves the purpose of monitoring - relative comparison, detect flattening etc. and in fact may be be an opportunity for insights..
 
-#### Examples
-<div align="center">
-<img src="https://github.com/hailotech/hailo-segmentation/blob/master/images/ResNet18_Apr02_HorseRider1.png" width="70%" height="70%"><br><br>
-</div>
-
-## Discussion
-
-### Basic Training
-..See [Results](#results) for some discussion of training hyperparams and schedules that worked,
-and sensitivites therein.
-
-#### Stuff we tried and didn't give improvement
+#### Stuff we tried and didn't show improvement
 Note these are still coded and can be enabled via command-line params.
 You're invited to get inspired and retry (possibly adding your ideas on top..)
 
 - Modified schedules that would work better for some FEs but not others - some signs of effect but nothing drastic..
 
-- Differential learning rate - large (X constant factor) for the "new" layers vs. the pre-trained.
+- Differential learning rate - large (X constant factor) for the "new" (decoder) layers vs. the pre-trained (FE/encoder).
 
 - "Heavy" (high-momentum) optimizer, as prescribed in [FCN paper](https://arxiv.org/pdf/1605.06211.pdf).
   We tried to reproduce it by increasing the ```beta1``` parameter of Adam (analogous to SGD's momentum),
@@ -246,49 +280,56 @@ Note that all params mentioned are involved in how gradients computed with diffe
 <br> We couldn't hit a low hanging fruit with the few runs we've made -
 but that doesn't mean some metric improvement (and insight on the side) couldn't be found with a disciplined parameter scan :)
 
-Contributions welcome! :)
 
-### FCN + wide-context discussion
+Contributions are welcome! :)
+
+### FCN + wide-context results
 ...Coming soon...
 
+#### Discussion 
+...Coming soon...
 
 ## Previous and similar work
-Big chunks of our code are borrowed from Daniil Pakhomov's a little bit dated [tf-image-segmentation](https://github.com/warmspringwinds/tf-image-segmentation]) repo.
-especially in the ```/utils```  package.
+Some healthy chunks of our code are borrowed from Daniil Pakhomov's nice (if a bit dated) [tf-image-segmentation](https://github.com/warmspringwinds/tf-image-segmentation]) repo.
+mostly those ```/utils```  package.
 
 Beyond those, it was very useful as a headstart; we went far beyond a fork though, 
- since we felt a better design will yield a repo more widely and deeply useful.
-We hope the current repo will be useful for development and research projects without serious redesign, 
+ since we felt a better and up-to-date design will yield a repo more widely and deeply useful.
+ We hope this repo can be similarly (or more..) useful as a fast headstart for people getting into CNN Semantic Segmentation in 2018 as Daniil's was in 2016. If it does the trick for you, please do credit our contribution :)
 
 An up-to-date work similar to ours is [RTSeg](https://github.com/MSiam/TFSegmentation) (see also ref. to paper below);
 Their 'SkipNet' architecture is in fact an FCN, 
   so when they marry that to ResNet18 and Mobilenet_V1 it's similar to corresponding subset of our work. 
-<br> They however use Cityscapes, which takes them more towards dataset-specific issues, e.g. additional coarse labels incorporation, etc. They also differ a bit in approach to modularization and software design, hence our separate project.
+<br> They however use Cityscapes, which takes them more towards dataset-specific issues, e.g. leveragin additional coarse labels, etc. They also differ a bit in approach to modularization and software design, hence our separate project.
 
 Many nets making progress towards high-performance high-resolution real-time segmentation were published since just an year ago, let's mention a few milestones that feel seminal to us: 
 
 - [RealTime-FCN](http://tuprints.ulb.tu-darmstadt.de/6893/1/20171023_dissertationMariusCordts.pdf#page=115) - created as baseline for CityScapes by its main curator. Inception-V1 based, surpassing VGG, then improving to >70% mIoU with coarse labels and architecture augmentation ("context modules").
    
 - [LinkNet](https://codeac29.github.io/projects/linknet/) - >70% mIoU on CityScapes, ResNet-18 based.
-- [MobilenetV2 (+stripped DeepLabV3)](https://arxiv.org/pdf/1801.04381.pdf), see Table7 - >70% mIoU on CityScapes with ~2M params, ~3Gops. As efficient as it gets...
+- [MobilenetV2 (+stripped DeepLabV3)](https://arxiv.org/pdf/1801.04381.pdf), see Table7 - >70% mIoU on both CityScapes and Pascal with ~2M params, ~3Gops (@512pxl). Seems to be SoA in efficiency right now.. Note however that they also pre-train on COCO, and don't report an ablation study of the contribution of this (much bigger than pascal & cityscapes) dataset.
 
 Implementing these and more in the framework defined here is one of the next steps for this repo...
 
+## Contacts (maintainers)
+Alex Finkelstein ([github](https://github.com/falex-ml)) & Mark Grobman ([github](https://github.com/grobman)) 
+<br>[Hailo Technologies](http://www.hailotech.com/) ([github](https://github.com/hailotech))
+
 ## Future Work
+ ***Contributions Welcome! :)***
 
-### Coming soon:
-- COCO training
-- Mobilenet V2
-- Dilation
-
-### Contributions welcome!
-- Road datasets - Cityscapes, Mapillary Vistas, ApolloScape  
-- Incorporate more FEs e.g. ShuffleNet - by finding or creating tf-slim implementation
-- implement some known architectures over the framework:
-    - DeepLab(3?) - barebones w.o. ASPP and other bells&whistles. Test Mobilenets 1/2, ResNet18
+- Dilation as a parameter.. 
+- Incorporate more FEs - both those in slim-models, s.a. Mobilenet_V2, NASnet and others, e.g. ShuffleNet - by bringing/creating a tf-slim implementation into our slim-models fork.
+- Train on [COCO stuff&things](https://github.com/nightrome/cocostuff), transfer to pascal.. 
+- Road datasets - Cityscapes, Mapillary Vistas, ApolloScape.. check out cross-transfer..
+- Implement a (few) known architecture(s) over the framework:
+    - DeepLab(3?) - barebones w.o. ASPP branches. Test Mobilenets 1/2, ResNet18
     - LinkNet - original ResNet18, then attempt to switch FE?
     - U-net - similarly..
   <br>reproduce published results and start testing and reporting on mix&match effects (e.g. LinkNet + Mobilenet V2).
+- Multiple-scale (aka pyramid) testing, robustness exploration.
+- Implement more architectures over the framework, upgrade base API if needed for more complex branching 
+  (e.g. ASPP, PSP, ICnet, etc.)
 
 ## References
 Feature extractors:
@@ -305,7 +346,7 @@ FCN based Semantic Segmentation
 1. ['RTSEG: Real-time semantic segmentation comparative study', Mar 2018](https://arxiv.org/pdf/1803.02758.pdf)
 1. [LinkNet: Exploiting Encoder Representations for Efficient Semantic Segmentation, Chaurasia et. al., 2017](https://arxiv.org/abs/1707.03718)
 
-## Appendix A: Dataset Rants
+## Appendix B: Dataset Rants
 
 If you have an hour, do read ```utils/pascal_voc.py``` whose author should be lauded.
 (be it Daniil of http://warmspringwinds.github.io/ or one of his spiritual fathers..)
