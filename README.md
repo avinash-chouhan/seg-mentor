@@ -7,17 +7,16 @@
 - [Previous, similar and future work](#previous-and-similar-work)
 
 ## WELCOME!
-to **tf-slim-segmentation** a flexible semantic segmentation framework built in tensorflow.
-We're making the world a better place by offerig a modular sandbox in which you can tinker with semantic segmantaion networks.
-
-<br>This repo is brought to you by the jovial Hailo ML team.    
-<br>(we also happily relied on the some great open-source projects, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
+to **tf-slim-segmentation** - a flexible semantic segmentation framework built in tensorflow.
+We're making the world a better place by offering a modular sandbox in which you can tinker with semantic segmentation networks.
+ 
+<br>The work here happily relies on some great open-source projects, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below
 
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/ResNet18_Apr02_HorseRider1.png" width="90%" height="90%"><br><br>
 </div>
-Semantic segmentation is an extremely important part of upcoming ASSS (Autonomous Street Smarts Systems) :),
-<br> .e.g. for tough parking situations calling for out-of-the-box thinking, for which a vision solution based solely on XY ortho-bbox object-detectors just won't cut it (multiple puns intended :) :
+Semantic segmentation is an extremely important task for machice vision in genral and autonomus vehicles in particular. How important? 
+<br> Well some tasks just call for out-of-the-box thinking, in which a vision solution based solely on XY ortho-bbox object-detectors just won't cut it (multiple puns intended :) :
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
 </div>
