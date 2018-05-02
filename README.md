@@ -85,7 +85,7 @@ As an example project, we report here on some minimal decode-path enhancements (
     ```
     (to let fcn net builder code call into slim FEs implementations in ```models/research/slim/nets```)
 
-1. **Play** with segmentation using with our pre-trained models, by downloading them from *releases*, and jumping to **test** below. Or, just [***jupyter***](http://jupyter.org/install) the #play-with-me.ipynb notebook..).
+1. **Play** with segmentation using with our pre-trained models, by downloading them from *releases*, and jumping to **Test** below. Or, just [***jupyter***](http://jupyter.org/install) the [play-with-me notebook](play-with-me.ipynb )
 
 1. **Download (&extract..)** :
     1. Checkpoints for ImageNet-pretrained slim FE checkpoints using links in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)
