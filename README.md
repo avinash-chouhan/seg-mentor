@@ -8,7 +8,7 @@
 
 ## WELCOME!
 to **tf-slim-based flexible semantic segmentation framework**, 
-<br>brought to you by the jovial HailoTech ML team. 
+<br>brought to you by the jovial Hailo ML team. 
 <br>(and some code giants on whose shoulders we stand, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
 
 <div align="center">
@@ -207,7 +207,7 @@ Some flip and strech augmentations were applied...
 
 ### Baseline FCN Results
 
-| Net name      | GOPS @512pxl        | Params (*1e6)  | Pascal <br>mIoU %  |
+| Net name      | GOPS (512x512 img)      | Params (*1e6)  | Pascal <br>mIoU %  |
 | ------------- |:-------------:| -----:  | ---------------: |
 | VGG16 - FCN16 [ts1](#ts1) (**) |   ~92         |  ~135    | **66.5**               |
 | VGG16 - FCN32 [ts1](#ts1) (***) |   ~92        |  ~135    | **65.5**               |
@@ -234,7 +234,7 @@ Adam (std.), LR=3e-4, /=10@15,30ep, bs=16, ~40 epochs.
 So VGG is significantly better than others, but it's impractical for real-time deployments,
  blowing both memory- and computations- (at high resolutions) requirements.
 
-The inceptionv-v1 comes close to VGG - but not surpassing as apparently proven possible on CityScapes (see [RealTime-FCN](http://tuprints.ulb.tu-darmstadt.de/6893/1/20171023_dissertationMariusCordts.pdf#page=115) ).
+The inception-v1 comes close to VGG - but not surpassing as apparently proven possible on CityScapes (see [RealTime-FCN](http://tuprints.ulb.tu-darmstadt.de/6893/1/20171023_dissertationMariusCordts.pdf#page=115) ).
 
 The FCN16 skip-connection generally gives a +1-2% mIoU improvement, 
  which is non-negligible but smaller than for original FCN as reported in paper (Adam is good for FCN32 health?), 
@@ -250,7 +250,7 @@ The resources needed by additional bilinear interpolations (for upsampling) are 
  <br> However, we reused the same computational graph as the train, switching between train/val data feed - leveraging the  *[feedable iterator](https://www.tensorflow.org/programmers_guide/datasets)* of TF ```Datasets``` (probably designed for this exact purpose). This is different from what happens at real inference time, since the BatchNorm/Dropout use training settings (randomly zeroing activations / using this-batch-stats instead of freezed moving-average mean&std, respectively), and gives lower results, with the delta decreasing with batch size. 
  <br>We may fix this in the future but currently we feel that it serves the purpose of monitoring - relative comparison, detect flattening etc. and in fact may be be an opportunity for insights..
 
-#### Stuff we tried and didn't give improvement
+#### Stuff we tried and didn't show improvement
 Note these are still coded and can be enabled via command-line params.
 You're invited to get inspired and retry (possibly adding your ideas on top..)
 
@@ -276,17 +276,17 @@ Contributions are welcome! :)
 ...Coming soon...
 
 ## Previous and similar work
-Big chunks of our code are borrowed from Daniil Pakhomov's a little bit dated [tf-image-segmentation](https://github.com/warmspringwinds/tf-image-segmentation]) repo.
-especially in the ```/utils```  package.
+Some healthy chunks of our code are borrowed from Daniil Pakhomov's nice (if a bit dated) [tf-image-segmentation](https://github.com/warmspringwinds/tf-image-segmentation]) repo.
+mostly those ```/utils```  package.
 
 Beyond those, it was very useful as a headstart; we went far beyond a fork though, 
- since we felt a better design will yield a repo more widely and deeply useful.
-We hope the current repo will be useful for development and research projects without serious redesign, 
+ since we felt a better and up-to-date design will yield a repo more widely and deeply useful.
+ We hope this repo can be similarly (or more..) useful as a fast headstart for people getting into CNN Semantic Segmentation in 2018 as Daniil's was in 2016. If it does the trick for you, please do credit our contribution :)
 
 An up-to-date work similar to ours is [RTSeg](https://github.com/MSiam/TFSegmentation) (see also ref. to paper below);
 Their 'SkipNet' architecture is in fact an FCN, 
   so when they marry that to ResNet18 and Mobilenet_V1 it's similar to corresponding subset of our work. 
-<br> They however use Cityscapes, which takes them more towards dataset-specific issues, e.g. additional coarse labels incorporation, etc. They also differ a bit in approach to modularization and software design, hence our separate project.
+<br> They however use Cityscapes, which takes them more towards dataset-specific issues, e.g. leveragin additional coarse labels, etc. They also differ a bit in approach to modularization and software design, hence our separate project.
 
 Many nets making progress towards high-performance high-resolution real-time segmentation were published since just an year ago, let's mention a few milestones that feel seminal to us: 
 
