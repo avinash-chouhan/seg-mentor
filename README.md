@@ -328,7 +328,11 @@ FCN based Semantic Segmentation
 1. ['RTSEG: Real-time semantic segmentation comparative study', Mar 2018](https://arxiv.org/pdf/1803.02758.pdf)
 1. [LinkNet: Exploiting Encoder Representations for Efficient Semantic Segmentation, Chaurasia et. al., 2017](https://arxiv.org/abs/1707.03718)
 
-## Appendix A: Dataset Rants
+## Contacts (maintainers)
+Alex Finkelstein ([github](https://github.com/falex-ml)) & Mark Grobman ([github](https://github.com/grobman)) 
+<br>[Hailo Technologies](http://www.hailotech.com/) [github](https://github.com/hailotech).
+
+## Appendix B: Dataset Rants
 
 If you have an hour, do read ```utils/pascal_voc.py``` whose author should be lauded.
 (be it Daniil of http://warmspringwinds.github.io/ or one of his spiritual fathers..)
