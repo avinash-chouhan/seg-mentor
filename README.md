@@ -7,9 +7,11 @@
 - [Previous, similar and future work](#previous-and-similar-work)
 
 ## WELCOME!
-to **tf-slim-based flexible semantic segmentation framework**, 
-<br>brought to you by the jovial Hailo ML team. 
-<br>(and some code giants on whose shoulders we stand, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
+to **tf-slim-segmentation** a flexible semantic segmentation framework built in tensorflow.
+We're making the world a better place by offerig a modular sandbox in which you can tinker with semantic segmantaion networks.
+
+<br>This repo is brought to you by the jovial Hailo ML team.    
+<br>(we also happily relied on the some great open-source projects, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
 
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/ResNet18_Apr02_HorseRider1.png" width="90%" height="90%"><br><br>
@@ -20,7 +22,7 @@ Semantic segmentation is an extremely important part of upcoming ASSS (Autonomou
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
 </div>
 
-We embrace Tensorflow and specifically tf-slim API and classification nets implementation,
+We embrace Tensorflow's tf-slim API and classification nets implementation,
 <br>and offer a modular code supporting the classic FCN and various enhancements on top of it:
  - Switching the base FE (feature extractor) out of imagenet-pretrained [slim-models selection](https://github.com/tensorflow/models/tree/master/research/slim)
  - Switching to more sophisticated decoding blocks (beyond s16, s8 skip connections and upsample)
