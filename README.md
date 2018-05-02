@@ -7,9 +7,10 @@
 - [Previous, similar and future work](#previous-and-similar-work)
 
 ## WELCOME!
-to **tf-slim-based flexible semantic segmentation framework**, 
-<br>brought to you by the jovial Hailo ML team. 
-<br>(and some code giants on whose shoulders we stand, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below)
+to **tf-slim-segmentation** - a flexible semantic segmentation framework built in tensorflow.
+We're making the world a better place by offering a modular sandbox in which you can tinker with semantic segmentation networks.
+ 
+<br>The work here happily relies on some great open-source projects, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below
 
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/ResNet18_Apr02_HorseRider1.png" width="90%" height="90%"><br><br>
@@ -20,7 +21,7 @@ Left - original image || Center - segmented with ResNet18-FCN || Right - ground 
 ```
 
 Semantic segmentation is a critical task in machine vision apps in general and street scene understanding in particular.
-<br> Because you know, sometimes perception based solely on XY ortho-b-box object-detectors just won't cut it, and you need to percept & think outside of the box: 
+<br> Because you know, sometimes perception based solely on XY ortho-b-box object-detectors just won't cut it, and you need to ...(cringe alert) think outside of the box: 
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
 </div>
@@ -74,13 +75,17 @@ In addition, discussion of practical issues are hard to come by. E.g. how to mon
 As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
 
 ## Usage
-1. **Steal** a PC with GPU and tensorflow-gpu 1.3 installed.
-1. **Clone** side-by-side this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) :
+
+1. **Steal** a linux PC with GPU (+cuda drivers, cudnn, etc.), create python 2.7 virtualenv, activate and [install tensorflow-gpu](https://www.tensorflow.org/install/install_linux) (1.2 and up) inside. 
+<br> Run ```pip intstall -r requirements``` (to minimize need to *pip install* stuff when imports fail later).
+1. **Clone** this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) side-by-side, e.g. :
     ```bash
     git clone https://github.com/hailotech/hailo-segmentation
     git clone https://github.com/hailotech/tf-models-hailofork
     ```
-    (to let seg net builder code call into slim FEs implementations in ```models/research/slim/nets```)
+    (to let fcn net builder code call into slim FEs implementations in ```models/research/slim/nets```)
+
+1. **Play** with segmentation using with our pre-trained models, by downloading them from *releases*, and jumping to **test** below. Or, just [***jupyter***](http://jupyter.org/install) the #play-with-me.ipynb notebook..).
 
 1. **Download (&extract..)** :
     1. Checkpoints for ImageNet-pretrained slim FE checkpoints using links in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)

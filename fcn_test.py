@@ -16,12 +16,6 @@ else:
 
 import fcn_arch, utils
 
-sys.path.append("/home/finkel/hailo_repos/phase2-dl-research")
-import nmldk
-from resnet.resnet_architect import ArchitectResNet18
-ArchitectFCN = ArchitectResNet18
-
-
 validation_records = '/data/pascal_augmented_berkely/validation.tfrecords'
 training_records = '/data/pascal_augmented_berkely/training.tfrecords'
 number_of_classes = 21
@@ -79,13 +73,14 @@ def test(image, annotation, predictions, checkpoint, iterator,
         for i in xrange(num_images):
             # note a bit different run for visualization vs. evaluation purposes...
             if (i+1) % X_as_in_visualize_each_Xth_seg == 0:
+                # TODO implement as a default callback..
                 image_np, annotation_np, pred_np, _, conf_tmp = \
                     sess.run([image, annotation, predictions, update_op, conf_op])
                 visualize(image_np, annotation_np, pred_np.squeeze())
             else:
                 _eval_res = sess.run([conf_op, update_op]+more_tensors_to_eval)
                 conf_tmp = _eval_res[0]
-                if callback: # a placeholder to
+                if callback: # a placeholder to inject more functionality w.o. changing this func
                     callback(_eval_res[2:])
             conf_mtx += conf_tmp
 
