@@ -159,7 +159,7 @@ which should be subclassed for each architecture;
 the subclasses should implement (aka 'override') the decoding blocks as defined in following drawing:
 
 <div align="center">
-<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/FCNgen.png" width="70%" height="70%"><br><br>
+<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/FCNgen.png" width="85%" height="85%"><br><br>
 </div>
 
 Note that if you choose the red script across the decoder blocks, you get the original FCN.
@@ -299,6 +299,10 @@ Many nets making progress towards high-performance high-resolution real-time seg
 
 Implementing these and more in the framework defined here is one of the next steps for this repo...
 
+## Contacts (maintainers)
+Alex Finkelstein ([github](https://github.com/falex-ml)) & Mark Grobman ([github](https://github.com/grobman)) 
+<br>[Hailo Technologies](http://www.hailotech.com/) ([github](https://github.com/hailotech))
+
 ## Future Work
  ***Contributions Welcome! :)***
 
@@ -330,7 +334,7 @@ FCN based Semantic Segmentation
 1. ['RTSEG: Real-time semantic segmentation comparative study', Mar 2018](https://arxiv.org/pdf/1803.02758.pdf)
 1. [LinkNet: Exploiting Encoder Representations for Efficient Semantic Segmentation, Chaurasia et. al., 2017](https://arxiv.org/abs/1707.03718)
 
-## Appendix A: Dataset Rants
+## Appendix B: Dataset Rants
 
 If you have an hour, do read ```utils/pascal_voc.py``` whose author should be lauded.
 (be it Daniil of http://warmspringwinds.github.io/ or one of his spiritual fathers..)
