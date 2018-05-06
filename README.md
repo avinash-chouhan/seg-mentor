@@ -27,9 +27,9 @@ Semantic segmentation is a critical task in machine vision apps in general and s
 </div>
 
 ```
-purple shading - cars (segmented with GoogleNet-FCN). 
-
-Groovy psychedelic car - it's cool failure mode. We think is reflects the lack of images of car from above in the dataset.
+Purple shading - cars (segmented with GoogleNet-FCN). 
+Groovy psychedelic frames - a cool failure mode worth exploring.
+We think the lack of images of car from this angle in the dataset is a part of the story, what else? 
 ```
 
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
@@ -47,30 +47,22 @@ We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
 We report results for several feature extractors using a classic FCN decoder. All nets were trained and tested on the Pascal VOC dataset.
 
 Now, sure, the state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
-and there are many nets which are both faster (some claiming "real-time" - but that depends on HW of course),
-and with better accuracy. We do plan to implement some of those over our framework down the line. 
+and there are many nets which are both faster and with better accuracy. We do plan to implement some of these over our framework down the line. But FCN is simple and when we started we couldn't find reports on using it with modern FEs.
 
-However, there is lot of terra incognita even before going to SoA architectures, and it may be a good idea to use the simplest decent one ("w.o. bells & whistles") one in these studies:
+Besides, there is lot of terra incognita even before going to SoA architectures - and it may be a good idea to use the simplest decent one - when exploring new areas:
 
  - ***What's the influence of the base Feature Extractor (FE)?
    <br>To which extent does the performance of a FE on a classfication task correlate with its performance on a segmentation task? is this meta-architecture dependent? Can one design a FE specifically for segmentation usage?***
  - ***Since we use pre-trained models, are the optimal training hyper-parameters sensitve to choice of FE?***
  - ***How to design simple, effective and efficient decoder blocks for seg' nets using lightweight (e.g. mobilenet) FEs?***
- - ***Does the failure mode of the net depend more on FE used or on meta-architecture? How can this be quantified (as opposed to stamp-collecting visual examples)***
+ - ***Do the failure modes of the net depend more on FE used or on meta-architecture? How can this be quantified (as opposed to stamp-collecting visual examples)***
  - ***Practical issues - how robust are the mIoU numbers to exact freeze point of training, test subset, etc.?***
 
-In addition, discussion of practical issues are hard to come by. E.g. how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, what failure modes (possibly critical for certain application) are there and how the net can be architected/trained to handle them - or maybe handled at inference time by multiscale testing, etc.
+In addition, worked-out examples of practical issues are hard to come by: how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, what failure modes (possibly critical for certain application) are there and how to deal with them. 
 
 ## Contribution
 
-#### We hope the repo will be useful for mix&match experimentation that may make the following DIFF:
-```diff
-+ PROMOTE DEEPER UNDERSTANDING OF ABOVE ISSUES
-
-+ PROMOTE ROBUSTNESS OF SEGMENTATION TECH,
-+   AND ITS READYNESS TO PRACTICAL APPLICATIONS IN VEHICLES AND OTHER DOMAINS
-
-```
+#### We hope that the repo will be a good starting point for your own cool semantic-segmentation project, e.g. exploring one of the open questions above.
 
 As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
 
