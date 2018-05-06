@@ -1,4 +1,4 @@
-# tf-slim-segmentation
+# seg-mentor
 
 - [Contribution](#contribution)
 - [MetaArchitecture](#architecture)
@@ -7,7 +7,7 @@
 - [Previous, similar and future work](#previous-and-similar-work)
 
 ## WELCOME!
-to **tf-slim-segmentation** - a flexible semantic segmentation framework built in tensorflow.
+to **seg-mentor** - a flexible semantic segmentation framework built in tensorflow.
 We're making the world a better place by offering a modular sandbox in which you can tinker with semantic segmentation networks.
  
 <br>The work here happily relies on some great open-source projects, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below
@@ -27,37 +27,35 @@ Semantic segmentation is a critical task in machine vision apps in general and s
 </div>
 
 ```
-purple shading - cars (segmented with GoogleNet-FCN)
+purple shading - cars (segmented with GoogleNet-FCN). Groovy psychedelic car - it's cool failure mode. We think is reflects the lack of images of car from above in the dataset.
 ```
 
-We embrace Tensorflow and specifically tf-slim API and classification nets implementation,
-<br>and offer a modular code supporting the classic FCN and various enhancements on top of it:
- - Switching the base FE (feature extractor) out of imagenet-pretrained [slim-models selection](https://github.com/tensorflow/models/tree/master/research/slim)
+We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
+<br>and offer a modular code for semantic segmentation based on the classic FCN meta-architecture. Our goal was to make it simple to allow:
+ - Choosing the base FE (feature extractor) from a selection of [pretrained models] (https://github.com/tensorflow/models/tree/master/research/slim)
  - Switching to more sophisticated decoding blocks (beyond s16, s8 skip connections and upsample)
 
 The main runner offers command-line params control of architecture along these lines -
  <br> as well as of training and preprocessing hyperparameters.
 
-We use ```tfrecords``` files and the new TF ```Datasets``` api for data feed,
- and contribute some nice train-time monitoring leveraging this api's advanced features;
- the design should hopefully be easy to extend to other datasets (e.g. Cityscapes, COCO, etc.)
+We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
+ and contribute some nice monitoring leveraging this api's advanced features;
+ the design is (hopefully) easy to extend to other datasets (e.g. Cityscapes, COCO, etc.)
 
-We report results of PASCAL-VOC training with the original FCN
-based off several feature extractors (VGG16 as in original paper, lightweight "realtime" nets s.a. ResNet18, Mobilenet, etc.).
+We report results for several feature extractors using a classic FCN decoder. All nets were trained and tested on the Pascal VOC dataset.
 
-Now, sure, the state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN,
+Now, sure, the state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
 and there are many nets which are both faster (some claiming "real-time" - but that depends on HW of course),
-and with better accuracy.
-<br>However, understanding is still lacking, (even as the researchers do take care to perform ablation studies on their brand new nets), e.g.
+and with better accuracy. We do plan to implement some of those over our framework down the line. 
+
+However, there is lot of terra incognita even before going to SoA architectures, and it may be a good idea to use the simplest decent one ("w.o. bells & whistles") one in these studies:
+
  - ***What's the influence of the base Feature Extractor (FE)?
-   To which extent the relative classification performance of pre-trained (.e.g ImageNet) FE
-   is a predictor of the relative accuracy of a segmentation net using it, per same meta-architecture?
-   What will be a good predictor? Can one design a FE specifically for downstream segmentation usage?***
- - ***Do specific FEs play better with specific training hyperparams, or specific decode-path enhancements?***
- - ***How to design simple, effective and efficient decoder blocks for seg' nets using lightweight (e.g. mobilenet) FEs***
- - ***Beyond mIoU - how deeper vectorial performance metrics (e.g. per class, per object size) depend on FE or architecture in general.
-    What about (..robustness to..) various failure modes? How that could be controlled?***
- - ***What about practical issues? how robust are the mIoU numbers to exact freeze point of training, test subset, etc.?***
+   <br>To which extent does the performance of a FE on a classfication task correlate with its performance on a segmentation task? is this meta-architecture dependent? Can one design a FE specifically for segmentation usage?***
+ - ***Since we use pre-trained models, are the optimal training hyper-parameters sensitve to choice of FE?***
+ - ***How to design simple, effective and efficient decoder blocks for seg' nets using lightweight (e.g. mobilenet) FEs?***
+ - ***Does the failure mode of the net depend more on FE used or on meta-architecture? How can this be quantified (as opposed to stamp-collecting visual examples)***
+ - ***Practical issues - how robust are the mIoU numbers to exact freeze point of training, test subset, etc.?***
 
 In addition, discussion of practical issues are hard to come by. E.g. how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, what failure modes (possibly critical for certain application) are there and how the net can be architected/trained to handle them - or maybe handled at inference time by multiscale testing, etc.
 
