@@ -44,35 +44,35 @@ We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
  and contribute some nice monitoring leveraging this api's advanced features;
  the design is (hopefully) easy to extend to other datasets (e.g. Cityscapes, COCO, etc.)
 
-We report results for several feature extractors using a classic FCN decoder. All nets were trained and tested on the Pascal VOC dataset.
+As a baseline, we trained & tested classic FCNs with several feature extractors on the Pascal VOC dataset - already something we couldn't find reports on when we started.
 
 Now, sure, the state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
-and there are many nets which are both faster and with better accuracy. We do plan to implement some of these over our framework down the line. But FCN is simple and when we started we couldn't find reports on using it with modern FEs.
+and there are many nets which are both faster and with better accuracy. Implementing some of these over our framework is part of the roadmap here.
 
-Besides, there is lot of terra incognita even before going to SoA architectures - and it may be a good idea to use the simplest decent one - when exploring new areas:
+Besides, there is lot of terra incognita that seems worth exploring before going to state-of-the-art architectures - using simplest decent net(s) to facilitate insight:
 
- - ***What's the influence of the base Feature Extractor (FE)?
-   <br>To which extent does the performance of a FE on a classfication task correlate with its performance on a segmentation task? is this meta-architecture dependent? Can one design a FE specifically for segmentation usage?***
- - ***Since we use pre-trained models, are the optimal training hyper-parameters sensitve to choice of FE?***
- - ***What's the optimal decoder design for seg' nets based on lightweight (e.g. mobilenet) FEs?***
- - ***Do the failure modes of the net depend more on FE used or on meta-architecture? How can this be quantified (as opposed to stamp-collecting visual examples)***
- - ***Practical issues - how robust are the mIoU numbers to exact freeze point of training, test subset, etc.?***
-
-In addition, worked-out examples of practical issues are hard to come by: how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, what failure modes (possibly critical for certain application) are there and how to deal with them. 
+ - ***What's the influence of the base Feature Extractor (FE) a.k.a Encoder on the segmentation task?
+   <br>To which extent does the performance of a FE on a classfication task correlate with its performance on a segmentation task? is this meta-architecture (a.k.a Decoder) dependent? Can one design a FE specifically for segmentation usage?***
+ - ***Focusing on the training/fine-tuning of segmentation nets based on pre-trained FEs, how does the optimal choice of hyper-parameters depend on choice of FE, decoder?***
+ - ***How to optimally architect segmentation decoder when building on lightweight (e.g. mobilenet) FEs?***
+ - ***What are the failure modes of the net? How do they depend on the FE or the decoder used? How can this be quantified (beyond stamp-collecting visual examples and gross-averaged metrics s.a. mIoU)?***
+ 
+And even before open research questions, there are important practical issues, worked-out examples of which are hard to come by. These include - how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, how robust are the mIoU numbers to exact freeze point of training, test subset, etc.
 
 ## Contribution
 
-#### We hope that the repo will be a good starting point for your own cool semantic-segmentation project, e.g. exploring one of the open questions above.
+#### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring one of the open questions above, or deploying a lightweight solution to a practical app.  
 
-As a baseline we report an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
+As an example of such a project, we're researching some minimal decoder enhancements (***"FCN+"***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN. Coming soon:)
+
+We also share some practical training tips and thoughts - see *Discussion* below
 
 ## Usage
 
 To all the gals that just want to segment,
 <br> It's easy to do, just follow these steps:
 
-1. **Steal** a linux PC with GPU (if you plan on training), create a python 2.7 virtualenv, activate and [install tensorflow<-gpu>](https://www.tensorflow.org/install/install_linux) (1.2 and up) inside. 
-<br> Run ```pip intstall -r requirements``` after editing
+1. **Steal** a linux PC with GPU (if you plan on training), create a python 2.7 virtualenv, with dependencies inc. [tensorflow](https://www.tensorflow.org/install/install_linux) (1.2 and up, appropriate to your platform (gpu/cpu, CUDA version)) inside. You can use ```requirements``` by e.g. editing the TF line to have right version and running ```pip intstall -r requirements```.
 1. **Clone** this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) side-by-side, e.g. :
     ```bash
     git clone https://github.com/hailotech/hailo-segmentation
@@ -156,7 +156,7 @@ Within the **Tensorflow** realm -
 **[Slim-models](https://github.com/tensorflow/models/tree/master/research/slim)** is a laudable attempt to bring implementations of some feature extractors to the same ground.
 Beyond classification, you got the **[Object Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection)**
 but it's different in spirit,
- catering to high-level-adapt&deploy users,
+ catering to high-level-adapt-deploy users,
  while discouraging tinkering with architecture.
  <br>Here we try to make a small first step towards *segmentation-models*, using the shoulders of **slim** giants as a launchpad.
  
@@ -173,22 +173,21 @@ the subclasses should implement (aka 'override') the decoding blocks as defined 
 Note that if you choose the red script across the decoder blocks, you get the original FCN.
 This is what's implemented in the ```FcnArch``` class, provided as the baseline example of the ```BaseFcnArch``` interface.
 
-Switching feature extractor (FE) is done **without code change among the currently supported FEs** (VGG, ResNet18/50, Inception_V1 aka googlenet, Mobilenet_V1, ...). We can't commit to having this sentence updated, so just check out the dictionary at the top of ```fcn_arch.py```. **Adding support for another FE** necessitates an incremental change in the dict and similar places (we're sure you can figure it out), AND a modification of the net in the sister repo (fork of slim-models) s.t. the net func signature is ```logits = net(images, ..., base_only=False, **kwargs)```, 
-and in the body of the function you do :
+Switching feature extractor (FE) is done **without code change among the currently supported FEs** (VGG, ResNet18/50, Inception_V1 aka googlenet, Mobilenet_V1, ..., - can't commit to having this sentence updated, so just check out the dictionary at the top of ```fcn_arch.py``` -:). **To add support for another FE** you'll need an incremental change in the dict and similar places (we're sure you can figure it out), AND a modification of the net in the sister repo (fork of slim-models); like [we did it for ResNet](https://github.com/hailotech/tf-models-hailofork/commit/c3280c1433f8b64bb0ed28acf191d6c4c777210b):
+1. Change net func signature from ```logits = net(images, ...)``` to ```logits = net(images, ..., base_only=False, **kwargs)```
+1. In the body of the function add :
 ```
-...
 if base_only:
   return net, end_points
-...
 ```
 between feature extracting stage and global-pool/fully-connected head. 
-<br>Ok, just check out [how we did it](https://github.com/hailotech/tf-models-hailofork/commit/c3280c1433f8b64bb0ed28acf191d6c4c777210b)
+
 
 ## Results and Discussion
 
-We report the results of train+test with the following breakup:
+We report the results of train+test with the following breakup (see also Appendix A):
 - train with all SBD annotations (11K images)
-- test with all VO12-val annotations disjoint from SBD (907 images),
+- test with all VOC12-val annotations disjoint from SBD (907 images),
   <br>(some call it RV-VOC12 ("restricted validation") while others use this name for other set.)
 
 We trained with Adam. The first 15 epochs with initial learning rate, then reducing X10 for another 15 (twice)
