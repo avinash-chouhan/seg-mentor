@@ -37,25 +37,26 @@ class BaseFcnArch:
     will be delivered. To adapt the network for an any size input use
     adapt_network_for_any_size_input(build_net, 32)
 
-    :arg
+    :Constructor Arguments:
 
-    net_func = the feature extractor network defined as a TF-SLIM inference function
-    number_of_classes : int, e.g. 21 for PASCAL VOC
-    is_training : boolean, to be propagated into the net_func()
+    :net_func:  = the feature extractor network defined as a TF-SLIM inference function
+    :number_of_classes: int, e.g. 21 for PASCAL VOC
+    :is_training: boolean, to be propagated into the net_func()
         Affects dropout and batchnorm layers of the feature extractor
      ->>>>> now some flags switching on/off features of architecture
-    :fcn16 - boolean, if True add skip connection. Note that we don't use two-stage training,
+    :fcn16: - boolean, if True add skip connection. Note that we don't use two-stage training,
               if necessary we can emulated that via differential learning schedule...
-    trainable_upsampling - ...
+    :trainable_upsampling: - ...
     """
 
     def __init__(self, number_of_classes=21, is_training=True, net='vgg_16',
-                 fcn16=True, fcn8=False, trainable_upsampling=False):
+                 fcn16=True, fcn8=False, fcn4=False, trainable_upsampling=False):
 
         self.number_of_classes = number_of_classes
         self.is_training = is_training
         self.fcn16 = fcn16
         self.fcn8 = fcn8
+        self.fcn4 = fcn4
         self.trainable_upsampling = trainable_upsampling
 
         self.fe = {'vgg_16': {'net_func': vgg.vgg_16,
@@ -86,8 +87,9 @@ class BaseFcnArch:
                                     'preproc_func': pytorch_resnet_preprocessing.normalize_gen,
                                     # ..last s16 - out of block 3,
                                     #   just before stride to /32 in first unit of block4
-                                    'tname_s16_skipconn': '{0}/resnet_v1_18/block3'
-                                    # TODO FCN8
+                                    'tname_s16_skipconn': '{0}/resnet_v1_18/block3',
+                                    'tname_s8_skipconn': '{0}/resnet_v1_18/block2'
+                                    'tname_s4_skipconn': '{0}/resnet_v1_18/block1'
                                     #'logits_opname': 'resnet_v1_18/logits'
                                     },
                    'mobilenet_v1': {'net_func': mobilenet_v1.mobilenet_v1,
@@ -110,19 +112,24 @@ class BaseFcnArch:
     def upsample_x2_32s(self, decode_32s_out):
         raise NotImplemented()
 
-    def decode_16s(self, post_upsample_16s, skip_conn_16s):
+    def combine_16s(self, post_upsample_16s, skip_conn_16s):
         raise NotImplemented()
     # ----
-    def upsample_x2_16s(self, decode_32s_out):
+    def upsample_x2_16s(self, combine_16s_out):
         raise NotImplemented()
 
-    def decode_8s(self, post_upsample_16s, skip_conn_16s):
+    def combine_8s(self, post_upsample_8s, skip_conn_8s):
         raise NotImplemented()
 
-    def upsample_x2_8s(self, decode_32s_out):
+    # ----
+    def upsample_x2_8s(self, combine_8s_out):
         raise NotImplemented()
 
-    def decode_4s(self, post_upsample_16s, skip_conn_16s):
+    def combine_4s(self, post_upsample_4s, skip_conn_4s):
+        raise NotImplemented()
+
+    # ----
+    def final_x4_upsample(self, combine_4s_out):
         raise NotImplemented()
 
     # ------------------------------------------------------------------------
@@ -177,22 +184,48 @@ class BaseFcnArch:
             post_decode_32s = self.decode_32s(fe_out32s_pre_pool)
             if not self.fcn16:
                 return self._upsample_fixed_bilinear(post_decode_32s, upsample_factor=32)
-
+            # ------------------
+            #  16
             post_upsample_16s = self.upsample_x2_32s(post_decode_32s)
 
             s16skip_ep_name = self.fe['tname_s16_skipconn'].format(self.base_fe_scope.name)
             skip_conn_16s = end_points.get(s16skip_ep_name)
             if skip_conn_16s is None:
-                for k in end_points.keys():
-                    print k
-                raise Exception('ERROR: Couldn''t find end point '+s16skip_ep_name+' in above endpoints ')
+                self.debug_endpoints(end_points, s16skip_ep_name)
 
-            post_decode_16s = self.decode_16s(post_upsample_16s, skip_conn_16s)
+            post_combine_16s = self.combine_16s(post_upsample_16s, skip_conn_16s)
             if not self.fcn8:
-                return self._upsample_fixed_bilinear(post_decode_16s, upsample_factor=16)
+                return self._upsample_fixed_bilinear(post_combine_16s, upsample_factor=16)
+            # ------------------
+            # 8
+            post_upsample_8s = self.upsample_x2_16s(post_combine_16s)
+
+            s8skip_ep_name = self.fe['tname_s8_skipconn'].format(self.base_fe_scope.name)
+            skip_conn_8s = end_points.get(s8skip_ep_name)
+            if skip_conn_8s is None:
+                self.debug_endpoints(end_points, s8skip_ep_name)
+
+            post_combine_8s = self.combine_8s(post_upsample_8s, skip_conn_8s)
+            if not self.fcn4:
+                return self._upsample_fixed_bilinear(post_combine_8s, upsample_factor=8)
+            # ------------------
+            # 4
+            post_upsample_4s = self.upsample_x2_8s(post_combine_8s)
+
+            s4skip_ep_name = self.fe['tname_s4_skipconn'].format(self.base_fe_scope.name)
+            skip_conn_4s = end_points.get(s4skip_ep_name)
+            if skip_conn_4s is None:
+                self.debug_endpoints(end_points, s8skip_ep_name)
+
+            post_combine_4s = self.combine_4s(post_upsample_4s, skip_conn_4s)
+            return self.final_x4_upsample(post_combine_4s)
 
             raise NotImplemented
-            # TODO FCN8
+
+    def debug_endpoints(self, end_points, name)
+        for k in end_points.keys():
+            print k
+        raise Exception('ERROR: Couldn''t find end point ' + name + ' in above endpoints ')
 
     def get_pretrained_and_new_vars(self):
         """
@@ -209,10 +242,6 @@ class BaseFcnArch:
 
                 new_vars       :         dict of new variables (layers beyond FE)
         """
-        #
-
-        # Here we remove the part of a name of the variable that is responsible for the current variable scope
-        # Note: name_scope only affects operations and variable scope is actually represented by .name
         feat_extractor_variables = slim.get_variables(self.base_fe_scope)
         net_variables_mapping = {variable.name[len(self.base_fe_scope.name) + 1:-2]: variable
                                  for variable in feat_extractor_variables}
@@ -240,11 +269,23 @@ class FcnArch(BaseFcnArch):
         else:
             return self._upsample_fixed_bilinear(decode_32s_out)
 
-    def decode_16s(self, post_upsample_16s, skip_conn_16s):
+    def combine_16s(self, post_upsample_16s, skip_conn_16s):
         skip_conn_16s_logits = slim.conv2d(skip_conn_16s, self.number_of_classes, [1, 1], scope='1x1_fcn16_logits',
                                            activation_fn=None, normalizer_fn=None,
-                                           weights_initializer=tf.zeros_initializer) # added on 25/04..
+                                           weights_initializer=tf.zeros_initializer)
         combined = skip_conn_16s_logits + post_upsample_16s
         return combined
 
-    # TODO FCN8
+    def upsample_x2_16s(self, combine_16s_out):
+        if self.trainable_upsampling:
+            return self._upsample_learnable(combine_16s_out)
+        else:
+            return self._upsample_fixed_bilinear(combine_16s_out)
+
+    def combine_8s(self, post_upsample_8s, skip_conn_8s):
+        skip_conn_8s_logits = slim.conv2d(skip_conn_8s, self.number_of_classes, [1, 1], scope='1x1_fcn8_logits',
+                                           activation_fn=None, normalizer_fn=None,
+                                           weights_initializer=tf.zeros_initializer)
+        combined = skip_conn_8s_logits + post_upsample_8s
+        return combined
+

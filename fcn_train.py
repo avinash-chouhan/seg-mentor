@@ -1,10 +1,7 @@
 import tensorflow as tf, numpy as np
 import os, sys, time, argparse
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = '0'
-
-# (!!) needed for code inside fcn_arch, utils..
-#sys.path.append("/home/finkel/hailo_repos/phase2-dl-research/slim_models/")
+# assuming our fork of tf-models is cloned side-by-side with current repo
 sys.path.append("../tf-models-hailofork/research/slim/")
 
 import fcn_arch, utils

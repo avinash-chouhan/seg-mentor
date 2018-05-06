@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 slim = tf.contrib.slim
 
-# (!!) needed for code inside fcn_arch, utils..
+# assuming our fork of tf-models is cloned side-by-side with current repo
 sys.path.append("../tf-models-hailofork/research/slim/")
 
 tf_ver = float('.'.join(tf.__version__.split('.')[:2]))
