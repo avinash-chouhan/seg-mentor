@@ -63,7 +63,7 @@ And even before open research questions, there are important practical issues, w
 
 #### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring one of the open questions above, or deploying a lightweight solution to a practical app.  
 
-As an example of such a project, we're researching some minimal decoder enhancements (***"FCN+"***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN. Coming soon:)
+As an example of such a project, we're researching some minimal decoder enhancements (***FCN+***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN. Coming soon:)
 
 We also share some practical training tips and thoughts - see *Discussion* below
 
@@ -133,12 +133,12 @@ to test an intermediate checkpoint after X batches (check out your options by ``
     1. Get a feeling for what it means by visualizing results: re-running with ```--vizstep 1```.
     1. Segment a specific image of your fancy with ```--singleimagepath``` or a movie with ```--movie```
 
-1. **Tinker** - check out ```fcn_train.py``` CLI options, train other net(s) with modded process, e.g.:
+1. **Tinker** - check out [fcn_train.py](fcn_train.py) CLI options, train other net(s) with modded process, e.g.:
     ```
     python fcn_train.py --basenet=resnet_v1_18 --batch_size=20 --learnrate=3e-4 --decaylr=True &
     ```
     Think of interesting variations to test, convince your boss/supervisor to buy you 1K gpu-hours on amazon, run hyperparameter scan, reach cool insights.. ..publish, credit our help:)
-1. **Architect** - dive into ```fcn_arch.py``` code, check out the ```BaseFcnArch``` interface, write your own subclass, train you own brand new net - with decoding path augmented and modified to your fancy, reach record-breaking mIoU reflecting your unique genius..
+1. **Architect** - dive into [fcn_arch.py](fcn_arch.py) code, check out the ```BaseFcnArch``` interface, write your own subclass, train you own brand new net - with decoding path augmented and modified to your fancy, reach record-breaking mIoU reflecting your unique genius..
 1. **Develop** - read ***future work*** below and lend a hand:)
 1. [...](http://knowyourmeme.com/memes/profit)
 1. [...](http://knowyourmeme.com/memes/profit)
@@ -277,7 +277,7 @@ but that doesn't mean some metric improvement (and insight on the side) couldn't
 
 Contributions are welcome! :)
 
-### FCN + wide-context results
+### FCN+ results
 ...Coming soon...
 
 #### Discussion 
@@ -322,6 +322,7 @@ Alex Finkelstein ([github](https://github.com/falex-ml)) & Mark Grobman ([github
     - U-net - similarly..
   <br>reproduce published results and start testing and reporting on mix&match effects (e.g. LinkNet + Mobilenet V2).
 - Multiple-scale (aka pyramid) testing, robustness exploration.
+- Multi-GPU training
 - Implement more architectures over the framework, upgrade base API if needed for more complex branching 
   (e.g. ASPP, PSP, ICnet, etc.)
 
