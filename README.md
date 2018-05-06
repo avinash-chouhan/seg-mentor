@@ -27,7 +27,7 @@ Semantic segmentation is a critical task in machine vision apps in general and s
 </div>
 
 ```
-purple shading - cars (segmented with GoogleNet-FCN). Groovy psychedelic car - it's cool failure mode. We think is reflects the lack of images of car from above in the dataset.
+purple shading - cars (segmented with GoogleNet-FCN). <br>Groovy psychedelic car - it's cool failure mode. We think is reflects the lack of images of car from above in the dataset.
 ```
 
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
