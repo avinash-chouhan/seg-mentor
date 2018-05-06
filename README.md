@@ -68,8 +68,11 @@ As an example project, we report here on some minimal decode-path enhancements (
 
 ## Usage
 
-1. **Steal** a linux PC with GPU (+cuda drivers, cudnn, etc.), create python 2.7 virtualenv, activate and [install tensorflow-gpu](https://www.tensorflow.org/install/install_linux) (1.2 and up) inside. 
-<br> Run ```pip intstall -r requirements``` (to minimize need to *pip install* stuff when imports fail later).
+To all the gals that just want to segment,
+<br> It's easy to do just follow these steps 
+
+1. **Steal** a linux PC with GPU (if you plan on training), create a python 2.7 virtualenv, activate and [install tensorflow-gpu](https://www.tensorflow.org/install/install_linux) (1.2 and up) inside. 
+<br> Run ```pip intstall -r requirements``` 
 1. **Clone** this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) side-by-side, e.g. :
     ```bash
     git clone https://github.com/hailotech/hailo-segmentation
@@ -79,7 +82,8 @@ As an example project, we report here on some minimal decode-path enhancements (
 
 1. **Play** with segmentation using with our pre-trained models, by downloading them from *releases*, and jumping to **Test** below. Or, just [***jupyter***](http://jupyter.org/install) the [play-with-me notebook](play-with-me.ipynb )
 
-1. **Download (&extract..)** :
+<br> If you want to train a segmentation net 
+1. **Download pre-trained models** :
     1. Checkpoints for ImageNet-pretrained slim FE checkpoints using links in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)
         . If needed, get missing ones (ResNet18, ..) from http://dropbox/TBD (translated from pytorch-vision by benevolent Hailo ML team).
     1. The dataset - [Pascal VOC12 trainval](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar)
