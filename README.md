@@ -33,7 +33,7 @@ We think the lack of images of car from this angle in the dataset is a part of t
 ```
 
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
-<br>and offer a modular code for semantic segmentation based on the classic FCN meta-architecture. Our goal was to make it simple to:
+<br>and offer a modular code for semantic segmentation with FCN meta-architecture and its variants. Our goal was to make it simple to:
  - Choose the base FE (feature extractor) from a selection of [pretrained models] (https://github.com/tensorflow/models/tree/master/research/slim)
  - Enhance meta-architecture upward from FCN by switching to more sophisticated decoding blocks.
 
