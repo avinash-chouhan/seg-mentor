@@ -251,8 +251,7 @@ The FCN16 skip-connection generally gives a +1-2% mIoU improvement,
  and in fact not much larger than the noise (w.r.t to test (sub)set choice, and exact params checkpoint) which we estimate to be ~0.5-1% (see tensorboard plots). So we have to conclude that the skip-connection contribution is **minor** - if it's only used as simple linear addition after the classification layer contracting #channels to 21 (classes).
 
 The resources needed by additional bilinear interpolations (for upsampling) are negligible, as well as those for the FCN16 skip-connection; so the ops and params are quite similar as for original imagenet classifiers, up to removal of the final classification layer (-) and resolution change (+).
-<br>Note however that params&ops don't tell the whole story, and there are HW-architecture-dependent issues.
-<br>For example, in dataflow architectures, special resource allocation is needed for buffering the skip connections.
+<br>remmeber that params&ops don't tell the whole story, and there are HW-architecture-dependent issues which effect runtime.
  <br>That's the reason we don't care to train FCN8 variants since returns are negligible w.r.t the costs.
 
 #### Technical issues:
@@ -276,7 +275,7 @@ Note that all params mentioned are involved in how gradients are computed.
 <br> We couldn't hit a low hanging fruit with the few runs we've made -
 but that doesn't mean some metric improvement (and insight on the side) couldn't be found with a disciplined parameter scan.
 
-<br><br>Contributions are welcome! :)
+<br><br>Once again - Contributions are welcome! 
 
 ### FCN+W results
 ...Coming soon...
@@ -298,7 +297,7 @@ Their 'SkipNet' architecture is in fact an FCN (altouhgh some details are not as
 Alex Finkelstein ([github](https://github.com/falex-ml)) & Mark Grobman ([github](https://github.com/grobman)) 
 <br>[Hailo Technologies](http://www.hailotech.com/) ([github](https://github.com/hailotech))
 
-## Future Work
+## (Possible) Future Work
  ***Contributions Welcome! :)***
 
 - Dilation as a parameter.. 
