@@ -13,7 +13,7 @@ We're making the world a better place by offering a modular sandbox in which you
 <br>The work here happily relies on some great open-source projects, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below
 
 <div align="center">
-<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/ResNet18_Apr02_HorseRider1.png" width="90%" height="90%"><br><br>
+<img src="https://github.com/hailotech/seg-mentor/blob/master/media/ResNet18_Apr02_HorseRider1.png" width="90%" height="90%"><br><br>
 </div>
 
 ```
@@ -23,7 +23,7 @@ Left - original image || Center - segmented with ResNet18-FCN || Right - ground 
 Semantic segmentation is a critical task in machine vision apps in general and street scene understanding in particular.
 <br> Because you know, sometimes perception based solely on XY-aligned ~~orthodox~~ ortho(b)box object-detectors just won't cut it, and you need to ...(cringe alert) think outside of the box: 
 <div align="center">
-<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
+<img src="https://github.com/hailotech/seg-mentor/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
 </div>
 
 ```
@@ -75,7 +75,7 @@ To all the gals that just want to segment,
 1. **Steal** a linux PC with GPU (if you plan on training), create a python 2.7 virtualenv, with dependencies inc. [tensorflow](https://www.tensorflow.org/install/install_linux) (v1.2 and up, appropriate to your platform (gpu/cpu, CUDA version)) installed inside. You can use ```requirements``` by e.g. editing the TF line to have right version and running ```pip intstall -r requirements``` after activating venv.
 1. **Clone** this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) side-by-side, e.g. :
     ```bash
-    git clone https://github.com/hailotech/hailo-segmentation
+    git clone https://github.com/hailotech/seg-mentor
     git clone https://github.com/hailotech/tf-models-hailofork
     ```
     (to let fcn net builder code call into slim FEs implementations in ```models/research/slim/nets```)
@@ -85,7 +85,7 @@ To all the gals that just want to segment,
 <br> If you want to train a segmentation net:
 1. **Download** :
     1. Get checkpoints for ImageNet-pretrained slim FE(s) using link(s) in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)
-        . If needed, get missing ones (ResNet18, ..) from [seg-mentor/Releases](https://github.com/hailotech/hailo-segmentation/releases/tag/v0.5) (translated from pytorch-vision by benevolent Hailo ML team).
+        . If needed, get missing ones (ResNet18, ..) from [seg-mentor/Releases](https://github.com/hailotech/seg-mentor/releases/tag/v0.5) (translated from pytorch-vision by benevolent Hailo ML team).
     1. Get the dataset - [Pascal VOC12 trainval](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) and [Berkely SBD ](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tg)
     1.  Note: scripts below assume ```/data/models``` as the dir with FE checkpoints,
        and ```/data``` as root dir for dataset (under which *VOCdevkit/VOC2012*, *SBD/benchmark_RELEASE* reside).
@@ -94,7 +94,7 @@ To all the gals that just want to segment,
 
 1. **Convert** the train/val Pascal data to tfrecords format by running [utils/pascal_voc_augmented_to_records.py](utils/pascal_voc_augmented_to_records.py)
 
-1. **Prepare** to run by ```cd hailo-segmentaion && mkdir tmp```
+1. **Prepare** to run by ```cd seg-mentor && mkdir tmp```
 <br>The ```tmp``` folder will host "training folders", one per run,
  to be created the training script.
  A "training folder" will contatin all relevant outputs -
@@ -166,7 +166,7 @@ which should be subclassed for each architecture;
 the subclasses should implement (aka 'override') the decoding blocks as defined in following drawing:
 
 <div align="center">
-<img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/FCNgen.png" width="85%" height="85%"><br><br>
+<img src="https://github.com/hailotech/seg-mentor/blob/master/media/FCNgen.png" width="85%" height="85%"><br><br>
 </div>
 
 Note that if you choose the red script across the decoder blocks, you get the original FCN.
