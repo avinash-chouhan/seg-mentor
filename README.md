@@ -33,9 +33,9 @@ We think the lack of images of car from this angle in the dataset is a part of t
 ```
 
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
-<br>and offer a modular code for semantic segmentation based on the classic FCN meta-architecture. Our goal was to make it simple to allow:
- - Choosing the base FE (feature extractor) from a selection of [pretrained models] (https://github.com/tensorflow/models/tree/master/research/slim)
- - Switching to more sophisticated decoding blocks (beyond s16, s8 skip connections and upsample)
+<br>and offer a modular code for semantic segmentation based on the classic FCN meta-architecture. Our goal was to make it simple to:
+ - Choose the base FE (feature extractor) from a selection of [pretrained models] (https://github.com/tensorflow/models/tree/master/research/slim)
+ - Enhance meta-architecture upward from FCN by switching to more sophisticated decoding blocks.
 
 The main runner offers command-line params control of architecture along these lines -
  <br> as well as of training and preprocessing hyperparameters.
@@ -53,7 +53,7 @@ Besides, there is lot of terra incognita that seems worth exploring before going
 
  - ***What's the influence of the base Feature Extractor (FE) a.k.a Encoder on the segmentation task?
    <br>To which extent does the performance of a FE on a classfication task correlate with its performance on a segmentation task? is this meta-architecture (a.k.a Decoder) dependent? Can one design a FE specifically for segmentation usage?***
- - ***Focusing on the training/fine-tuning of segmentation nets based on pre-trained FEs, how does the optimal choice of hyper-parameters depend on choice of FE, decoder?***
+ - ***Regarding the training/fine-tuning of segmentation nets based on pre-trained FEs, how does the optimal choice of hyper-parameters depend on choice of FE, decoder?***
  - ***How to optimally architect segmentation decoder when building on lightweight (e.g. mobilenet) FEs?***
  - ***What are the failure modes of the net? How do they depend on the FE or the decoder used? How can this be quantified (beyond stamp-collecting visual examples and gross-averaged metrics s.a. mIoU)?***
  
@@ -72,7 +72,7 @@ We also share some practical training tips and thoughts - see *Discussion* below
 To all the gals that just want to segment,
 <br> It's easy to do, just follow these steps:
 
-1. **Steal** a linux PC with GPU (if you plan on training), create a python 2.7 virtualenv, with dependencies inc. [tensorflow](https://www.tensorflow.org/install/install_linux) (1.2 and up, appropriate to your platform (gpu/cpu, CUDA version)) inside. You can use ```requirements``` by e.g. editing the TF line to have right version and running ```pip intstall -r requirements```.
+1. **Steal** a linux PC with GPU (if you plan on training), create a python 2.7 virtualenv, with dependencies inc. [tensorflow](https://www.tensorflow.org/install/install_linux) (v1.2 and up, appropriate to your platform (gpu/cpu, CUDA version)) installed inside. You can use ```requirements``` by e.g. editing the TF line to have right version and running ```pip intstall -r requirements``` after activating venv.
 1. **Clone** this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) side-by-side, e.g. :
     ```bash
     git clone https://github.com/hailotech/hailo-segmentation
@@ -80,20 +80,19 @@ To all the gals that just want to segment,
     ```
     (to let fcn net builder code call into slim FEs implementations in ```models/research/slim/nets```)
 
-1. **Play** with segmentation using with our pre-trained models, by downloading them from *releases*, and jumping to **Test** below. Or, just [***jupyter***](http://jupyter.org/install) the [play-with-me notebook](play-with-me.ipynb )
+1. **Play** with segmentation using with our pre-trained models, by downloading them from *releases*, and jumping to **Test** below. Or, check out the [play-with-me notebook](play-with-me.ipynb) using [*jupyter*](http://jupyter.org/install).
 
 <br> If you want to train a segmentation net:
-1. **Download pre-trained models** :
-    1. Checkpoints for ImageNet-pretrained slim FE checkpoints using links in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)
-        . If needed, get missing ones (ResNet18, ..) from http://dropbox/TBD (translated from pytorch-vision by benevolent Hailo ML team).
-    1. Download the dataset - [Pascal VOC12 trainval](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) and [Berkely SBD ](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tg)
+1. **Download** :
+    1. Get checkpoints for ImageNet-pretrained slim FE(s) using link(s) in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)
+        . If needed, get missing ones (ResNet18, ..) from [seg-mentor/Releases](https://github.com/hailotech/hailo-segmentation/releases/tag/v0.5) (translated from pytorch-vision by benevolent Hailo ML team).
+    1. Get the dataset - [Pascal VOC12 trainval](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) and [Berkely SBD ](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tg)
     1.  Note: scripts below assume ```/data/models``` as the dir with FE checkpoints,
        and ```/data``` as root dir for dataset (under which *VOCdevkit/VOC2012*, *SBD/benchmark_RELEASE* reside).
        <br>If you (or your admin..) don't agree than ```/data/``` is the greatest root dir ever,
        use ```--datapath, --modelspath``` cli arg to inform the scripts where you've put stuff.
 
-1. **Convert** the train/val Pascal data to tfrecords format by running [utils/pascal_voc_augmented_to_records.py](#hailo-segmentation/utils/pascal_voc_augmented_to_records.py)
-  , <br>
+1. **Convert** the train/val Pascal data to tfrecords format by running [utils/pascal_voc_augmented_to_records.py](utils/pascal_voc_augmented_to_records.py)
 
 1. **Prepare** to run by ```cd hailo-segmentaion && mkdir tmp```
 <br>The ```tmp``` folder will host "training folders", one per run,
