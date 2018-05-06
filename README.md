@@ -86,9 +86,7 @@ To all the gals that just want to segment,
 1. **Download pre-trained models** :
     1. Checkpoints for ImageNet-pretrained slim FE checkpoints using links in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)
         . If needed, get missing ones (ResNet18, ..) from http://dropbox/TBD (translated from pytorch-vision by benevolent Hailo ML team).
-    1. The dataset - [Pascal VOC12 trainval](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar)
-(images and somea & labels) and [Berekely SBD ](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tg)
-(+10K seg. annotations for pascal data) .
+    1. Download the dataset - [Pascal VOC12 trainval](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) and [Berkely SBD ](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tg)
     1.  Note: scripts below assume ```/data/models``` as the dir with FE checkpoints,
        and ```/data``` as root dir for dataset (under which *VOCdevkit/VOC2012*, *SBD/benchmark_RELEASE* reside).
        <br>If you (or your admin..) don't agree than ```/data/``` is the greatest root dir ever,
@@ -106,42 +104,42 @@ To all the gals that just want to segment,
       for *tensorboard* visualization.<br>
       **Naming convention** for is ```tmp/<TODAY>_<NETNAME>__<#RUN>``` <br>
 
-1. **Run** ```python fcn_train.py --g 0 & ```
-to start training plain FCN32-VGG16 with default params
-(works given stuff is in ```data```, see above)
+1. **Run** ```python fcn_train.py --g 0 --basenet inception_v1 ```
+to start training plain FCN32-INCEPTION_V1 with default params (assuming default dirpaths!)
 using only 1st GPU if you're filthy rich and got a few of 'em.
+Note: you can customize your run with MANY flags, some of which we explain below but don't be that person who doesn't read the code she is using (or at the very least the CLI help).
 
 1. **Monitor** your training by :
     1. **Sanity checks**: using the folder documenting this training run:<br>
     ```cat tmp/<THIS-RUN-FOLDER>/runargs``` - the config (here simply the cli arguments or their defaults..) used for this training..
      verify that it's what you wanted to have (architecture, hyperparams, etc.)
-    <br> ```tail tmp/<THIS-RUN-FOLDER>/runlog``` - verify loss goes down and mIoU goes up..:)
+    <br> ```tail tmp/<THIS-RUN-FOLDER>/runlog``` - verify loss goes down and mIoU goes up over time..:)
      Note the folder under <repo>/tmp for each training run,
 
     1. **Tensorboard**: ```cd tboards && bash createlinks && tensorboard --logdir=. &```
-     This way you see all past and present runs under <repo>/tmp in tensorboard a
-     nd you can use the checkboxes to see curves for a single run or several for side-by-side
-     comparison. Check out the noise around the ***test mIoU*** curve, incorporating randomness of both instantaneous checkpoint and 1/4 of test set used for evaluation) as a crude proxy for the typical deviation of the mIoU a.k.a "error-bars" that would be reported in ideal world
-      (w.o. the high stakes on framing a +1% improvement as a tectonic shift of SoA:):).
+     This way you see all past and present runs under <repo>/tmp in tensorboard 
+    and you can use the checkboxes to see curves for a single run or several for side-by-side
+     comparison. Check out the noise around the ***test mIoU*** curve (incorporating randomness of both instantaneous checkpoint and 1/4 of test set used for evaluation) as a crude proxy for the typical deviation of the mIoU a.k.a "error-bars" that would be reported in ideal world
+      (w.o. the high stakes on framing a +1% improvement as a tectonic shift of SoA).
 
 2. **Test** the monster you've grown so far by ```python fcn_test.py --traindir <THIS-RUN-FOLDER> --g 1```
 <br> leveraging your second GPU (first  one is busy training..), as you can't wait... <br>
-Now seriously, give it a **20-30 hours** of single-GPU training
+Now seriously, give it a **20-30 hours** of training
 (use tensorboard to see *test-mIoU* flattening), then test and behold the converged IoU results.
 <br> Note: the mIoU of full test may surprise you with ~+5% discrepancy w.r.t the tensorboard plot. see Discussion below.
 Don't be shy and kill the process (find pid by ```ps aux | grep fcn_train```)
- if it burns your precious GPU cycles for no further improvements.
-    1. If in doubt re convergence (or robusteness in general), run with ```--afteriter X```
+ if it burns your precious GPU cycles for no good reason.
+    1. If in doubt about convergence (or robusteness in general), run with ```--afteriter X```
 to test an intermediate checkpoint after X batches (check out your options by ```ls tmp/<THIS-TRAIN-DIR>```).
-    1. Get a feeling for what it means by visualizing results, rerunning with ```--vizstep 1```.
+    1. Get a feeling for what it means by visualizing results: re-running with ```--vizstep 1```.
     1. Segment a specific image of your fancy with ```--singleimagepath``` or a movie with ```--movie```
 
-1. **Tinker** - check out ```fcn_train.py``` cli options, train other net(s) with modded process, e.g.:
+1. **Tinker** - check out ```fcn_train.py``` CLI options, train other net(s) with modded process, e.g.:
     ```
     python fcn_train.py --basenet=resnet_v1_18 --batch_size=20 --learnrate=3e-4 --decaylr=True &
     ```
     Think of interesting variations to test, convince your boss/supervisor to buy you 1K gpu-hours on amazon, run hyperparameter scan, reach cool insights.. ..publish, credit our help:)
-1. **Architect** - dive into ```fcn_arch.py``` code, check out the ```BaseFcnArch``` interface, write your own subclass, train you own brand new net - with decoding path augmented and modified to your fancy, reach record-breaking mIoU reflecting your unique genius.. ..publish, credit our help:)
+1. **Architect** - dive into ```fcn_arch.py``` code, check out the ```BaseFcnArch``` interface, write your own subclass, train you own brand new net - with decoding path augmented and modified to your fancy, reach record-breaking mIoU reflecting your unique genius..
 1. **Develop** - read ***future work*** below and lend a hand:)
 1. [...](http://knowyourmeme.com/memes/profit)
 1. [...](http://knowyourmeme.com/memes/profit)
@@ -150,9 +148,9 @@ to test an intermediate checkpoint after X batches (check out your options by ``
 ## Architecture
 
 ### Modular Net Architecture via OOP
-DL community is keen on opensourcing net (inc. segmentation) implementations which is awesome;
+The DL community is keen on open-sourcing net (inc. segmentation) implementations which is awesome;
  unfortunately each one gets its own repo which starts to be frustrating at times,
- since so much of code (and procedures!) is the same (or ain't but should be!) and can be shared.
+ since so much of the code (and procedures!) is the same (or ain't but should be!) and can be shared.
 
 Within the **Tensorflow** realm -
 **[Slim-models](https://github.com/tensorflow/models/tree/master/research/slim)** is a laudable attempt to bring implementations of some feature extractors to the same ground.
@@ -175,7 +173,7 @@ the subclasses should implement (aka 'override') the decoding blocks as defined 
 Note that if you choose the red script across the decoder blocks, you get the original FCN.
 This is what's implemented in the ```FcnArch``` class, provided as the baseline example of the ```BaseFcnArch``` interface.
 
-Switching feature extractor (FE) is done **without code change among the currently supported ones** (VGG, ResNet18/50, Inception_V1 aka googlenet, Mobilenet_V1, ...). I can't commit to having this sentence updated, so just check out the dictionary in top of ```fcn_arch.py```. **Adding support for another FE** necessitates an incremental change in the dict and similar places (sure u can figure it out), AND a modification of the net in the sister repo (fork of slim-models) s.t. the net func signature is ```logits = net(images, ..., base_only=False, **kwargs)``` (the new part is after ...), 
+Switching feature extractor (FE) is done **without code change among the currently supported FEs** (VGG, ResNet18/50, Inception_V1 aka googlenet, Mobilenet_V1, ...). We can't commit to having this sentence updated, so just check out the dictionary at the top of ```fcn_arch.py```. **Adding support for another FE** necessitates an incremental change in the dict and similar places (we're sure you can figure it out), AND a modification of the net in the sister repo (fork of slim-models) s.t. the net func signature is ```logits = net(images, ..., base_only=False, **kwargs)```, 
 and in the body of the function you do :
 ```
 ...
@@ -184,31 +182,31 @@ if base_only:
 ...
 ```
 between feature extracting stage and global-pool/fully-connected head. 
-<br>Ok, just check it out in the nets already in game:)
+<br>Ok, just check out [how we did it](https://github.com/hailotech/tf-models-hailofork/commit/c3280c1433f8b64bb0ed28acf191d6c4c777210b)
 
 ## Results and Discussion
 
-We report on results of train+test with the following breakup:
+We report the results of train+test with the following breakup:
 - train with all SBD annotations (11K images)
 - test with all VO12-val annotations disjoint from SBD (907 images),
   <br>(some call it RV-VOC12 ("restricted validation") while others use this name for other set.)
 
-We trained with Adam, mostly with 15 epochs with initial learning rate, then reducing X10 for another 15, twice
-(for a total of 45), but found that second part is marginally useful while 3rd is mostly redundant
-(most nets are converged by that time). So most results are after +-35 epochs.
-<br>  * *...Note - that claim is of course dependent on initial rate (and batch size, momentum, etc.),
+We trained with Adam. The first 15 epochs with initial learning rate, then reducing X10 for another 15 (twice)
+for a total of 45 epochs. We found that the second stage is marginally useful while the 3rd is mostly redundant
+(most nets are already converged by that time). So most results are after +-35 epochs.
+<br>  * *...Note - that claim is obviously dependent on the initial learnig rate (and batch size, momentum, etc.),
        we use the (..very roughly..) largest that gives good initial convergence.*
 
-All nets trained with similar hyperparams to decent results which were quite robust to small param changes,
-<br> - except for VGG FE which was sensitive to learning rate, requiring smaller values of LR,
- and, in FCN16 variant, was very sensitive to the init of skip-connection params, requiring a zero init.
- <br>That is consistent with original FCN paper(s) which describe two-stage training or
+All nets trained were with similar hyperparams and the results were robust to small param changes,
+<br> - except for VGG FE which was sensitive to learning rate, requiring smaller values of LR. 
+ its FCN16 variant was very sensitive to the init of skip-connection params, requiring a zero init.
+ <br>That is consistent with original FCN paper(s) which described two-stage training or
  "all-at-once" (like us) but with ad-hoc scaling of the skip-connections as a primitive normalization.
- Relative to them, we here use Adam optimizer which makes stuff more robust, such that zero-init
- (very roughly) simulates a two-stage process of optimize-FCN32 then finesse with skip-connection..
+ Relative to them, we use an Adam optimizer which makes stuff more robust, such that zero-init
+ (very roughly) simulates a two-stage process of optimized-FCN32 then fine-tune with skip-connection..
 
 The other FEs also have BatchNorm which seem to add more robustness - to higher LR, random init of skip-conn., etc.
-It does (naturally) require a >1 batch size for train - which is fine, it's also good for GPU efficiency.
+We used a batch size of 16 (but in limited testing found that for reasonable values e.g. 8,32 the results are the same)
 
 Input images were scaled so larger side becomes 512 pixels, then padded to 512x512
  <br>* *Note - that's a parameter, you can change that - inc. just for test time;
