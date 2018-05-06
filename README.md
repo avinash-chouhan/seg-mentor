@@ -54,7 +54,7 @@ Besides, there is lot of terra incognita even before going to SoA architectures 
  - ***What's the influence of the base Feature Extractor (FE)?
    <br>To which extent does the performance of a FE on a classfication task correlate with its performance on a segmentation task? is this meta-architecture dependent? Can one design a FE specifically for segmentation usage?***
  - ***Since we use pre-trained models, are the optimal training hyper-parameters sensitve to choice of FE?***
- - ***How to design simple, effective and efficient decoder blocks for seg' nets using lightweight (e.g. mobilenet) FEs?***
+ - ***What's the optimal decoder design for seg' nets based on lightweight (e.g. mobilenet) FEs?***
  - ***Do the failure modes of the net depend more on FE used or on meta-architecture? How can this be quantified (as opposed to stamp-collecting visual examples)***
  - ***Practical issues - how robust are the mIoU numbers to exact freeze point of training, test subset, etc.?***
 
@@ -64,15 +64,15 @@ In addition, worked-out examples of practical issues are hard to come by: how to
 
 #### We hope that the repo will be a good starting point for your own cool semantic-segmentation project, e.g. exploring one of the open questions above.
 
-As an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
+As a baseline we report an example project, we report here on some minimal decode-path enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par as the original VGG based, and share some practical tips and theoretical insight on architecture and training - see *Discussion* below
 
 ## Usage
 
 To all the gals that just want to segment,
-<br> It's easy to do just follow these steps 
+<br> It's easy to do, just follow these steps:
 
-1. **Steal** a linux PC with GPU (if you plan on training), create a python 2.7 virtualenv, activate and [install tensorflow-gpu](https://www.tensorflow.org/install/install_linux) (1.2 and up) inside. 
-<br> Run ```pip intstall -r requirements``` 
+1. **Steal** a linux PC with GPU (if you plan on training), create a python 2.7 virtualenv, activate and [install tensorflow<-gpu>](https://www.tensorflow.org/install/install_linux) (1.2 and up) inside. 
+<br> Run ```pip intstall -r requirements``` after editing
 1. **Clone** this repo and the [Hailo fork of tensorflow/models](https://github.com/hailotech/tf-models-hailofork) side-by-side, e.g. :
     ```bash
     git clone https://github.com/hailotech/hailo-segmentation
@@ -82,7 +82,7 @@ To all the gals that just want to segment,
 
 1. **Play** with segmentation using with our pre-trained models, by downloading them from *releases*, and jumping to **Test** below. Or, just [***jupyter***](http://jupyter.org/install) the [play-with-me notebook](play-with-me.ipynb )
 
-<br> If you want to train a segmentation net 
+<br> If you want to train a segmentation net:
 1. **Download pre-trained models** :
     1. Checkpoints for ImageNet-pretrained slim FE checkpoints using links in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)
         . If needed, get missing ones (ResNet18, ..) from http://dropbox/TBD (translated from pytorch-vision by benevolent Hailo ML team).
