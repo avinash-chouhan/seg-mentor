@@ -21,7 +21,7 @@ Left - original image || Center - segmented with ResNet18-FCN || Right - ground 
 ```
 
 Semantic segmentation is a critical task in machine vision apps in general and street scene understanding in particular.
-<br> Because you know, sometimes perception based solely on XY ortho-b-box object-detectors just won't cut it, and you need to ...(cringe alert) think outside of the box: 
+<br> Because you know, sometimes perception based solely on XY-aligned ~~orthodox~~ ortho(b)box object-detectors just won't cut it, and you need to ...(cringe alert) think outside of the box: 
 <div align="center">
 <img src="https://github.com/hailotech/hailo-segmentation/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
 </div>
@@ -34,8 +34,8 @@ We think the lack of images of car from this angle in the dataset is a part of t
 
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
 <br>and offer a modular code for semantic segmentation with FCN meta-architecture and its variants. Our goal was to make it simple to:
- - Choose the base FE (feature extractor) from a selection of [pretrained models] (https://github.com/tensorflow/models/tree/master/research/slim)
- - Enhance meta-architecture upward from FCN by switching to more sophisticated decoding blocks.
+ - Choose the base Feature Extractor (FE) aka Encoder from a selection of [pretrained models] (https://github.com/tensorflow/models/tree/master/research/slim)
+ - Enhance meta-architecture aka Decoder upward from FCN by switching to more sophisticated decoding blocks.
 
 The main runner offers command-line params control of architecture along these lines -
  <br> as well as of training and preprocessing hyperparameters.
@@ -52,7 +52,7 @@ and there are many nets which are both faster and with better accuracy. Implemen
 Besides, there is lot of terra incognita that seems worth exploring before going to state-of-the-art architectures - using simplest decent net(s) to facilitate insight:
 
  - ***What's the influence of the base Feature Extractor (FE) a.k.a Encoder on the segmentation task?
-   <br>To which extent does the performance of a FE on a classfication task correlate with its performance on a segmentation task? is this meta-architecture (a.k.a Decoder) dependent? Can one design a FE specifically for segmentation usage?***
+   <br>To which extent does the performance of a FE on a classfication task correlate with its performance on a segmentation task? is this meta-architecture (a.k.a Decoder) dependent? Are there seg.-performance gains to be made by architecting FE specifically for usage as seg. encoder (trading off classification performance)?***
  - ***Regarding the training/fine-tuning of segmentation nets based on pre-trained FEs, how does the optimal choice of hyper-parameters depend on choice of FE, decoder?***
  - ***How to optimally architect segmentation decoder when building on lightweight (e.g. mobilenet) FEs?***
  - ***What are the failure modes of the net? How do they depend on the FE or the decoder used? How can this be quantified (beyond stamp-collecting visual examples and gross-averaged metrics s.a. mIoU)?***
@@ -63,7 +63,7 @@ And even before open research questions, there are important practical issues, w
 
 #### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring one of the open questions above, or deploying a lightweight solution to a practical app.  
 
-As an example of such a project, we're researching some minimal decoder enhancements (***FCN+***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN. Coming soon:)
+As an example of such a project, we're researching some minimal decoder enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN. Coming soon:)
 
 We also share some practical training tips and thoughts - see *Discussion* below
 
@@ -173,7 +173,7 @@ Note that if you choose the red script across the decoder blocks, you get the or
 This is what's implemented in the ```FcnArch``` class, provided as the baseline example of the ```BaseFcnArch``` interface.
 
 Switching feature extractor (FE) is done **without code change among the currently supported FEs** (VGG, ResNet18/50, Inception_V1 aka googlenet, Mobilenet_V1, ..., - can't commit to having this sentence updated, so just check out the dictionary at the top of ```fcn_arch.py``` -:). **To add support for another FE** you'll need an incremental change in the dict and similar places (we're sure you can figure it out), AND a modification of the net in the sister repo (fork of slim-models); like [we did it for ResNet](https://github.com/hailotech/tf-models-hailofork/commit/c3280c1433f8b64bb0ed28acf191d6c4c777210b):
-1. Change net func signature from ```logits = net(images, ...)``` to ```logits = net(images, ..., base_only=False, **kwargs)```
+1. Change net func signature from ```logits = net(images, ...)``` to ```logits = net(images, ..., base_only=False, **kwargs)``` to add bare-FE option while preserving compatibility..
 1. In the body of the function add :
 ```
 if base_only:
@@ -235,7 +235,7 @@ Adam (std.), LR=3e-4, /=10@15,30ep, bs=16, ~40 epochs.
 ( * * *): LR(ini.) = 3e-5
 
 ##### ts2 
-..coming soon..
+...gain for some of the nets... - yet to be found!
 
 #### Discussion
 
@@ -277,7 +277,7 @@ but that doesn't mean some metric improvement (and insight on the side) couldn't
 
 Contributions are welcome! :)
 
-### FCN+ results
+### FCN+W results
 ...Coming soon...
 
 #### Discussion 
