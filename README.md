@@ -36,20 +36,17 @@ We embrace the Tensorflow framework and specifically the tf-slim API (and associ
  - *Choose* the base Feature Extractor (FE) aka Encoder from a selection of [pretrained models](https://github.com/tensorflow/models/tree/master/research/slim)
  - *Tinker* with the segmentation meta-architecture (aka Decoder) building on the FE. Currently we support FCN out-of-the-box + a path to upgrade the decoding blocks in 2-3 lines of code along a simple [abstraction](#Architecture)
  - *Share* the datafeed/train/test boilerplate between all variants (vs. taming yet-another repo per net/paper).
- 
-The main runner offers command-line params control of architecture along these lines -
- <br> as well as of training and preprocessing hyperparameters.
+ - *Config* as much as possbile of architecture and training procedures w.o. touching code
 
 We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
  and offer some nice monitoring leveraging this api's advanced features. Pre-conversion scripts for Pascal VOC and COCO-Stuff is provided.
  
 As a baseline, we trained & tested classic FCNs with different feature extractors on the Pascal VOC dataset.
 
-NThe state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
-and there are many nets which are both faster and with better accuracy.
-Implementing some of these over our framework is part of the roadmap here.
+The state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
+and there are many nets which are both faster and with better accuracy, and implementing some of these over our framework is surely part of the roadmap here.
 
-However, there's a lot of terra incognita that seems worth exploring before rushing to state-of-the-art architectures.
+However, there's a lot of terra incognita that seems worth exploring before rushing to state-of-the-art nets.
  Playing with a simple-no-thrills decoder can still give us insight into some fundemantal questions:
 
  - ***What's the influence of the base Feature Extractor (FE) a.k.a Encoder on the segmentation task?
@@ -68,7 +65,7 @@ how does the optimal choice of hyper-parameters depend on choice of FE, decoder?
 We don't have the answers to any of the above but we feel that a good infrastructure for running quick experiments can help. And if it doesn't - well at least we all had fun, right?
 <br> And even before open research questions, there are important practical issues,
 worked-out examples of which are hard to come by.
-For instance - how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, how robust are the mIoU numbers to exact freeze point of training, test subset, etc. These are important for adaptations and deployments to real-life and real-stakes problems, quite possibly more than another 3% in the metric.
+For instance - how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, how robust are the mIoU numbers to exact freeze point of training, test subset, etc. These are important for adaptations and deployments to real-life and real-stakes problems (quite possibly more than another +3% in the metric) - especially to the resource-constraint ones which call for lightweight nets anyways.
 
 
 ## Contribution
