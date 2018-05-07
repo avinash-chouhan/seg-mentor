@@ -93,8 +93,8 @@ To all the gals out there with semants to segment,
     ```
     (to let fcn net builder code call into slim FEs implementations in ```models/research/slim/nets```)
 
-1. **Play** with segmentation using with our pre-trained models, by downloading them from *releases*,
-  and jumping to **Test** below. Or, check out the [play-with-me notebook](play-with-me.ipynb) using [*jupyter*](http://jupyter.org/install).
+1. **Play** with segmentation using with our pre-trained models, by downloading them from [seg-mentor/Releases](https://github.com/hailotech/seg-mentor/releases/tag/v0.5), and jumping to **Test** below. Or, check out the [play-with-me notebook](play-with-me.ipynb) using [*jupyter*](http://jupyter.org/install).
+
 
 <br> If you want to train a segmentation net:
 1. **Download** :
