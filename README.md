@@ -186,7 +186,7 @@ Note that if you choose the red script across the decoder blocks, you get the or
 This is what's implemented in the ```FcnArch``` class, provided as the baseline example of the ```BaseFcnArch``` interface.
 
 Also, note the dashed (..dotted) FCN8 (..4) optional skip connections.
-<br>(toggled by ```--fcn8, --fcn4``` flags to [fcn_train.py](fcn_train.py)); same for ```--fcn16``` - though we treat it as the norm as reflected in diagram).
+<br>(toggled by ```--fcn8, --fcn4``` flags to [fcn_train.py](fcn_train.py); got ```--fcn16``` too but we treat that as the norm).
 
 Switching feature extractor (FE) is done **without code change among the currently supported FEs** (VGG, ResNet18/50, Inception_V1 aka googlenet, Mobilenet_V1, ... - can't commit to having this sentence updated, so just check out the dictionary at the top of ```fcn_arch.py``` -:). **To add support for another FE** you'll need an incremental change in the dict and similar places (we're sure you can figure it out), AND a modification of the net in the sister repo (fork of slim-models); like [we did it for inception etc.](https://github.com/hailotech/tf-models-hailofork/commit/c3280c1433f8b64bb0ed28acf191d6c4c777210b):
 1. Change net func signature from ```logits = net(images, ...)``` to ```logits = net(images, ..., base_only=False, **kwargs)``` to add bare-FE option while preserving compatibility..
@@ -195,7 +195,7 @@ Switching feature extractor (FE) is done **without code change among the current
 if base_only:
   return net, end_points
 ```
-between feature extracting stage and global-pool/fully-connected head. 
+between feature extracting stage and global-pool/fully-connected classification head. 
 
 
 ## Results and Discussion
