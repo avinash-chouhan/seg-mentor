@@ -213,6 +213,10 @@ def parse_record(serialized_example):
 def process_coco_stuff_things(imgsdir = '/data/coco',
                               traindir='train2017', valdir='val2017',
                               labelsdir='/data/coco/stuffthings_pixellabels'):
+    '''
+        Assumes stuff (pardon the pun) is downloaded & extracted
+         from https://github.com/nightrome/cocostuff#downloads (3 top files)
+    '''
     import os
     trainpairs = [(os.path.join(imgsdir, traindir, fname.replace('png', 'jpg')),
                    os.path.join(labelsdir, traindir, fname)) \
