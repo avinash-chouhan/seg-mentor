@@ -26,7 +26,7 @@ Some moving pictures from our office:
  </div>
 
 ```
-segmented with ResNet18-FCN.
+segmented with Inception_v1-FCN.
 
 Coloring: yellowish - person; greenish - chair; reddish - TV/monitor
 ```
@@ -45,11 +45,11 @@ We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
  
 As a baseline, we trained & tested classic FCNs with different feature extractors on the Pascal VOC dataset.
 
-Now, sure, the state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
+NThe state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
 and there are many nets which are both faster and with better accuracy.
 Implementing some of these over our framework is part of the roadmap here.
 
-Besides, there's a lot of terra incognita that seems worth exploring before rushing to state-of-the-art architectures.
+However, there's a lot of terra incognita that seems worth exploring before rushing to state-of-the-art architectures.
  Playing with a simple-no-thrills decoder can still give us insight into some fundemantal questions:
 
  - ***What's the influence of the base Feature Extractor (FE) a.k.a Encoder on the segmentation task?
@@ -75,7 +75,7 @@ For instance - how to monitor training, how to estimate the actual variance/"err
 
 #### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring one of the open questions above, or deploying a lightweight solution to a practical app.  
 
-As an example of such a project, we're researching some minimal decoder enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN, with architectural insight in mind. Coming soon:)
+As an example of such a project, we're researching some minimal decoder enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN, with architectural insight in mind. Stay tuned :)
 
 We also share some practical training tips and thoughts - see *Discussion* below
 
