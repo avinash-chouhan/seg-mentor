@@ -303,9 +303,8 @@ Beyond those, it was very useful as a headstart; we went far beyond a fork thoug
 An up-to-date work similar to ours is [RTSeg](https://github.com/MSiam/TFSegmentation) (see also ref. to paper below);
 Their 'SkipNet' architecture is in fact an FCN (altouhgh some details are not as in the original paper), 
   so when they marry that to ResNet18 and Mobilenet_V1 it's similar to the corresponding subset of our work.
- Another work in similar vein is [Semantic-Segmentation-Suite](https://github.com/GeorgeSeif/Semantic-Segmentation-Suite) which is regualry updated with SoTA models. 
-
-Another multi-net shared-boilerplate segmentation repo is by GeorgeSeif, named [Semantic-Segmentation-Suite](https://github.com/GeorgeSeif/Semantic-Segmentation-Suite). It's focused on bringing most recent architectures as per respective papers. Modularity w.r.t both nets and datasets is claimed, but only partially delivered - not much of a shared abstraction layer beyond tf-slim, and CamVid as the only dataset demo (others supported if converted to same format but no demo scripts provided..).
+ 
+ Another work in similar vein is [Semantic-Segmentation-Suite](https://github.com/GeorgeSeif/Semantic-Segmentation-Suite) which is regularly updated with SoTA models. Modularity w.r.t both nets and datasets is sought but only partially delivered - not much of a shared abstraction layer beyond tf-slim, and CamVid as the only dataset demo (others supported if converted to same format but no demo scripts provided..).
 
 ## Contacts (maintainers)
 Alex Finkelstein ([github](https://github.com/falex-ml)) & Mark Grobman ([github](https://github.com/grobman)) 
