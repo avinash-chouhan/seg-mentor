@@ -99,15 +99,17 @@ def test(image, annotation, predictions, checkpoint, iterator,
         print np.mean(iou) # a nice sanity check is to verify that it's the same as final_miou
 
 
-def visualize(image_np, annotation_np, upsampled_predictions):
+def visualize(image_np, upsampled_predictions, annotation_np=None, i=0):
     plt.figure(figsize=(30, 10))
+    subplots = 3 if annotation_np else 2
     plt.suptitle('image #{0}'.format(i))
-    plt.subplot(131)
+    plt.subplot(1, subplots, 1); plt.title("orig image")
     plt.imshow(image_np)
-    plt.subplot(132)
+    plt.subplot(1, subplots, 2); plt.title("segmentation")
     utils.visualization.visualize_segmentation_adaptive(upsampled_predictions, pascal_voc_lut, image_np)
-    plt.subplot(133)
-    utils.visualization.visualize_segmentation_adaptive(annotation_np.squeeze(), pascal_voc_lut, image_np)
+    if annotation_np:
+        plt.subplot(1, subplots, 3); plt.title("ground truth")
+        utils.visualization.visualize_segmentation_adaptive(annotation_np.squeeze(), pascal_voc_lut, image_np)
     plt.show()
 
 def get_data_feed(pixels):
@@ -120,31 +122,37 @@ def get_data_feed(pixels):
     return iterator
 
 
-def single_image_feed(image_path, pixels=None):
+def segment_image(fcnfunc, checkpoint, image_path, pixels=None):
     image = tf.read_file(image_path)
     image = tf.image.decode_jpeg(image)
-    input_shape = tf.to_float(tf.shape(image))[:2]
-    image = tf.expand_dims(image, 0)
+    image_t3d, predictions = prepare_ph_path(fcnfunc, image, pixels)
 
-    pixels = pixels or tf.reduce_max(input_shape)
-    scale = tf.reduce_min(pixels / input_shape)
-    image = tf.image.resize_nearest_neighbor(image, tf.cast(tf.round(input_shape * scale), tf.int32))
-    image = tf.image.resize_image_with_crop_or_pad(image, pixels, pixels)
-    image = tf.reshape(image, [1, pixels, pixels, 3])
-    annotation = tf.zeros([1, pixels, pixels, 1])
+    with tf.Session() as sess:
+        sess.run(tf.local_variables_initializer())
+        tf.train.Saver().restore(sess, checkpoint)
+        scaled_image, inferred_pixel_labels = sess.run([image_t3d, predictions])#, {image_ph: image_in})
+        visualize(scaled_image, inferred_pixel_labels)
 
-    dataset = data.Dataset.from_tensor_slices((image, annotation))
-    iterator = dataset.repeat().make_initializable_iterator()
-    return iterator
+# def single_image_feed(image_path, checkpoint, pixels=None):
+#     input_shape = tf.to_float(tf.shape(image))[:2]
+#     image = tf.expand_dims(image, 0)
+#
+#     pixels = pixels or tf.reduce_max(input_shape)
+#     scale = tf.reduce_min(pixels / input_shape)
+#     image = tf.image.resize_nearest_neighbor(image, tf.cast(tf.round(input_shape * scale), tf.int32))
+#     image = tf.image.resize_image_with_crop_or_pad(image, pixels, pixels)
+#     image = tf.reshape(image, [1, pixels, pixels, 3])
+#     annotation = tf.casttf.zeros([1, pixels, pixels, 1])
+#
+#     dataset = data.Dataset.from_tensor_slices((image, annotation))
+#     iterator = dataset.repeat().make_initializable_iterator()
+#     return iterator
 
-def segment_movie(fcnfunc, checkpoint, video_file_in, pixels=None):
-    from PIL import Image
-
-    image_ph = tf.placeholder(tf.int32) #, shape=)
+def prepare_ph_path(fcnfunc, image_ph, pixels=None):
 
     input_shape = tf.to_float(tf.shape(image_ph))[:2]
     image_t = tf.expand_dims(image_ph, 0)
-    pixels = pixels or tf.reduce_max(input_shape)
+    pixels = pixels or tf.reduce_max(input_shape) # won't really work w. pixels==None
     scale = tf.reduce_min(pixels / input_shape)
 
     inshape32 = tf.cast(tf.round(input_shape * scale), tf.int32)
@@ -157,13 +165,20 @@ def segment_movie(fcnfunc, checkpoint, video_file_in, pixels=None):
     cropback = True
     if cropback:
         image_t3d = tf.image.resize_image_with_crop_or_pad(image_t, inshape32[0], inshape32[1])
-        predictions = tf.image.resize_image_with_crop_or_pad(tf.expand_dims(predictions, -1), inshape32[0], inshape32[1])
+        predictions = tf.image.resize_image_with_crop_or_pad(predictions, #tf.expand_dims(predictions, -1),
+                                                             inshape32[0], inshape32[1])
 
     image_t3d = tf.squeeze(image_t3d)
     predictions = tf.squeeze(predictions)
 
-    # weights = tf.cast(tf.less_equal(predictions, number_of_classes - 1), tf.int64)
-    # predictions = predictions * weights # tf.cast(weights, tf.int32)
+    return image_t3d, predictions
+
+def segment_movie(fcnfunc, checkpoint, video_file_in, pixels=None):
+    from PIL import Image
+    from moviepy.editor import VideoFileClip
+
+    image_ph = tf.placeholder(tf.int32)  # , shape = smth w. pixels (doesn't work..:)
+    image_t3d, predictions = prepare_ph_path(fcnfunc, image_ph, pixels)
 
     with tf.Session() as sess:
         sess.run(tf.local_variables_initializer())
@@ -171,7 +186,6 @@ def segment_movie(fcnfunc, checkpoint, video_file_in, pixels=None):
         ext = '.mp4'
         video_file_out = video_file_in.replace(ext, '_segmented'+ext)
 
-        from moviepy.editor import VideoFileClip
         input_clip = VideoFileClip(video_file_in)
 
         mask_alpha = round(0.3*255)
@@ -251,9 +265,11 @@ if __name__ == "__main__":
     fcn_builder = fcn_arch.FcnArch(number_of_classes=number_of_classes, is_training=False, net=args.basenet,
                                    trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
 
-    # note: after adaptation, network returns final labels and not logits
+    # ..From logits to class predictions
     if pixels == (pixels/32)*32.0 :
-        fcnfunc_img2labels = lambda img: tf.argmax(fcn_builder.build_net(img), dimension=3)
+        def fcnfunc_img2labels(img):
+            tmp = tf.argmax(fcn_builder.build_net(img), dimension=3)
+            return tf.expand_dims(tmp, 3)
     else:
         print '...non-mult of 32, doing the generic adaptation...'
         fcnfunc_img2labels = utils.inference.adapt_network_for_any_size_input(fcn_builder.build_net, 32)
@@ -262,8 +278,8 @@ if __name__ == "__main__":
         segment_movie(fcnfunc_img2labels, checkpoint, args.movie, pixels)
         exit()
     if args.single_image:
-        iterator = single_image_feed(args.single_image, pixels)
-        X_as_in_visualize_each_Xth_seg = 1
+        segment_image(fcnfunc_img2labels, checkpoint, args.single_image, pixels)
+        exit()
     else:
         iterator = get_data_feed(pixels)
         X_as_in_visualize_each_Xth_seg = args.vizstep
@@ -274,4 +290,4 @@ if __name__ == "__main__":
         predictions = fcnfunc_img2labels(tf.expand_dims(image, axis=0))
         test(image, annotation, predictions, checkpoint, iterator)
     else: 
-	print("Please contact Hailo to enter Early Access Program and gain access to Hailo-quantized version of this net")
+	    print("Coming soon - quantized version for real-time deployments...")

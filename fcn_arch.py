@@ -88,7 +88,7 @@ class BaseFcnArch:
                                     # ..last s16 - out of block 3,
                                     #   just before stride to /32 in first unit of block4
                                     'tname_s16_skipconn': '{0}/resnet_v1_18/block3',
-                                    'tname_s8_skipconn': '{0}/resnet_v1_18/block2'
+                                    'tname_s8_skipconn': '{0}/resnet_v1_18/block2',
                                     'tname_s4_skipconn': '{0}/resnet_v1_18/block1'
                                     #'logits_opname': 'resnet_v1_18/logits'
                                     },
@@ -222,7 +222,7 @@ class BaseFcnArch:
 
             raise NotImplemented
 
-    def debug_endpoints(self, end_points, name)
+    def debug_endpoints(self, end_points, name):
         for k in end_points.keys():
             print k
         raise Exception('ERROR: Couldn''t find end point ' + name + ' in above endpoints ')
