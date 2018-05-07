@@ -19,17 +19,14 @@ We're making the world a better place by offering a modular sandbox in which you
 ```
 Left - original image || Center - segmented with ResNet18-FCN || Right - ground truth segmentation 
 ```
+Some moving pictures from our office:
 
-Semantic segmentation is a critical task in machine vision apps in general and street scene understanding in particular.
-<br> Because you know, sometimes perception based solely on XY-aligned ~~orthodox~~ ortho(b)box object-detectors just won't cut it, and you need to ...(cringe alert) think outside of the box: 
 <div align="center">
 <img src="https://github.com/hailotech/seg-mentor/blob/master/media/office.gif" width="80%" height="80%"><br><br>
  </div>
 
 ```
-Purple shading - cars (segmented with GoogleNet-FCN). 
-Groovy psychedelic frames - a cool failure mode worth exploring.
-We think the lack of images of car from this angle in the dataset is a part of the story, what else? 
+yellowish - person || greenish - chair || reddish - TV/monitor
 ```
 
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
