@@ -37,8 +37,8 @@ def _discrete_matshow_adaptive(data, labels_names=[], orig_image=None, title="")
     if labels_names:
         cax.ax.set_yticklabels(labels_names)
     
-    if title:
-        plt.suptitle(title, fontsize=15, fontweight='bold')
+    #if title:
+    #    plt.suptitle(title, fontsize=15, fontweight='bold')
     
     #plt.show()
 

@@ -479,7 +479,7 @@ def get_augmented_pascal_image_annotation_filename_pairs(pascal_root, pascal_ber
     
         Let BT, BV, PT, PV, and PX be the Berkeley training and validation
         sets and PASCAL segmentation challenge training, validation, and
-        test sets. Let T, V, X the final trainig, validation, and test
+        scan_val_set sets. Let T, V, X the final trainig, validation, and scan_val_set
         sets.
 
         Mode 1::
@@ -495,7 +495,7 @@ def get_augmented_pascal_image_annotation_filename_pairs(pascal_root, pascal_ber
         In all cases:
 
               S = PT + PV + BT + BV
-              X = PX  (the test set is uncahgend)
+              X = PX  (the scan_val_set set is uncahgend)
               T = (S \ V) \ X (the rest is training material)
     Parameters
     ----------

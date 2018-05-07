@@ -24,22 +24,19 @@ pascal_voc_lut = utils.pascal_voc.pascal_segmentation_lut()
 
 validation = True
 
-# That's our slightly hacky way to (optionally) sample and visualize some segmentations..
-# X_in_visualize_each_Xth_seg =1
-X_as_in_visualize_each_Xth_seg = 3455
-
 # ...assumes "mode 2" in utils.pascal_voc.get_augmented_pascal_image_annotation_filename_pairs()
 #     was used on creation of the tfrecord file
 VALIDATION_SET_SIZE = utils.pascal_voc.PASCAL12_VALIDATION_WO_BERKELEY_TRAINING  # 904 RV-VOC12
 
 
-def test(image, annotation, predictions, checkpoint, iterator,
-         num_images=VALIDATION_SET_SIZE, more_tensors_to_eval=[], callback=None):
+def scan_val_set(image, annotation, predictions, checkpoint, iterator,
+                 num_images=VALIDATION_SET_SIZE, more_tensors_to_eval=[], callback=None):
     """
-        iterate over the validation set, visualize each so and so and/or compute overall mIoU metric
+        iterate over the validation set, and compute overall (m)IoU metric(s)
 
-        # Note tensors_to_eval & callback - a future placeholder for additional operation(s)
+        # Note tensors_to_eval & callback - a placeholder for additional operation(s)
             to be run in the context of each image, without changing this function code..
+            e.g. visualize images 20-25
     """
     annotation_batch_tensor = tf.expand_dims(annotation, axis=0)
 
@@ -70,61 +67,56 @@ def test(image, annotation, predictions, checkpoint, iterator,
         sess.run(iterator.initializer)
         saver.restore(sess, checkpoint)
 
-        for i in xrange(num_images):
-            # note a bit different run for visualization vs. evaluation purposes...
-            if (i+1) % X_as_in_visualize_each_Xth_seg == 0:
-                # TODO implement as a default callback..
-                image_np, annotation_np, pred_np, _, conf_tmp = \
-                    sess.run([image, annotation, predictions, update_op, conf_op])
-                visualize(image_np, annotation_np, pred_np.squeeze())
-            else:
-                _eval_res = sess.run([conf_op, update_op]+more_tensors_to_eval)
-                conf_tmp = _eval_res[0]
-                if callback: # a placeholder to inject more functionality w.o. changing this func
-                    callback(_eval_res[2:])
+        for i in range(num_images):
+            _eval_res = sess.run([conf_op, update_op]+more_tensors_to_eval)
+            conf_tmp = _eval_res[0]
+            if callback: # a placeholder to inject more functionality w.o. changing this func
+                callback(i, _eval_res[2:])
             conf_mtx += conf_tmp
 
-            final_miou = sess.run(miou)
+        final_miou = sess.run(miou)
+        print("Final mIoU for {0} images is {1:.2f}%".format(num_images, final_miou * 100))
 
+        print("\n\n ---- Breakup by class: ----")
         diag = conf_mtx.diagonal()
         err1 = conf_mtx.sum(axis=1) - conf_mtx.diagonal()
         err2 = conf_mtx.sum(axis=0) - conf_mtx.diagonal()
         iou = diag / (0.0 + diag + err1 + err2)
-
-        print("Final mIoU for {0} images is {1:.2f}%".format(num_images, final_miou*100))
-        print("\n\n ---- Breakup by class: ----")
-        print(pascal_voc_lut)
+        # print(pascal_voc_lut)
         for i, x in enumerate(iou):
             print(pascal_voc_lut[i]+': {0:.2f}%'.format(x*100))
-        print np.mean(iou) # a nice sanity check is to verify that it's the same as final_miou
+        print(np.mean(iou)) # just a sanity check to verify that it's the same as final_miou
 
 
 def visualize(image_np, upsampled_predictions, annotation_np=None, i=0):
     plt.figure(figsize=(30, 10))
-    subplots = 3 if annotation_np else 2
+    subplots = 2 if annotation_np is None else 3
     plt.suptitle('image #{0}'.format(i))
     plt.subplot(1, subplots, 1); plt.title("orig image")
     plt.imshow(image_np)
     plt.subplot(1, subplots, 2); plt.title("segmentation")
-    utils.visualization.visualize_segmentation_adaptive(upsampled_predictions, pascal_voc_lut, image_np)
-    if annotation_np:
+    utils.visualization.visualize_segmentation_adaptive(upsampled_predictions.squeeze(), pascal_voc_lut, image_np)
+    if annotation_np is not None:
         plt.subplot(1, subplots, 3); plt.title("ground truth")
         utils.visualization.visualize_segmentation_adaptive(annotation_np.squeeze(), pascal_voc_lut, image_np)
     plt.show()
 
-def get_data_feed(pixels):
+def get_data_feed(pixels=None):
     dataset = data.TFRecordDataset([validation_records]).map(utils.tf_records.parse_record)  # .batch(1)
-    if pixels != 0:
+    if pixels is not None:
         dataset = dataset.map(lambda img, ann:
                               utils.augmentation.nonrandom_rescale(img, ann, [pixels, pixels]))
-
+    else:
+        dataset = dataset.map(lambda img, ann:
+                              (img, tf.cast(ann, tf.int32)))
     iterator = dataset.repeat().make_initializable_iterator()
     return iterator
 
 
 def segment_image(fcnfunc, checkpoint, image_path, pixels=None):
     image = tf.read_file(image_path)
-    image = tf.image.decode_jpeg(image)
+    image = tf.image.decode_jpeg(image, channels=3)
+    # image = tf.image.decode_jpeg(image) # TODO this would enable monochrome images but currently breaks other stuff...
     image_t3d, predictions = prepare_ph_path(fcnfunc, image, pixels)
 
     with tf.Session() as sess:
@@ -133,30 +125,23 @@ def segment_image(fcnfunc, checkpoint, image_path, pixels=None):
         scaled_image, inferred_pixel_labels = sess.run([image_t3d, predictions])#, {image_ph: image_in})
         visualize(scaled_image, inferred_pixel_labels)
 
-# def single_image_feed(image_path, checkpoint, pixels=None):
-#     input_shape = tf.to_float(tf.shape(image))[:2]
-#     image = tf.expand_dims(image, 0)
-#
-#     pixels = pixels or tf.reduce_max(input_shape)
-#     scale = tf.reduce_min(pixels / input_shape)
-#     image = tf.image.resize_nearest_neighbor(image, tf.cast(tf.round(input_shape * scale), tf.int32))
-#     image = tf.image.resize_image_with_crop_or_pad(image, pixels, pixels)
-#     image = tf.reshape(image, [1, pixels, pixels, 3])
-#     annotation = tf.casttf.zeros([1, pixels, pixels, 1])
-#
-#     dataset = data.Dataset.from_tensor_slices((image, annotation))
-#     iterator = dataset.repeat().make_initializable_iterator()
-#     return iterator
-
 def prepare_ph_path(fcnfunc, image_ph, pixels=None):
+    image_t = tf.expand_dims(image_ph, 0)
+
+    if pixels is None:
+        predictions = tf.squeeze(fcnfunc(image_t))
+        image_t3d = tf.cast(tf.squeeze(image_t), tf.int32)
+        return image_t3d, predictions
 
     input_shape = tf.to_float(tf.shape(image_ph))[:2]
-    image_t = tf.expand_dims(image_ph, 0)
-    pixels = pixels or tf.reduce_max(input_shape) # won't really work w. pixels==None
+
+    #pixels = pixels or tf.reduce_max(input_shape) # won't really work w. pixels==None
     scale = tf.reduce_min(pixels / input_shape)
 
     inshape32 = tf.cast(tf.round(input_shape * scale), tf.int32)
-    image_t = tf.image.resize_nearest_neighbor(image_t, inshape32)
+    #image_t = tf.image.resize_nearest_neighbor(image_t, inshape32)
+    image_t = tf.image.resize_area(image_t, inshape32) # better in case of downsampling (avoids aliasing a.k.a "moire")
+    #print 'pixels', pixels
     image_t = tf.image.resize_image_with_crop_or_pad(image_t, pixels, pixels)
     image_t3d = image_t = tf.reshape(image_t, [1,pixels,pixels,3])
 
@@ -168,7 +153,7 @@ def prepare_ph_path(fcnfunc, image_ph, pixels=None):
         predictions = tf.image.resize_image_with_crop_or_pad(predictions, #tf.expand_dims(predictions, -1),
                                                              inshape32[0], inshape32[1])
 
-    image_t3d = tf.squeeze(image_t3d)
+    image_t3d = tf.cast(tf.squeeze(image_t3d), tf.int32)
     predictions = tf.squeeze(predictions)
 
     return image_t3d, predictions
@@ -217,21 +202,27 @@ if __name__ == "__main__":
     parser.add_argument('--traindir', type=str,
                         help='the folder in which the results of the training run reside..',
                         default='')
-    # TODO add back an option to run without preprocessing... ("native")
+    # TODO add back an option to run "native" (without pre-scaling to pixels x pixels at all)
     parser.add_argument('--pixels', dest='pixels', type=int,
-                         help='if not zero, normalize (interpolate&crop) image (and annotation)'
-                              ' to pixels X pixels before inference... otherwise use the training setting',
-                         default=0)
-    parser.add_argument('--vizstep', type=int,
-                        help='set to X < size(val.set) to draw visualization each X images',
+                         help='A.) if >0, normalize images (&annotation) to [pixels X pixels] '
+                                 ' before shoving them down the net''s throat,'
+                                 ' by up(down)sampling larger side and padding the other to get square shape'                              
+                              'B.) if -1 use the *pixels* used at train time (normally gives best results)'
+                              'C.) if 0 dont preprocess ("native")',
+                         default=-1)
+    parser.add_argument('--first2viz', type=int,
+                        help='set to X < size(val.set) to draw visualization for images between X and Y',
+                        default=5555)
+    parser.add_argument('--last2viz', type=int,
+                        help='set to Y > X to draw visualization for images between X and Y',
                         default=5555)
     parser.add_argument('--hquant', type=bool,
                         help='set to True to do a Hailo-quantized run...',
                         default=False)
-    parser.add_argument('--single_image', type=str,
+    parser.add_argument('--imagepath', type=str,
                         help='set to a path in order to run on a single image',
                         default=None)
-    parser.add_argument('--movie', type=str,
+    parser.add_argument('--moviepath', type=str,
                         help='set to a path in order to run on a movie',
                         default=None)
     parser.add_argument('--gpu', '-g', type=int,
@@ -250,44 +241,51 @@ if __name__ == "__main__":
 
     checkpoint = args.traindir+'/fcn.ckpt' 
     if args.afteriter!=0 :
-	checkpoint += ('_'+str(args.afteriter))
-    testpixels = args.pixels
+        checkpoint += ('_'+str(args.afteriter))
 
     # get the architecture configuration from the training run folder..
     import json
     trainargs = json.load(open(args.traindir+'/runargs'))
+
+    # resolve the working resolution - passed as arg CLI / used in train / "native" of image
+    if args.pixels > 0:
+        pixels = args.pixels
+    elif args.pixels < 0:
+        pixels = trainargs['pixels']
+    else:
+        pixels = None
+
+    # Build net, using architecture flags which were used in train (test same net as trained)
     args.__dict__.update(trainargs)
-
-    pixels = testpixels or args.pixels # use what's given, with the training as default.
-
-    tf.reset_default_graph()
-
     fcn_builder = fcn_arch.FcnArch(number_of_classes=number_of_classes, is_training=False, net=args.basenet,
                                    trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
 
     # ..From logits to class predictions
-    if pixels == (pixels/32)*32.0 :
+    if pixels > 0 and pixels == (pixels/32)*32.0 :
         def fcnfunc_img2labels(img):
             tmp = tf.argmax(fcn_builder.build_net(img), dimension=3)
             return tf.expand_dims(tmp, 3)
     else:
-        print '...non-mult of 32, doing the generic adaptation...'
+        print('..."native" mode or size not multiple of 32, doing the generic adaptation...')
         fcnfunc_img2labels = utils.inference.adapt_network_for_any_size_input(fcn_builder.build_net, 32)
 
-    if args.movie:
-        segment_movie(fcnfunc_img2labels, checkpoint, args.movie, pixels)
-        exit()
-    if args.single_image:
-        segment_image(fcnfunc_img2labels, checkpoint, args.single_image, pixels)
-        exit()
-    else:
+    # OK, let's get data build graph and run stuff!
+    tf.reset_default_graph()
+
+    if args.moviepath:
+        # (!) this fails for "native" res. not so interesting..
+        segment_movie(fcnfunc_img2labels, checkpoint, args.moviepath, pixels)
+    elif args.imagepath:
+        segment_image(fcnfunc_img2labels, checkpoint, args.imagepath, pixels)
+    else: # run over the validation set
         iterator = get_data_feed(pixels)
-        X_as_in_visualize_each_Xth_seg = args.vizstep
-
-    image, annotation = iterator.get_next()
-
-    if not args.hquant:
+        image, annotation = iterator.get_next()
+        if args.hquant:
+            print("Coming soon - quantized version for real-time deployments...")
         predictions = fcnfunc_img2labels(tf.expand_dims(image, axis=0))
-        test(image, annotation, predictions, checkpoint, iterator)
-    else: 
-	    print("Coming soon - quantized version for real-time deployments...")
+        def viz_cb(i, (image_np, upsampled_predictions, annotation_np)):
+            if args.first2viz <= i < args.last2viz:
+                visualize(image_np, annotation_np, upsampled_predictions, i)
+        scan_val_set(image, annotation, predictions, checkpoint, iterator,
+                     callback=viz_cb, more_tensors_to_eval=[image, annotation, predictions])
+

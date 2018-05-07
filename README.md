@@ -47,18 +47,29 @@ We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
 As a baseline, we trained & tested classic FCNs with different feature extractors on the Pascal VOC dataset.
 
 Now, sure, the state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
-and there are many nets which are both faster and with better accuracy. Implementing some of these over our framework is part of the roadmap here.
+and there are many nets which are both faster and with better accuracy.
+Implementing some of these over our framework is part of the roadmap here.
 
-Besides, there is lot of terra incognita that seems worth exploring before going to state-of-the-art architectures. Playing with a simple-no-thrills decoder can still give us insight into some fundemantal questions:
+Besides, there is lot of terra incognita that seems worth exploring before going to state-of-the-art architectures.
+ Playing with a simple-no-thrills decoder can still give us insight into some fundemantal questions:
 
  - ***What's the influence of the base Feature Extractor (FE) a.k.a Encoder on the segmentation task?
-   <br>To which extent does the performance of a FE on a classfication task correlate with its performance on a segmentation task? is this meta-architecture (a.k.a Decoder) dependent? Are there seg.-performance gains to be made by designing FE specifically for usage as seg. encoder (trading off classification performance)?***
- - ***Regarding the training/fine-tuning of segmentation nets based on pre-trained FEs, how does the optimal choice of hyper-parameters depend on choice of FE, decoder?***
+   <br>To which extent does the performance of a FE on a classfication task correlate
+with its performance on a segmentation task? is this meta-architecture (a.k.a Decoder) dependent?
+Are there seg.-performance gains to be made by designing FE specifically for usage as seg. encoder
+(trading off classification performance)?***
+ - ***Regarding the training/fine-tuning of segmentation nets based on pre-trained FEs,
+how does the optimal choice of hyper-parameters depend on choice of FE, decoder?***
  - ***How to optimally build a decoder for segmentation when using lightweight (e.g. mobilenet) FEs?***
- - ***What are the failure modes of the net? How do they depend on the FE or the decoder used? How can this be quantified (beyond stamp-collecting visual examples and gross-averaged metrics s.a. mIoU)?***
- 
+ - ***What are the failure modes of the net? How do they depend on the FE or the decoder used?
+ How can this be quantified (beyond stamp-collecting visual examples and gross-averaged metrics s.a. mIoU)?***
+ - ***How the datafeed (resolution, augmentations) and pre-training on other sets influences the failure modes,
+ and here too, are there synergistic effects with arhcitecture (FE, decoder)***
+
 We don't have the answers to any of the above but we feel that a good infrastructure for running quick experiments can help. And if it doesn't - well at least we all had fun, right?
-<br> And even before open research questions, there are important practical issues, worked-out examples of which are hard to come by. These include - how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, how robust are the mIoU numbers to exact freeze point of training, test subset, etc.
+<br> And even before open research questions, there are important practical issues,
+worked-out examples of which are hard to come by.
+These include - how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, how robust are the mIoU numbers to exact freeze point of training, scan_val_set subset, etc.
 
 
 ## Contribution
@@ -82,7 +93,8 @@ To all the gals out there with semants to segment,
     ```
     (to let fcn net builder code call into slim FEs implementations in ```models/research/slim/nets```)
 
-1. **Play** with segmentation using with our pre-trained models, by downloading them from *releases*, and jumping to **Test** below. Or, check out the [play-with-me notebook](play-with-me.ipynb) using [*jupyter*](http://jupyter.org/install).
+1. **Play** with segmentation using with our pre-trained models, by downloading them from *releases*,
+  and jumping to **Test** below. Or, check out the [play-with-me notebook](play-with-me.ipynb) using [*jupyter*](http://jupyter.org/install).
 
 <br> If you want to train a segmentation net:
 1. **Download** :
@@ -106,9 +118,10 @@ To all the gals out there with semants to segment,
       **Naming convention** for is ```tmp/<TODAY>_<NETNAME>__<#RUN>``` <br>
 
 1. **Run** ```python fcn_train.py --g 0 --basenet inception_v1 ```
-to start training plain FCN32-INCEPTION_V1 with default params (assuming default dirpaths!)
-using only 1st GPU if you're filthy rich and got a few of 'em.
-Note: you can customize your run with MANY flags, some of which we explain below but don't be that person who doesn't read the code she is using (or at the very least the CLI help).
+to start training something - here a FCN32-INCEPTION_V1 with default params (assumes default dirpaths!),
+using only 1st GPU if you're filthy rich and got a few of 'em (see *Tinker* below for more).
+Check out ``` --help``` for mor options, flags but don't be
+ that person who doesn't read the code she is using (or at least the ``` --help```).
 
 1. **Monitor** your training by :
     1. **Sanity checks**: using the folder documenting this training run:<br>
@@ -120,26 +133,30 @@ Note: you can customize your run with MANY flags, some of which we explain below
     1. **Tensorboard**: ```cd tboards && bash createlinks && tensorboard --logdir=. &```
      This way you see all past and present runs under <repo>/tmp in tensorboard 
     and you can use the checkboxes to see curves for a single run or several for side-by-side
-     comparison. Check out the noise around the ***test mIoU*** curve (incorporating randomness of both instantaneous checkpoint and 1/4 of test set used for evaluation) as a crude proxy for the typical deviation of the mIoU a.k.a "error-bars" that would be reported in ideal world
+     comparison. Check out the noise around the ***scan_val_set mIoU*** curve (incorporating randomness of both instantaneous checkpoint and 1/4 of scan_val_set set used for evaluation) as a crude proxy for the typical deviation of the mIoU a.k.a "error-bars" that would be reported in ideal world
       (w.o. the high stakes on framing a +1% improvement as a tectonic shift of SoA).
 
 2. **Test** the monster you've grown so far by ```python fcn_test.py --traindir <THIS-RUN-FOLDER> --g 1```
 <br> leveraging your second GPU (first  one is busy training..), as you can't wait... <br>
 Now seriously, give it a **20-30 hours** of training
-(use tensorboard to see *test-mIoU* flattening), then test and behold the converged IoU results.
-<br> Note: the mIoU of full test may surprise you with ~+5% discrepancy w.r.t the tensorboard plot. see Discussion below.
+(use tensorboard to see *scan_val_set-mIoU* flattening), then scan_val_set and behold the converged IoU results.
+<br> Note: the mIoU of full scan_val_set may surprise you with ~+5% discrepancy w.r.t the tensorboard plot. see Discussion below.
 Don't be shy and kill the process (find pid by ```ps aux | grep fcn_train```)
  if it burns your precious GPU cycles for no good reason.
-    1. If in doubt about convergence (or robusteness in general), run with ```--afteriter X```
-to test an intermediate checkpoint after X batches (check out your options by ```ls tmp/<THIS-TRAIN-DIR>```).
-    1. Get a feeling for what it means by visualizing results: re-running with ```--vizstep 1```.
-    1. Segment a specific image of your fancy with ```--singleimagepath``` or a movie with ```--movie```
+    1. Checkout [test](fcn_test.py) options with ```python fcn_test.py --help``` (or click).
+    1. If in doubt about convergence-status/robustness, run with ```--afteriter X```
+to scan_val_set an intermediate checkpoint after X batches (check out your options by ```ls tmp/<THIS-TRAIN-DIR>```).
+    1. Get a feeling for what it means by visualizing some val images, e.g. ##20-25 by ```--first2viz=20 --last2viz=25```.
+    1. Segment a specific image/movie of your fancy with ```--imagepath``` / ```--moviepath```
+    1. Play with the pre-(up/down)-scaling with ```--pixels``` (default is what train used; use 0 for no-prescale).
+    1. ...Or use [play-with-me notebook](play-with-me.ipynb) instead of CLI. See more rants there..
 
-1. **Tinker** - check out [fcn_train.py](fcn_train.py) CLI options, train other net(s) with modded process, e.g.:
+1. **Tinker** - check out [train](fcn_train.py) train options with ```python fcn_train.py --help```,
+play with training other net(s), and training process(es), e.g.:
     ```
     python fcn_train.py --basenet=resnet_v1_18 --batch_size=20 --learnrate=3e-4 --decaylr=True &
     ```
-    Think of interesting variations to test, convince your boss/supervisor to buy you 1K gpu-hours on amazon, run hyperparameter scan, reach cool insights.. ..publish, credit our help:)
+    Think of interesting variations to scan_val_set, convince your boss/supervisor to buy you 1K gpu-hours, run hyperparameter scan, reach cool insights.. ..publish, credit our help:)
 1. **Architect** - dive into [fcn_arch.py](fcn_arch.py) code, check out the ```BaseFcnArch``` interface, write your own subclass, train you own brand new net - with decoding path augmented and modified to your fancy, reach record-breaking mIoU reflecting your unique genius..
 1. **Develop** - read ***future work*** below and lend a hand:)
 1. [...](http://knowyourmeme.com/memes/profit)
@@ -186,9 +203,9 @@ between feature extracting stage and global-pool/fully-connected head.
 
 ## Results and Discussion
 
-We report the results of train+test with the following breakup (see also Appendix A):
+We report the results of train+scan_val_set with the following breakup (see also Appendix A):
 - train with all SBD annotations (11K images)
-- test with all VOC12-val annotations disjoint from SBD (907 images),
+- scan_val_set with all VOC12-val annotations disjoint from SBD (907 images),
   <br>(some call it RV-VOC12 ("restricted validation") while others use this name for other set.)
 
 We trained with Adam. The first 15 epochs with initial learning rate, then reducing X10 for another 15 (twice)
@@ -209,9 +226,9 @@ The other FEs also use BatchNorm which seem to add more robustness - to higher L
 We used a batch size of 16 (but in limited testing found that for reasonable values e.g. 8,32 the results are the same)
 
 Input images were scaled so larger side becomes 512 pixels, then padded to 512x512
- <br>* *Note - that's a parameter, you can change that - inc. just for test time;
-    unsurprisingly results are best for preprocessing same as train..
-    would be interesting to check with test-set of higher resolution though...)*
+ <br>* *Note - that's a parameter, you can change that - inc. just for scan_val_set time;
+        naturally, results are best for same choise @test as @train and that's what's reported below.
+    <br> Interestingly, it's even better than using no-rescale (each image's native resolution) @test *
 
 Some flip and strech augmentations were applied...
 
@@ -248,15 +265,15 @@ The inception-v1 comes close to VGG - but not surpassing as proven possible on C
 
 The FCN16 skip-connection generally gives a +1-2% mIoU improvement, 
  which is non-negligible but smaller than for original FCN as reported in paper (Adam is good for FCN32 health?), 
- and in fact not much larger than the noise (w.r.t to test (sub)set choice, and exact params checkpoint) which we estimate to be ~0.5-1% (see tensorboard plots). So we have to conclude that the skip-connection contribution is **minor** - if it's only used as simple linear addition after the classification layer contracting #channels to 21 (classes).
+ and in fact not much larger than the noise (w.r.t to scan_val_set (sub)set choice, and exact params checkpoint) which we estimate to be ~0.5-1% (see tensorboard plots). So we have to conclude that the skip-connection contribution is **minor** - if it's only used as simple linear addition after the classification layer contracting #channels to 21 (classes).
 
 The resources needed by additional bilinear interpolations (for upsampling) are negligible, as well as those for the FCN16 skip-connection; so the ops and params are quite similar as for original imagenet classifiers, up to removal of the final classification layer (-) and resolution change (+).
 <br>remmeber that params&ops don't tell the whole story, and there are HW-architecture-dependent issues which effect runtime.
  <br>That's the reason we don't care to train FCN8 variants since returns are negligible w.r.t the costs.
 
 #### Technical issues:
-* Monitor vs. final result - we monitor a *test-mIoU* estimate during training by running the net on a quarter (1/4) of the validation set; the resulting signal reflects both data(sub)set and param-point variability in its noise, thus giving a kinda-realistic rough estimate of the error bars on the value.
- <br> However, we reused the same computational graph as the train, switching between train/val data feed - leveraging the  *[feedable iterator](https://www.tensorflow.org/programmers_guide/datasets)* of TF ```Datasets``` (probably designed for this exact purpose). This is different from what happens at test time, since the BatchNorm/Dropout layers use. 
+* Monitor vs. final result - we monitor a *scan_val_set-mIoU* estimate during training by running the net on a quarter (1/4) of the validation set; the resulting signal reflects both data(sub)set and param-point variability in its noise, thus giving a kinda-realistic rough estimate of the error bars on the value.
+ <br> However, we reused the same computational graph as the train, switching between train/val data feed - leveraging the  *[feedable iterator](https://www.tensorflow.org/programmers_guide/datasets)* of TF ```Datasets``` (probably designed for this exact purpose). This is different from what happens at scan_val_set time, since the BatchNorm/Dropout layers use.
  <br>We may fix this in the future but currently we feel that it serves the purpose of monitoring - relative comparison, detect flattening etc. and in fact may be be an opportunity for insights..
 
 #### Stuff we tried and didn't work
@@ -336,13 +353,13 @@ If you have an hour, do read ```utils/pascal_voc.py``` whose author should be la
 
 If you have a minute, do read the rant below, it should summarize the status&spirit of things.
 
-...So, VOC PASCAL is kind of mess, the files train/val/test sets X3 challenges (07', 11', 12'),
+...So, VOC PASCAL is kind of mess, the files train/val/scan_val_set sets X3 challenges (07', 11', 12'),
   with various intersections between the sets of different years/challenges..
 then come additional annotations on original files...
 
 Eventually the widest segmentation-relevant stuff seems to come from Berkely project called SBD:
 http://home.bharathh.info/pubs/codes/SBD/download.html
-Ignore their own rant re non-intersecting train/test with 5623 images.
-Here it's done better, using more for train and a bit less for test.
+Ignore their own rant re non-intersecting train/scan_val_set with 5623 images.
+Here it's done better, using more for train and a bit less for scan_val_set.
 
 In any case, have no fear, train/val disjointness is ensured in line 546 of pascal_voc.py
