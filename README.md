@@ -36,7 +36,7 @@ We embrace the Tensorflow framework and specifically the tf-slim API (and associ
  - *Choose* the base Feature Extractor (FE) aka Encoder from a selection of [pretrained models](https://github.com/tensorflow/models/tree/master/research/slim)
  - *Tinker* with the segmentation meta-architecture (aka Decoder) building on the FE. Currently we support FCN out-of-the-box + a path to upgrade the decoding blocks in 2-3 lines of code along a simple [abstraction](#Architecture)
  - *Share* the datafeed/train/test boilerplate between all variants (vs. taming yet-another repo per net/paper).
- - *Config* as much as possbile of architecture and training procedures w.o. touching code
+ - *Config* as much as possbile of architecture and training procedures thru CLI args, w.o. touching code.
 
 We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
  and offer some nice monitoring leveraging this api's advanced features. Pre-conversion scripts for Pascal VOC and COCO-Stuff is provided.
