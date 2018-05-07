@@ -165,7 +165,6 @@ play with training other net(s), and training process(es), e.g.:
 ### Modular Net Architecture via OOP
 The DL community is keen on open-sourcing net (inc. segmentation) implementations which is awesome;
  unfortunately each one gets its own repo which starts to be frustrating at times,
- since so much of the code (and procedures!) is the same (or ain't but should be!) and can be shared.
 
 Within the **Tensorflow** realm -
 **[Slim-models](https://github.com/tensorflow/models/tree/master/research/slim)** is a laudable attempt to bring implementations of some feature extractors to the same ground.
@@ -304,7 +303,8 @@ Beyond those, it was very useful as a headstart; we went far beyond a fork thoug
 
 An up-to-date work similar to ours is [RTSeg](https://github.com/MSiam/TFSegmentation) (see also ref. to paper below);
 Their 'SkipNet' architecture is in fact an FCN (altouhgh some details are not as in the original paper), 
-  so when they marry that to ResNet18 and Mobilenet_V1 it's similar to the corresponding subset of our work. This repo didn't exist -so myabe it's an idea whose time has come. Or maybe just a coincidence. Accept the mystery! 
+  so when they marry that to ResNet18 and Mobilenet_V1 it's similar to the corresponding subset of our work.
+ Another work in similar vein is [Semantic-Segmentation-Suite](https://github.com/GeorgeSeif/Semantic-Segmentation-Suite) which is regualry updated with SoTA models. 
 
 
 ## Contacts (maintainers)
