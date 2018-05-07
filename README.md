@@ -23,8 +23,8 @@ Left - original image || Center - segmented with ResNet18-FCN || Right - ground 
 Semantic segmentation is a critical task in machine vision apps in general and street scene understanding in particular.
 <br> Because you know, sometimes perception based solely on XY-aligned ~~orthodox~~ ortho(b)box object-detectors just won't cut it, and you need to ...(cringe alert) think outside of the box: 
 <div align="center">
-<img src="https://github.com/hailotech/seg-mentor/blob/master/media/perfectparking.gif" width="60%" height="60%"><br><br>
-</div>
+<img src="https://github.com/hailotech/seg-mentor/releases/download/v0.5/office.gif" width="80%" height="80%"><br><br>
+ </div>
 
 ```
 Purple shading - cars (segmented with GoogleNet-FCN). 
