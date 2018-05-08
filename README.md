@@ -19,38 +19,34 @@ We're making the world a better place by offering a modular sandbox in which you
 ```
 Left - original image || Center - segmented with ResNet18-FCN || Right - ground truth segmentation 
 ```
+Some moving pictures from our office:
 
-Semantic segmentation is a critical task in machine vision apps in general and street scene understanding in particular.
-<br> Because you know, sometimes perception based solely on XY-aligned ~~orthodox~~ ortho(b)box object-detectors just won't cut it, and you need to ...(cringe alert) think outside of the box: 
 <div align="center">
 <img src="https://github.com/hailotech/seg-mentor/blob/master/media/office.gif" width="80%" height="80%"><br><br>
  </div>
 
 ```
-Purple shading - cars (segmented with GoogleNet-FCN). 
-Groovy psychedelic frames - a cool failure mode worth exploring.
-We think the lack of images of car from this angle in the dataset is a part of the story, what else? 
+segmented with Inception_v1-FCN.
+
+Coloring: yellowish - person; greenish - chair; reddish - TV/monitor
 ```
 
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
-<br>and offer a modular code for semantic segmentation with FCN meta-architecture and its variants. Our goal was to make it simple to:
- - Choose the base Feature Extractor (FE) aka Encoder from a selection of [pretrained models](https://github.com/tensorflow/models/tree/master/research/slim)
- - Wrap FE in a meta-architecture (aka Decoder) by switching to more sophisticated decoding blocks. Currently we support FCN meta-arch.
-
-The main runner offers command-line params control of architecture along these lines -
- <br> as well as of training and preprocessing hyperparameters.
+<br>and offer a modular code for semantic segmentation with FCN-based meta-architectures. Our goal was to make it simple to:
+ - *Choose* the base Feature Extractor (FE) aka Encoder from a selection of [pretrained models](https://github.com/tensorflow/models/tree/master/research/slim)
+ - *Tinker* with the segmentation meta-architecture (aka Decoder) building on the FE. Currently we support FCN out-of-the-box + a path to upgrade the decoding blocks in 2-3 lines of code along a simple [abstraction](#Architecture)
+ - *Share* the datafeed/train/test boilerplate between all variants (vs. taming yet-another repo per net/paper).
+ - *Config* as much as possbile of architecture and training procedures thru CLI args, w.o. touching code.
 
 We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
- and offer some nice monitoring leveraging this api's advanced features;
- the design is (hopefully) easy to extend to other datasets (e.g. Cityscapes, COCO, etc.)
-
+ and offer some nice monitoring leveraging this api's advanced features. Pre-conversion scripts for Pascal VOC and COCO-Stuff is provided.
+ 
 As a baseline, we trained & tested classic FCNs with different feature extractors on the Pascal VOC dataset.
 
-Now, sure, the state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
-and there are many nets which are both faster and with better accuracy.
-Implementing some of these over our framework is part of the roadmap here.
+The state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
+and there are many nets which are both faster and with better accuracy, and implementing some of these over our framework is surely part of the roadmap here.
 
-Besides, there is lot of terra incognita that seems worth exploring before going to state-of-the-art architectures.
+However, there's a lot of terra incognita that seems worth exploring before rushing to state-of-the-art nets.
  Playing with a simple-no-thrills decoder can still give us insight into some fundemantal questions:
 
  - ***What's the influence of the base Feature Extractor (FE) a.k.a Encoder on the segmentation task?
@@ -69,14 +65,14 @@ how does the optimal choice of hyper-parameters depend on choice of FE, decoder?
 We don't have the answers to any of the above but we feel that a good infrastructure for running quick experiments can help. And if it doesn't - well at least we all had fun, right?
 <br> And even before open research questions, there are important practical issues,
 worked-out examples of which are hard to come by.
-These include - how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, how robust are the mIoU numbers to exact freeze point of training, test subset, etc.
+For instance - how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, how robust are the mIoU numbers to exact freeze point of training, test subset, etc. These are important for adaptations and deployments to real-life and real-stakes problems (quite possibly more than another +3% in the metric) - especially to the resource-constraint ones which call for lightweight nets anyways.
 
 
 ## Contribution
 
 #### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring one of the open questions above, or deploying a lightweight solution to a practical app.  
 
-As an example of such a project, we're researching some minimal decoder enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN. Coming soon:)
+As an example of such a project, we're researching some minimal decoder enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN, with architectural insight in mind. Stay tuned :)
 
 We also share some practical training tips and thoughts - see *Discussion* below
 
@@ -106,7 +102,7 @@ To all the gals out there with semants to segment,
        <br>If you (or your admin..) don't agree than ```/data/``` is the greatest root dir ever,
        use ```--datapath, --modelspath``` cli arg to inform the scripts where you've put stuff.
 
-1. **Convert** the train/val Pascal data to tfrecords format by running [utils/pascal_voc_augmented_to_records.py](utils/pascal_voc_augmented_to_records.py)
+1. **Convert** the train/val Pascal data to tfrecords format by running [utils/pascal_voc_augmented_to_records.py](utils/pascal_voc_augmented_to_records.py). 
 
 1. **Prepare** to run by ```cd seg-mentor && mkdir tmp```
 <br>The ```tmp``` folder will host "training folders", one per run,
@@ -142,14 +138,14 @@ Now seriously, give it a **20-30 hours** of training
 (use tensorboard to see *test-mIoU* flattening), then test and behold the converged IoU results.
 <br> Note: the mIoU of full test may surprise you with ~+5% discrepancy w.r.t the tensorboard plot. see Discussion below.
 Don't be shy and kill the process (find pid by ```ps aux | grep fcn_train```)
- if it burns your precious GPU cycles for no good reason.
-    1. Checkout [test](fcn_test.py) options with ```python fcn_test.py --help``` (or click).
-    1. If in doubt about convergence-status/robustness, run with ```--afteriter X```
+ if it burns your precious GPU cycles for no good reason. 
+ Checkout [test](fcn_test.py) options with ```python fcn_test.py --help``` (or [click](fcn_test.py) for code), use them to e.g.:
+    1. Check convergence-status/robustness by using ```--afteriter X```
 to test an intermediate checkpoint after X batches (check out your options by ```ls tmp/<THIS-TRAIN-DIR>```).
     1. Get a feeling for what it means by visualizing some val images, e.g. ##20-25 by ```--first2viz=20 --last2viz=25```.
     1. Segment a specific image/movie of your fancy with ```--imagepath``` / ```--moviepath```
     1. Play with the pre-(up/down)-scaling with ```--pixels``` (default is what train used; use 0 for no-prescale).
-    1. ...Or use [play-with-me notebook](play-with-me.ipynb) instead of CLI. See more rants there..
+...Or use [play-with-me notebook](play-with-me.ipynb) instead of CLI. See more rants there..
 
 1. **Tinker** - check out [train](fcn_train.py) train options with ```python fcn_train.py --help```,
 play with training other net(s), and training process(es), e.g.:
@@ -166,9 +162,7 @@ play with training other net(s), and training process(es), e.g.:
 ## Architecture
 
 ### Modular Net Architecture via OOP
-The DL community is keen on open-sourcing net (inc. segmentation) implementations which is awesome;
- unfortunately each one gets its own repo which starts to be frustrating at times,
- since so much of the code (and procedures!) is the same (or ain't but should be!) and can be shared.
+The DL community is keen on open-sourcing net (inc. segmentation) implementations which is awesome for reproducible research; unfortunately, the reproductive path is normally thru yet-another repo with its own boilerplate and learning curve.
 
 Within the **Tensorflow** realm -
 **[Slim-models](https://github.com/tensorflow/models/tree/master/research/slim)** is a laudable attempt to bring implementations of some feature extractors to the same ground.
@@ -176,7 +170,7 @@ Beyond classification, you got the **[Object Detection API](https://github.com/t
 but it's different in spirit,
  catering to high-level-adapt-deploy users,
  while discouraging tinkering with architecture.
- <br>Here we try to make a small first step towards *segmentation-models*, using the shoulders of **slim** giants as a launchpad.
+ <br>Here we try to make a small first step towards *segmentation-slim-models*, using the shoulders of **slim** giants as a launchpad.
  
  ----------------
  
@@ -191,6 +185,9 @@ the subclasses should implement (aka 'override') the decoding blocks as defined 
 Note that if you choose the red script across the decoder blocks, you get the original FCN.
 This is what's implemented in the ```FcnArch``` class, provided as the baseline example of the ```BaseFcnArch``` interface.
 
+Also, note the dashed (..dotted) FCN8 (..4) optional skip connections.
+<br>(toggled by ```--fcn8, --fcn4``` flags to [fcn_train.py](fcn_train.py); got ```--fcn16``` too but we treat that as the norm).
+
 Switching feature extractor (FE) is done **without code change among the currently supported FEs** (VGG, ResNet18/50, Inception_V1 aka googlenet, Mobilenet_V1, ... - can't commit to having this sentence updated, so just check out the dictionary at the top of ```fcn_arch.py``` -:). **To add support for another FE** you'll need an incremental change in the dict and similar places (we're sure you can figure it out), AND a modification of the net in the sister repo (fork of slim-models); like [we did it for inception etc.](https://github.com/hailotech/tf-models-hailofork/commit/c3280c1433f8b64bb0ed28acf191d6c4c777210b):
 1. Change net func signature from ```logits = net(images, ...)``` to ```logits = net(images, ..., base_only=False, **kwargs)``` to add bare-FE option while preserving compatibility..
 1. In the body of the function add :
@@ -198,7 +195,7 @@ Switching feature extractor (FE) is done **without code change among the current
 if base_only:
   return net, end_points
 ```
-between feature extracting stage and global-pool/fully-connected head. 
+between feature extracting stage and global-pool/fully-connected classification head. 
 
 
 ## Results and Discussion
@@ -225,10 +222,8 @@ All nets trained were with similar hyperparams and the results were robust to sm
 The other FEs also use BatchNorm which seem to add more robustness - to higher LR, random init of skip-conn., etc.
 We used a batch size of 16 (but in limited testing found that for reasonable values e.g. 8,32 the results are the same)
 
-Input images were scaled so larger side becomes 512 pixels, then padded to 512x512
- <br>* *Note - that's a parameter, you can change that - inc. just for test time;
-        naturally, results are best for same choise @test as @train and that's what's reported below.
-    <br> Interestingly, it's even better than using no-rescale (each image's native resolution) @test *
+Input images were scaled so larger side becomes 512 pixels, then padded to 512x512.
+ <br>That's configurable separately for test/train; naturally, results are best for same choice @test & @train (that's what went into the table below); interestingly, even better than w.o. any rescale (each image's native resolution) @test.
 
 Some flip and strech augmentations were applied...
 
@@ -290,7 +285,7 @@ You're invited to get inspired and retry (possibly adding your ideas on top..)
 
 Note that all params mentioned are involved in how gradients are computed.
 <br> We couldn't hit a low hanging fruit with the few runs we've made -
-but that doesn't mean some metric improvement (and insight on the side) couldn't be found with a disciplined parameter scan.
+but that doesn't mean some improvement of IoU (and insight on the side) couldn't be found with a disciplined parameter scan.
 
 <br><br>Once again - Contributions are welcome! 
 
@@ -307,8 +302,9 @@ Beyond those, it was very useful as a headstart; we went far beyond a fork thoug
 
 An up-to-date work similar to ours is [RTSeg](https://github.com/MSiam/TFSegmentation) (see also ref. to paper below);
 Their 'SkipNet' architecture is in fact an FCN (altouhgh some details are not as in the original paper), 
-  so when they marry that to ResNet18 and Mobilenet_V1 it's similar to the corresponding subset of our work. This repo didn't exist -so myabe it's an idea whose time has come. Or maybe just a coincidence. Accept the mystery! 
-
+  so when they marry that to ResNet18 and Mobilenet_V1 it's similar to the corresponding subset of our work.
+ 
+ Another work in similar vein is [Semantic-Segmentation-Suite](https://github.com/GeorgeSeif/Semantic-Segmentation-Suite) which is regularly updated with SoTA models. Modularity w.r.t both nets and datasets is sought but only partially delivered - not much of a shared abstraction layer beyond tf-slim, and CamVid as the only dataset demo (others supported if converted to same format but no demo scripts provided..).
 
 ## Contacts (maintainers)
 Alex Finkelstein ([github](https://github.com/falex-ml)) & Mark Grobman ([github](https://github.com/grobman)) 
