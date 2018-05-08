@@ -40,11 +40,17 @@ class Trainer:
     def __init__(self, args, checkpoint_path):
         self.args = args
         self.checkpoint_path = checkpoint_path
-        self.train_tfrec = self.args.datapath + 'training.tfrecords'
-        self.test_tfrec = self.args.datapath + 'validation.tfrecords'
+        self.train_tfrec = os.path.join(self.args.datapath, 'training.tfrecords')
+        self.test_tfrec = os.path.join(self.args.datapath, 'validation.tfrecords')
 
-        self.fcn_builder = fcn_arch.FcnArch(number_of_classes=number_of_classes, is_training=True, net=args.basenet,
-                                            trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
+        if args.extended_arch!='':
+            import newer_arch
+            netclass = eval('newer_arch.'+args.extended_arch)
+        else:
+            netclass = fcn_arch.FcnArch
+        print("Using architecture "+netclass.__name__)
+        self.fcn_builder = netclass(number_of_classes=number_of_classes, is_training=True, net=args.basenet,
+                                    trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16, fcn8=args.fcn8)
 
     def run_training(self, trainfolder, num_epochs=10, learning_rate=1e-6, decaylr=True,
                      new_vars_to_learn_faster=None, pretrained_vars=None):
@@ -186,7 +192,7 @@ class Trainer:
                     for _tb in range(num_test_batches):
                         _, test_cross_entropy_arr[_tb] = \
                             sess.run([miou_update_op, cross_entropy_loss],
-                                     feed_dict={self.masterhandle: c})
+                                     feed_dict={self.masterhandle: test_handle})
                     test_miou_score, test_miou_summary = sess.run([miou_score_op, test_miou_summary_op])
                     test_loss = np.mean(test_cross_entropy_arr)
                     test_loss_summary = tf.Summary()
@@ -263,9 +269,9 @@ if __name__ == "__main__":
     parser.add_argument('--basenet', type=str,
                         help='the base feature extractor',
                         default='vgg_16')
-    parser.add_argument('--extended_arch', type=bool,
-                        help='if True use extended architecturei (TBD)',
-                        default=False)
+    parser.add_argument('--extended_arch', type=str,
+                        help='if nontrivial, use extended architecture according to name',
+                        default='')
     parser.add_argument('--trainable_upsampling', type=bool,
                         help='if True use trainable_upsampling in the basic FCN architecture',
                         default=False)
@@ -274,6 +280,9 @@ if __name__ == "__main__":
                         default=False)
     parser.add_argument('--fcn8', type=bool,
                         help='if True add the fcn8 skip connection',
+                        default=False)
+    parser.add_argument('--fcn4', type=bool,
+                        help='if True add the fcn4 skip connection',
                         default=False)
     parser.add_argument('--batch_size', type=int,
                         help='batch size',
@@ -310,7 +319,6 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         print("No args, running with defaults...")
         parser.print_help()
-
 
     args = parser.parse_args()
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
