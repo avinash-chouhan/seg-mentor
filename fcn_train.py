@@ -120,7 +120,7 @@ class Trainer:
 
         cross_entropy_loss_summary_op = tf.summary.scalar('cross_entropy_loss', cross_entropy_loss)
         miou_summary_op = tf.summary.scalar('train mIOU', miou_score_op)
-        test_miou_summary_op = tf.summary.scalar('scan_val_set mIOU', miou_score_op)
+        test_miou_summary_op = tf.summary.scalar('test mIOU', miou_score_op)
 
         learning_rate_summary_op = tf.summary.scalar('weak learning rate', weak_learning_rate)
 
@@ -196,14 +196,14 @@ class Trainer:
                     test_miou_score, test_miou_summary = sess.run([miou_score_op, test_miou_summary_op])
                     test_loss = np.mean(test_cross_entropy_arr)
                     test_loss_summary = tf.Summary()
-                    test_loss_summary.value.add(tag='scan_val_set cross entropy loss', simple_value=test_loss)
+                    test_loss_summary.value.add(tag='test_set cross entropy loss', simple_value=test_loss)
                     for _prevstep in range(periodic_test_eval_steps)[::-1]:
                         # write same value for all prev. steps, for compatibility with filters, etc.
                         summary_string_writer.add_summary(test_loss_summary, trainstep - _prevstep)
                         summary_string_writer.add_summary(test_miou_summary, trainstep - _prevstep)
-                    print("----scan_val_set mIOU: ", test_miou_score)
-                    print("----scan_val_set loss: ", test_loss)
-                    print("----finished scan_val_set eval...", time.ctime())
+                    print("----test mIOU: ", test_miou_score)
+                    print("----test loss: ", test_loss)
+                    print("----finished test eval...", time.ctime())
                 # make a copy once in a while for case we start to overfit and model becomes worse...
                 if trainstep % 3000 == 0:
                     saver.save(sess, chkpnt2save_path + '_{0}'.format(trainstep))

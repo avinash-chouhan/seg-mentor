@@ -29,8 +29,8 @@ validation = True
 VALIDATION_SET_SIZE = utils.pascal_voc.PASCAL12_VALIDATION_WO_BERKELEY_TRAINING  # 904 RV-VOC12
 
 
-def scan_val_set(image, annotation, predictions, checkpoint, iterator,
-                 num_images=VALIDATION_SET_SIZE, more_tensors_to_eval=[], callback=None):
+def iter_test(image, annotation, predictions, checkpoint, iterator,
+              num_images=VALIDATION_SET_SIZE, more_tensors_to_eval=[], callback=None):
     """
         iterate over the validation set, and compute overall (m)IoU metric(s)
 
@@ -286,6 +286,6 @@ if __name__ == "__main__":
         def viz_cb(i, (image_np, upsampled_predictions, annotation_np)):
             if args.first2viz <= i < args.last2viz:
                 visualize(image_np, annotation_np, upsampled_predictions, i)
-        scan_val_set(image, annotation, predictions, checkpoint, iterator,
+        iter_test(image, annotation, predictions, checkpoint, iterator,
                      callback=viz_cb, more_tensors_to_eval=[image, annotation, predictions])
 
