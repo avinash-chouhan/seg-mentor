@@ -13,31 +13,53 @@ if tf_ver >= 1.4:
     data = tf.data
 else:
     data = tf.contrib.data
-#checkpoints_dir = '/data/models'
+
 log_folder = "tmp/logs"
 image_train_size = [512, 512]
 
-number_of_classes = 21
-
-pascal_voc_lut = utils.pascal_voc.pascal_segmentation_lut()
-class_labels = pascal_voc_lut.keys()
-
-# ...follows from usage of "mode 2" in utils.pascal_voc.get_augmented_pascal_image_annotation_filename_pairs()
-TRAIN_DATASET_SIZE = 11127
-
+PASCAL_NUM_CLASSES = 21
 # ...assumes "mode 2" in utils.pascal_voc.get_augmented_pascal_image_annotation_filename_pairs()
 #     was used on creation of the tfrecord file
-TRAIN_DATASET_SIZE = utils.pascal_voc.BERKELY_U_PASCAL12_TRAINING  # 904
+PASCAL_TRAIN_DATASET_SIZE = utils.pascal_voc.BERKELY_U_PASCAL12_TRAINING # 11127
 
+CAMVID_NUM_CLASSES = 11
+CAMVID_TRAIN_DATASET_SIZE = 367 # train only..
+
+pascal_voc_lut = utils.pascal_voc.pascal_segmentation_lut()
+pascal_class_labels = pascal_voc_lut.keys() # ==range(PASCAL_NUM_CLASSES)+[255]
+camvid_class_labels = range(CAMVID_NUM_CLASSES)+[CAMVID_NUM_CLASSES]
+
+print 'pascal_class_labels ', pascal_class_labels
+print 'camvid_class_labels ', camvid_class_labels
 # For mode of "go overfit over first images"
-#  (a.k.a "training convergence sanity scan_val_set")
+#  (a.k.a "training convergence sanity test")
 #  - set a number here...
 debug_loop_over_few_first_images = None  # 30
+
+def resolve_dataset_family(args):
+    if args.dataset_family == 'pascal':
+        class_labels = pascal_class_labels
+        if args.total_train_images == 0:
+            args.total_train_images = PASCAL_TRAIN_DATASET_SIZE
+        if args.num_classes == 0:
+            args.num_classes = PASCAL_NUM_CLASSES
+    elif args.dataset_family == 'camvid':
+        class_labels = camvid_class_labels
+        if args.total_train_images == 0:
+            args.total_train_images = CAMVID_TRAIN_DATASET_SIZE
+        if args.num_classes == 0:
+            args.num_classes = CAMVID_NUM_CLASSES
+    else:
+        assert 0, "dataset family " + args.dataset_family + " not supported"
+    #print args.num_classes, args.total_train_images; exit()
+    return class_labels, args
 
 
 class Trainer:
 
     def __init__(self, args, checkpoint_path):
+        self.class_labels, args = resolve_dataset_family(args)
+
         self.args = args
         self.checkpoint_path = checkpoint_path
         self.train_tfrec = os.path.join(self.args.datapath, 'training.tfrecords')
@@ -49,7 +71,7 @@ class Trainer:
         else:
             netclass = fcn_arch.FcnArch
         print("Using architecture "+netclass.__name__)
-        self.fcn_builder = netclass(number_of_classes=number_of_classes, is_training=True, net=args.basenet,
+        self.fcn_builder = netclass(number_of_classes=self.args.num_classes, is_training=True, net=args.basenet,
                                     trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16, fcn8=args.fcn8)
 
     def run_training(self, trainfolder, num_epochs=10, learning_rate=1e-6, decaylr=True,
@@ -60,7 +82,7 @@ class Trainer:
         valid_labels_batch_tensor, valid_logits_batch_tensor = \
             utils.training.get_valid_logits_and_labels(annotation_batch_tensor=self.annotation_batch,
                                                        logits_batch_tensor=self.upsampled_logits_batch,
-                                                       class_labels=class_labels)
+                                                       class_labels=self.class_labels)
 
         cross_entropies = tf.nn.softmax_cross_entropy_with_logits(logits=valid_logits_batch_tensor,
                                                                   labels=valid_labels_batch_tensor)
@@ -73,7 +95,7 @@ class Trainer:
         # _probabilities = tf.nn.softmax(self.upsampled_logits_batch)
 
         global_step = tf.Variable(0, trainable=False)
-        total_iterations = TRAIN_DATASET_SIZE * num_epochs / self.args.batch_size
+        total_iterations = self.args.total_train_images * num_epochs / self.args.batch_size
         if decaylr:
             # Simple: reduce x10 LR twice during train..
             dr = 0.1
@@ -109,11 +131,12 @@ class Trainer:
                                                         epsilon=1e-3, beta1=self.args.momentum). \
                         minimize(cross_entropy_loss, global_step=global_step)
 
-        mask = tf.to_int32(tf.not_equal(self.annotation_batch, 255))
+        # assuming the "ambiguous/ unlabeled" is either num_classes or 255 (or whatever in between:))
+        mask = tf.to_int32(tf.less(self.annotation_batch, self.args.num_classes))
 
         miou_score_op, miou_update_op = tf.metrics.mean_iou(predictions=predictions,
                                                             labels=tf.multiply(self.annotation_batch, mask),
-                                                            num_classes=number_of_classes,
+                                                            num_classes=self.args.num_classes,
                                                             name='my_miou')  # , weights=mask)
         running_metric_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="my_miou")
         running_metric_initializer = tf.variables_initializer(var_list=running_metric_vars)
@@ -309,6 +332,15 @@ if __name__ == "__main__":
     parser.add_argument('--datapath', type=str,
                         help='path where tfrecords are located',
                         default='/data/TFrec/')
+    parser.add_argument('--num_classes', type=int,
+                        help='number of classes (dataset dependent); if not set will use dataset-damily default',
+                        default=0)
+    parser.add_argument('--total_train_images', type=int,
+                        help='size of the training set; if not set will use dataset-damily default',
+                        default=0)
+    parser.add_argument('--dataset_family', type=str,
+                        help='pascal/ camvid / coco / ...',
+                        default='pascal')
     parser.add_argument('--modelspath', type=str,
                         help='path where imagenet-pretrained FE checkpoints are located',
                         default='/data/models/')

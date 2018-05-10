@@ -39,14 +39,7 @@ def write_image_annotation_pairs_to_tfrecord(filename_pairs, tfrecords_filename,
             break
         img = np.array(Image.open(img_path))
         annotation = np.array(Image.open(annotation_path))
-        # Unomment this one when working with surgical data
-        # annotation = annotation[:, :, 0]
 
-        # The reason to store image sizes was demonstrated
-        # in the previous example -- we have to know sizes
-        # of images to later read raw serialized string,
-        # convert to 1d array and convert to respective
-        # shape that image used to have.
         height = img.shape[0]
         width = img.shape[1]
 
@@ -210,9 +203,9 @@ def parse_record(serialized_example):
     return image, annotation
 
 
-def process_coco_stuff_things(imgsdir = '/data/coco',
-                              traindir='train2017', valdir='val2017',
-                              labelsdir='/data/coco/stuffthings_pixellabels'):
+def tfrecordify_coco_stuff_things(imgsdir = '/data/coco',
+                                  labelsdir='/data/coco/stuffthings_pixellabels',
+                                  traindir='train2017', valdir='val2017'):
     '''
         Assumes stuff (pardon the pun) is downloaded & extracted
          from https://github.com/nightrome/cocostuff#downloads (3 top files)
@@ -230,7 +223,33 @@ def process_coco_stuff_things(imgsdir = '/data/coco',
                                             tfrecords_filename=imgsdir+'/training.tfrecords')
 
     write_image_annotation_pairs_to_tfrecord(filename_pairs=valpairs,
-                                             tfrecords_filename=imgsdir+'/val.tfrecords')
+                                             tfrecords_filename=imgsdir+'/validation.tfrecords')
+
+def tfrecordify_camvid(rootdir = '/data/camvid'):
+    '''
+        Assumes stuff is e.g. cloned from https://github.com/alexgkendall/SegNet-Tutorial // CamVid
+         - 11-class version encoded as the usual #class (not color-code)
+
+        TODO 32-class version
+    '''
+    import os
+    trainpairs = [(os.path.join(rootdir, 'train', fname),
+                   os.path.join(rootdir, 'trainannot', fname)) \
+                    for fname in os.listdir(os.path.join(rootdir, 'train'))]
+
+    valpairs = [(os.path.join(rootdir, 'val', fname),
+                   os.path.join(rootdir, 'valannot', fname)) \
+                  for fname in os.listdir(os.path.join(rootdir, 'val'))]
+
+    testpairs = [(os.path.join(rootdir, 'test', fname),
+                 os.path.join(rootdir, 'testannot', fname)) \
+                for fname in os.listdir(os.path.join(rootdir, 'test'))]
+
+    write_image_annotation_pairs_to_tfrecord(filename_pairs=trainpairs,
+                                            tfrecords_filename=rootdir+'/training.tfrecords')
+
+    write_image_annotation_pairs_to_tfrecord(filename_pairs=valpairs,
+                                             tfrecords_filename=rootdir+'/validation.tfrecords')
 
 if __name__ == "__main__":
-    process_coco_stuff_things()
+    tfrecordify_camvid()
