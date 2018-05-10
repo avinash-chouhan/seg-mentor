@@ -257,8 +257,7 @@ if __name__ == "__main__":
 
     # Build net, using architecture flags which were used in train (test same net as trained)
     args.__dict__.update(trainargs)
-    if type(args.extended_arch)==str and args.extended_arch != '':
-        print  args.extended_arch
+    if type(args.extended_arch)in [str, unicode] and args.extended_arch != '':
         import newer_arch
         netclass = eval('newer_arch.' + args.extended_arch)
     else:
