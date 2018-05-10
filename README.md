@@ -34,7 +34,7 @@ Coloring: yellowish - person; greenish - chair; reddish - TV/monitor
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
 <br>and offer a modular code for semantic segmentation with FCN-based meta-architectures. Our goal was to make it simple to:
  - *Choose* the base Feature Extractor (FE) aka Encoder from a selection of [pretrained models](https://github.com/tensorflow/models/tree/master/research/slim)
- - *Tinker* with the segmentation meta-architecture (aka Decoder) building on the FE. Currently we support FCN out-of-the-box + a path to upgrade the decoding blocks in 2-3 lines of code along a simple [abstraction](#Architecture)
+ - *Tinker* with the segmentation meta-architecture (aka Decoder) building on the FE. Currently we support FCN out-of-the-box + a path to upgrade the decoding blocks in 2-3 lines of code along a simple [abstraction](#architecture)
  - *Share* the datafeed/train/test boilerplate between all variants (vs. taming yet-another repo per net/paper).
  - *Config* as much as possbile of architecture and training procedures thru CLI args, w.o. touching code.
 
