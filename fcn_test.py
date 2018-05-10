@@ -14,7 +14,7 @@ if tf_ver >= 1.4:
 else:
     data = tf.contrib.data
 
-import fcn_arch, utils
+import fcn_arch, fcn_train, utils
 
 validation_records = '/data/pascal_augmented_berkely/validation.tfrecords'
 training_records = '/data/pascal_augmented_berkely/training.tfrecords'
@@ -257,8 +257,17 @@ if __name__ == "__main__":
 
     # Build net, using architecture flags which were used in train (test same net as trained)
     args.__dict__.update(trainargs)
-    fcn_builder = fcn_arch.FcnArch(number_of_classes=number_of_classes, is_training=False, net=args.basenet,
-                                   trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
+    if type(args.extended_arch)==str and args.extended_arch != '':
+        print  args.extended_arch
+        import newer_arch
+        netclass = eval('newer_arch.' + args.extended_arch)
+    else:
+        netclass = fcn_arch.FcnArch
+    print("Using architecture " + netclass.__name__)
+    fcn_builder = netclass(number_of_classes=number_of_classes, is_training=False, net=args.basenet,
+                           trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16, fcn8=args.fcn8)
+    # fcn_builder = fcn_arch.FcnArch(number_of_classes=number_of_classes, is_training=False, net=args.basenet,
+    #                                trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
 
     # ..From logits to class predictions
     if pixels > 0 and pixels == (pixels/32)*32.0 :

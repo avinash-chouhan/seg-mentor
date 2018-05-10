@@ -23,6 +23,14 @@ def inception_preprocess(image):
     image_float = tf.subtract(image_float, 0.5)
     return tf.multiply(image_float, 2.0)
 
+def decoder_arg_scope_func(weight_decay=1e-4, use_batch_norm=True):
+    with slim.arg_scope([slim.conv2d_transpose],
+            weights_regularizer=slim.l2_regularizer(weight_decay),
+            weights_initializer=slim.variance_scaling_initializer(),
+            activation_fn=tf.nn.relu,
+            normalizer_fn=slim.batch_norm if use_batch_norm else None)\
+         as arg_sc:
+                return arg_sc
 
 class BaseFcnArch:
     """
@@ -58,7 +66,7 @@ class BaseFcnArch:
         self.fcn8 = fcn8
         self.fcn4 = fcn4
         self.trainable_upsampling = trainable_upsampling
-
+        self.decoder_arg_scope_func = decoder_arg_scope_func
         self.fe = {'vgg_16': {'net_func': vgg.vgg_16,
                            'arg_scope_func': vgg.vgg_arg_scope,
                            'preproc_func': vgg_preprocess,
@@ -180,47 +188,46 @@ class BaseFcnArch:
                                                                      fc_conv_padding='SAME', # relevant for VGG only
                                                                      is_training=self.is_training,
                                                                      base_only=True)
+            # Add more arg-scoping for decoder
+            with slim.arg_scope(self.decoder_arg_scope_func()):
+                post_decode_32s = self.decode_32s(fe_out32s_pre_pool)
+                if not self.fcn16:
+                    return self._upsample_fixed_bilinear(post_decode_32s, upsample_factor=32)
+                # ------------------
+                #  16
+                post_upsample_16s = self.upsample_x2_32s(post_decode_32s)
 
-            post_decode_32s = self.decode_32s(fe_out32s_pre_pool)
-            if not self.fcn16:
-                return self._upsample_fixed_bilinear(post_decode_32s, upsample_factor=32)
-            # ------------------
-            #  16
-            post_upsample_16s = self.upsample_x2_32s(post_decode_32s)
+                s16skip_ep_name = self.fe['tname_s16_skipconn'].format(self.base_fe_scope.name)
+                skip_conn_16s = end_points.get(s16skip_ep_name)
+                if skip_conn_16s is None:
+                    self.debug_endpoints(end_points, s16skip_ep_name)
 
-            s16skip_ep_name = self.fe['tname_s16_skipconn'].format(self.base_fe_scope.name)
-            skip_conn_16s = end_points.get(s16skip_ep_name)
-            if skip_conn_16s is None:
-                self.debug_endpoints(end_points, s16skip_ep_name)
+                post_combine_16s = self.combine_16s(post_upsample_16s, skip_conn_16s)
+                if not self.fcn8:
+                    return self._upsample_fixed_bilinear(post_combine_16s, upsample_factor=16)
+                # ------------------
+                # 8
+                post_upsample_8s = self.upsample_x2_16s(post_combine_16s)
 
-            post_combine_16s = self.combine_16s(post_upsample_16s, skip_conn_16s)
-            if not self.fcn8:
-                return self._upsample_fixed_bilinear(post_combine_16s, upsample_factor=16)
-            # ------------------
-            # 8
-            post_upsample_8s = self.upsample_x2_16s(post_combine_16s)
+                s8skip_ep_name = self.fe['tname_s8_skipconn'].format(self.base_fe_scope.name)
+                skip_conn_8s = end_points.get(s8skip_ep_name)
+                if skip_conn_8s is None:
+                    self.debug_endpoints(end_points, s8skip_ep_name)
 
-            s8skip_ep_name = self.fe['tname_s8_skipconn'].format(self.base_fe_scope.name)
-            skip_conn_8s = end_points.get(s8skip_ep_name)
-            if skip_conn_8s is None:
-                self.debug_endpoints(end_points, s8skip_ep_name)
+                post_combine_8s = self.combine_8s(post_upsample_8s, skip_conn_8s)
+                if not self.fcn4:
+                    return self._upsample_fixed_bilinear(post_combine_8s, upsample_factor=8)
+                # ------------------
+                # 4
+                post_upsample_4s = self.upsample_x2_8s(post_combine_8s)
 
-            post_combine_8s = self.combine_8s(post_upsample_8s, skip_conn_8s)
-            if not self.fcn4:
-                return self._upsample_fixed_bilinear(post_combine_8s, upsample_factor=8)
-            # ------------------
-            # 4
-            post_upsample_4s = self.upsample_x2_8s(post_combine_8s)
+                s4skip_ep_name = self.fe['tname_s4_skipconn'].format(self.base_fe_scope.name)
+                skip_conn_4s = end_points.get(s4skip_ep_name)
+                if skip_conn_4s is None:
+                    self.debug_endpoints(end_points, s8skip_ep_name)
 
-            s4skip_ep_name = self.fe['tname_s4_skipconn'].format(self.base_fe_scope.name)
-            skip_conn_4s = end_points.get(s4skip_ep_name)
-            if skip_conn_4s is None:
-                self.debug_endpoints(end_points, s8skip_ep_name)
-
-            post_combine_4s = self.combine_4s(post_upsample_4s, skip_conn_4s)
-            return self.final_x4_upsample(post_combine_4s)
-
-            raise NotImplemented
+                post_combine_4s = self.combine_4s(post_upsample_4s, skip_conn_4s)
+                return self.final_x4_upsample(post_combine_4s)
 
     def debug_endpoints(self, end_points, name):
         for k in end_points.keys():
