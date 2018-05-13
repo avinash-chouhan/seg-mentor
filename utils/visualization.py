@@ -22,6 +22,7 @@ def _discrete_matshow_adaptive(data, labels_names=[], orig_image=None, title="")
     # get discrete colormap
     cmap = plt.get_cmap('Paired', np.max(data)-np.min(data)+1)
 
+    print 'cmap', cmap
     #data2draw = data if orig_image is None else data + 0.01*np.mean(orig_image, 2)
 
     # set limits .5 outside true range

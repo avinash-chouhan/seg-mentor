@@ -16,21 +16,29 @@ else:
 
 import fcn_arch, fcn_train, utils
 
-validation_records = '/data/pascal_augmented_berkely/validation.tfrecords'
-training_records = '/data/pascal_augmented_berkely/training.tfrecords'
-number_of_classes = 21
-
+pascal_val_rec_fname = '/data/pascal_augmented_berkely/validation.tfrecords'
+pascal_number_of_classes = 21
 pascal_voc_lut = utils.pascal_voc.pascal_segmentation_lut()
-
-validation = True
 
 # ...assumes "mode 2" in utils.pascal_voc.get_augmented_pascal_image_annotation_filename_pairs()
 #     was used on creation of the tfrecord file
-VALIDATION_SET_SIZE = utils.pascal_voc.PASCAL12_VALIDATION_WO_BERKELEY_TRAINING  # 904 RV-VOC12
+PASCAL_VAL_SET_SIZE = utils.pascal_voc.PASCAL12_VALIDATION_WO_BERKELEY_TRAINING  # 904 RV-VOC12
 
+CAMVID_VAL_DATA_SIZE = 237 # 107
 
-def iter_test(image, annotation, predictions, checkpoint, iterator,
-              num_images=VALIDATION_SET_SIZE, more_tensors_to_eval=[], callback=None):
+def resolve_dataset_family(args):
+    args = fcn_train.resolve_dataset_family(args)
+    if args.dataset_family == 'pascal':
+        args.total_val_images = PASCAL_VAL_SET_SIZE
+    elif args.dataset_family == 'camvid':
+        args.total_val_images = CAMVID_VAL_DATA_SIZE
+    else:
+        assert 0, "dataset family " + args.dataset_family + " not supported"
+    return args
+
+def iter_test(annotation, predictions, checkpoint, iterator, num_classes,
+              num_images=PASCAL_VAL_SET_SIZE, classes_lut=pascal_voc_lut,
+              more_tensors_to_eval=[], callback=None):
     """
         iterate over the validation set, and compute overall (m)IoU metric(s)
 
@@ -42,21 +50,21 @@ def iter_test(image, annotation, predictions, checkpoint, iterator,
 
     # Prepare mask to exclude some pixels from evaluation - 
     # e.g. "padding margins" (=255) or "ambiguous" (=num_classes (additional class))
-    weights = tf.to_float(tf.less_equal(annotation_batch_tensor, number_of_classes-1))
-    # ...below line is redundant (because masked values shouldn't be used anyways..)
-    #    but mean_iou won't work without it somehow..
+    weights = tf.to_float(tf.less_equal(annotation_batch_tensor, num_classes-1))
+    #  mean_iou won't work without the line below -
+    #    expects valid class-label values even in masked out regions, apparently..
     annotation_batch_tensor = annotation_batch_tensor*tf.cast(weights, tf.int32)
 
     miou, update_op = tf.metrics.mean_iou(predictions=predictions,
                                           labels=annotation_batch_tensor,
-                                          num_classes=number_of_classes,
+                                          num_classes=num_classes,
                                           weights=weights)
 
     conf_op = tf.confusion_matrix(tf.reshape(predictions, [-1]),
                                   tf.reshape(annotation_batch_tensor, [-1]),
-                                  num_classes=number_of_classes,
+                                  num_classes=num_classes,
                                   weights=tf.reshape(weights, [-1]))
-    conf_mtx = np.zeros([number_of_classes]*2)
+    conf_mtx = np.zeros([num_classes]*2)
 
     initializer = tf.local_variables_initializer()
     saver = tf.train.Saver()
@@ -75,34 +83,41 @@ def iter_test(image, annotation, predictions, checkpoint, iterator,
             conf_mtx += conf_tmp
 
         final_miou = sess.run(miou)
-        print("Final mIoU for {0} images is {1:.2f}%".format(num_images, final_miou * 100))
 
-        print("\n\n ---- Breakup by class: ----")
-        diag = conf_mtx.diagonal()
-        err1 = conf_mtx.sum(axis=1) - conf_mtx.diagonal()
-        err2 = conf_mtx.sum(axis=0) - conf_mtx.diagonal()
-        iou = diag / (0.0 + diag + err1 + err2)
-        # print(pascal_voc_lut)
-        for i, x in enumerate(iou):
-            print(pascal_voc_lut[i]+': {0:.2f}%'.format(x*100))
-        print(np.mean(iou)) # just a sanity check to verify that it's the same as final_miou
+    print("Final mIoU for {0} images is {1:.2f}%".format(num_images, final_miou * 100))
+
+    print("\n\n ---- Breakup by class: ----")
+    diag = conf_mtx.diagonal()
+    err1 = conf_mtx.sum(axis=1) - conf_mtx.diagonal()
+    err2 = conf_mtx.sum(axis=0) - conf_mtx.diagonal()
+    iou = diag / (0.0 + diag + err1 + err2)
+    # print(pascal_voc_lut)
+    for i, x in enumerate(iou):
+        print(classes_lut[i]+': {0:.2f}%'.format(x*100))
+    print(np.mean(iou)) # just a sanity check to verify that it's the same as final_miou
+    print(conf_mtx.sum(axis=1), conf_mtx.sum(axis=0))
+
+# cm = lsc.from_list('goo', [[y/256.0 for y in x] for x in camvid11_od_classes_colors.values()], 12)
+# ax1=plt.imshow(im1, cmap=cm, vmin=-0.5, vmax=11.5); axc=plt.colorbar(ax1, ticks=range(13));
+# axc.ax.set_yticklabels(camvid11_od_classes_colors.keys())
+# ticks=np.arange(np.min(data), np.max(data)+1)
 
 
-def visualize(image_np, upsampled_predictions, annotation_np=None, i=0):
+def visualize(image_np, upsampled_predictions, annotation_np=None, i=0, classes_lut=None):
     plt.figure(figsize=(30, 10))
     subplots = 2 if annotation_np is None else 3
     plt.suptitle('image #{0}'.format(i))
     plt.subplot(1, subplots, 1); plt.title("orig image")
     plt.imshow(image_np)
     plt.subplot(1, subplots, 2); plt.title("segmentation")
-    utils.visualization.visualize_segmentation_adaptive(upsampled_predictions.squeeze(), pascal_voc_lut, image_np)
+    utils.visualization.visualize_segmentation_adaptive(upsampled_predictions.squeeze(), classes_lut, image_np)
     if annotation_np is not None:
         plt.subplot(1, subplots, 3); plt.title("ground truth")
-        utils.visualization.visualize_segmentation_adaptive(annotation_np.squeeze(), pascal_voc_lut, image_np)
+        utils.visualization.visualize_segmentation_adaptive(annotation_np.squeeze(), classes_lut, image_np)
     plt.show()
 
-def get_data_feed(pixels=None):
-    dataset = data.TFRecordDataset([validation_records]).map(utils.tf_records.parse_record)  # .batch(1)
+def get_data_feed(val_rec_fname=pascal_val_rec_fname, pixels=None):
+    dataset = data.TFRecordDataset([val_rec_fname]).map(utils.tf_records.parse_record)  # .batch(1)
     if pixels is not None:
         dataset = dataset.map(lambda img, ann:
                               utils.augmentation.nonrandom_rescale(img, ann, [pixels, pixels]))
@@ -179,7 +194,8 @@ def segment_movie(fcnfunc, checkpoint, video_file_in, pixels=None):
         colors /= np.max(colors, axis=1)[:, np.newaxis]
         colors *= 255
         colors = np.concatenate(( np.round(colors), mask_alpha*np.ones((21,1))), axis=1)
-        colors[0][3] = 0 # don't color background
+        background_class = 0 # TODO what about other cases?
+        colors[background_class][3] = 0
 
         def process_frame(image_in):
             scaled_image, inferred_pixel_labels = sess.run([image_t3d, predictions], {image_ph: image_in})
@@ -195,6 +211,70 @@ def segment_movie(fcnfunc, checkpoint, video_file_in, pixels=None):
 
         annotated_clip = input_clip.fl_image(process_frame)
         annotated_clip.write_videofile(video_file_out, audio=False)
+
+
+def main(args):
+    checkpoint = args.traindir+'/fcn.ckpt'
+    if args.afteriter!=0 :
+        checkpoint += ('_'+str(args.afteriter))
+
+    # get the architecture configuration from the training run folder..
+    import json
+    trainargs = json.load(open(args.traindir+'/runargs'))
+
+    # resolve the working resolution - passed as arg CLI / used in train / "native" of image
+    if args.pixels > 0:
+        pixels = args.pixels
+    elif args.pixels < 0:
+        pixels = trainargs['pixels']
+    else:
+        pixels = None
+
+    # Build net, using architecture flags which were used in train (test same net as trained)
+    args.__dict__.update(trainargs)
+    if type(args.extended_arch)in [str, unicode] and args.extended_arch != '':
+        import newer_arch
+        netclass = eval('newer_arch.' + args.extended_arch)
+    else:
+        netclass = fcn_arch.FcnArch
+    print("Using architecture " + netclass.__name__)
+
+    args = resolve_dataset_family(args)
+    fcn_builder = netclass(number_of_classes=args.num_classes, is_training=False, net=args.basenet,
+                           trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16, fcn8=args.fcn8)
+    # fcn_builder = fcn_arch.FcnArch(number_of_classes=number_of_classes, is_training=False, net=args.basenet,
+    #                                trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
+
+    # ..From logits to class predictions
+    if pixels > 0 and pixels == (pixels/32)*32.0 :
+        def fcnfunc_img2labels(img):
+            tmp = tf.argmax(fcn_builder.build_net(img), dimension=3)
+            return tf.expand_dims(tmp, 3)
+    else:
+        print('..."native" mode or size not multiple of 32, doing the generic adaptation...')
+        fcnfunc_img2labels = utils.inference.adapt_network_for_any_size_input(fcn_builder.build_net, 32)
+
+    # OK, let's get data build graph and run stuff!
+    tf.reset_default_graph()
+
+    if args.moviepath:
+        # (!) this fails for "native" res. not so interesting..
+        segment_movie(fcnfunc_img2labels, checkpoint, args.moviepath, pixels)
+    elif args.imagepath:
+        segment_image(fcnfunc_img2labels, checkpoint, args.imagepath, pixels)
+    else: # run over the validation set
+        val_tfrec_fname = os.path.join(args.datapath, 'validation.tfrecords')
+        iterator = get_data_feed(val_tfrec_fname, pixels)
+        image_t, annotation_t = iterator.get_next()
+        if args.hquant:
+            print("Coming soon - quantized version for real-time deployments...")
+        prediction_t = fcnfunc_img2labels(tf.expand_dims(image_t, axis=0))
+        def viz_cb(i, (image_np, upsampled_predictions, annotation_np)):
+            if args.first2viz <= i < args.last2viz:
+                visualize(image_np, annotation_np, upsampled_predictions, i, args.label2name)
+        iter_test(annotation_t, prediction_t, checkpoint, iterator, num_classes=args.num_classes,
+                  num_images=args.total_val_images, classes_lut=args.label2name,
+                  callback=viz_cb, more_tensors_to_eval=[image_t, annotation_t, prediction_t])
 
 
 if __name__ == "__main__":
@@ -239,61 +319,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
 
-    checkpoint = args.traindir+'/fcn.ckpt' 
-    if args.afteriter!=0 :
-        checkpoint += ('_'+str(args.afteriter))
-
-    # get the architecture configuration from the training run folder..
-    import json
-    trainargs = json.load(open(args.traindir+'/runargs'))
-
-    # resolve the working resolution - passed as arg CLI / used in train / "native" of image
-    if args.pixels > 0:
-        pixels = args.pixels
-    elif args.pixels < 0:
-        pixels = trainargs['pixels']
-    else:
-        pixels = None
-
-    # Build net, using architecture flags which were used in train (test same net as trained)
-    args.__dict__.update(trainargs)
-    if type(args.extended_arch)in [str, unicode] and args.extended_arch != '':
-        import newer_arch
-        netclass = eval('newer_arch.' + args.extended_arch)
-    else:
-        netclass = fcn_arch.FcnArch
-    print("Using architecture " + netclass.__name__)
-    fcn_builder = netclass(number_of_classes=number_of_classes, is_training=False, net=args.basenet,
-                           trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16, fcn8=args.fcn8)
-    # fcn_builder = fcn_arch.FcnArch(number_of_classes=number_of_classes, is_training=False, net=args.basenet,
-    #                                trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
-
-    # ..From logits to class predictions
-    if pixels > 0 and pixels == (pixels/32)*32.0 :
-        def fcnfunc_img2labels(img):
-            tmp = tf.argmax(fcn_builder.build_net(img), dimension=3)
-            return tf.expand_dims(tmp, 3)
-    else:
-        print('..."native" mode or size not multiple of 32, doing the generic adaptation...')
-        fcnfunc_img2labels = utils.inference.adapt_network_for_any_size_input(fcn_builder.build_net, 32)
-
-    # OK, let's get data build graph and run stuff!
-    tf.reset_default_graph()
-
-    if args.moviepath:
-        # (!) this fails for "native" res. not so interesting..
-        segment_movie(fcnfunc_img2labels, checkpoint, args.moviepath, pixels)
-    elif args.imagepath:
-        segment_image(fcnfunc_img2labels, checkpoint, args.imagepath, pixels)
-    else: # run over the validation set
-        iterator = get_data_feed(pixels)
-        image, annotation = iterator.get_next()
-        if args.hquant:
-            print("Coming soon - quantized version for real-time deployments...")
-        predictions = fcnfunc_img2labels(tf.expand_dims(image, axis=0))
-        def viz_cb(i, (image_np, upsampled_predictions, annotation_np)):
-            if args.first2viz <= i < args.last2viz:
-                visualize(image_np, annotation_np, upsampled_predictions, i)
-        iter_test(image, annotation, predictions, checkpoint, iterator,
-                     callback=viz_cb, more_tensors_to_eval=[image, annotation, predictions])
-
+    main(args)

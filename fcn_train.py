@@ -25,12 +25,20 @@ PASCAL_TRAIN_DATASET_SIZE = utils.pascal_voc.BERKELY_U_PASCAL12_TRAINING # 11127
 CAMVID_NUM_CLASSES = 11
 CAMVID_TRAIN_DATASET_SIZE = 367 # train only..
 
-pascal_voc_lut = utils.pascal_voc.pascal_segmentation_lut()
-pascal_class_labels = pascal_voc_lut.keys() # ==range(PASCAL_NUM_CLASSES)+[255]
-camvid_class_labels = range(CAMVID_NUM_CLASSES)+[CAMVID_NUM_CLASSES]
+#pascal_voc_lut = utils.pascal_voc.pascal_segmentation_lut()
+#pascal_class_labels = pascal_voc_lut.keys() # ==range(PASCAL_NUM_CLASSES)+[255]
+#camvid_class_labels = range(CAMVID_NUM_CLASSES)+[CAMVID_NUM_CLASSES]
 
-print 'pascal_class_labels ', pascal_class_labels
-print 'camvid_class_labels ', camvid_class_labels
+pascal_label2name = utils.pascal_voc.pascal_segmentation_lut() # ==range(PASCAL_NUM_CLASSES)+[255]
+
+# NOTE: num_classes and 255 are used interchangeable for the masked-out aka ambiguous aka unlabeled
+camvid_label2name = utils.camvid.camvid_lut
+#camvid_label2name = {lb:str(lb) for lb in range(CAMVID_NUM_CLASSES+1)}  # TODO names...
+camvid_label2name[255] = 'unlabeled'
+
+#print 'pascal_class_labels ', pascal_class_labels
+#print 'camvid_class_labels ', camvid_class_labels
+
 # For mode of "go overfit over first images"
 #  (a.k.a "training convergence sanity test")
 #  - set a number here...
@@ -38,27 +46,30 @@ debug_loop_over_few_first_images = None  # 30
 
 def resolve_dataset_family(args):
     if args.dataset_family == 'pascal':
-        class_labels = pascal_class_labels
+        args.label2name = pascal_label2name
         if args.total_train_images == 0:
             args.total_train_images = PASCAL_TRAIN_DATASET_SIZE
         if args.num_classes == 0:
             args.num_classes = PASCAL_NUM_CLASSES
     elif args.dataset_family == 'camvid':
-        class_labels = camvid_class_labels
+        args.label2name = camvid_label2name
         if args.total_train_images == 0:
             args.total_train_images = CAMVID_TRAIN_DATASET_SIZE
         if args.num_classes == 0:
             args.num_classes = CAMVID_NUM_CLASSES
     else:
         assert 0, "dataset family " + args.dataset_family + " not supported"
+
+    if args.datapath == '':
+        args.datapath = '/data/' + args.dataset_family
     #print args.num_classes, args.total_train_images; exit()
-    return class_labels, args
+    return args
 
 
 class Trainer:
 
     def __init__(self, args, checkpoint_path):
-        self.class_labels, args = resolve_dataset_family(args)
+        args = resolve_dataset_family(args)
 
         self.args = args
         self.checkpoint_path = checkpoint_path
@@ -71,6 +82,7 @@ class Trainer:
         else:
             netclass = fcn_arch.FcnArch
         print("Using architecture "+netclass.__name__)
+
         self.fcn_builder = netclass(number_of_classes=self.args.num_classes, is_training=True, net=args.basenet,
                                     trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16, fcn8=args.fcn8)
 
@@ -82,7 +94,7 @@ class Trainer:
         valid_labels_batch_tensor, valid_logits_batch_tensor = \
             utils.training.get_valid_logits_and_labels(annotation_batch_tensor=self.annotation_batch,
                                                        logits_batch_tensor=self.upsampled_logits_batch,
-                                                       class_labels=self.class_labels)
+                                                       class_labels=self.args.label2name.keys())
 
         cross_entropies = tf.nn.softmax_cross_entropy_with_logits(logits=valid_logits_batch_tensor,
                                                                   labels=valid_labels_batch_tensor)
@@ -117,19 +129,20 @@ class Trainer:
         with tf.control_dependencies(update_ops):
             with tf.variable_scope("adam_vars"):
                 if new_vars_to_learn_faster:
-                    # TODO - do we need to do smth special to include regularization losses?
                     train_op1 = tf.train.AdamOptimizer(learning_rate=strong_learning_rate,
                                                        epsilon=1e-3, beta1=self.args.momentum). \
                         minimize(cross_entropy_loss, var_list=new_vars_to_learn_faster, global_step=global_step)
                     train_op2 = tf.train.AdamOptimizer(learning_rate=weak_learning_rate,
                                                        epsilon=1e-3, beta1=self.args.momentum). \
-                        minimize(cross_entropy_loss, var_list=pretrained_vars, global_step=global_step)
-
+                        minimize(cross_entropy_loss, var_list=pretrained_vars)
                     train_step = tf.group(train_op1, train_op2)
+                    # TODO is global_step iterated on each minimize()?
                 else:
                     train_step = tf.train.AdamOptimizer(learning_rate=weak_learning_rate,
                                                         epsilon=1e-3, beta1=self.args.momentum). \
                         minimize(cross_entropy_loss, global_step=global_step)
+
+        # TODO - do we need to do smth special to include regularization losses?
 
         # assuming the "ambiguous/ unlabeled" is either num_classes or 255 (or whatever in between:))
         mask = tf.to_int32(tf.less(self.annotation_batch, self.args.num_classes))
@@ -161,7 +174,7 @@ class Trainer:
         local_vars_init_op = tf.local_variables_initializer()
         combined_loc_glob_init_op = tf.group(local_vars_init_op, global_vars_init_op)
 
-        # We need this to save only model variables and qomit
+        # We need this to save only model variables and omit
         # optimization-related and other variables.
         model_variables = slim.get_model_variables()
         saver = tf.train.Saver(model_variables)
@@ -178,7 +191,7 @@ class Trainer:
             sess.run(self.train_iter.initializer)
             sess.run(self.test_iter.initializer)
             t0 = time.time()
-            for trainstep in xrange(total_iterations):
+            for trainstep in range(total_iterations):
                 # print '--full loop ', time.time() - t0
                 t0 = time.time()
                 sess.run(running_metric_initializer)
@@ -330,8 +343,8 @@ if __name__ == "__main__":
                              ' by up(down)sampling larger side and padding the other to get square shape',
                         default=512)
     parser.add_argument('--datapath', type=str,
-                        help='path where tfrecords are located',
-                        default='/data/TFrec/')
+                        help='path where tfrecords are located; if not set will use /data/<dataset-family>',
+                        default='')
     parser.add_argument('--num_classes', type=int,
                         help='number of classes (dataset dependent); if not set will use dataset-damily default',
                         default=0)
