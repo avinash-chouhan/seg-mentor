@@ -248,7 +248,7 @@ def tfrecordify_camvid(rootdir = '/data/camvid'):
     write_image_annotation_pairs_to_tfrecord(filename_pairs=trainpairs,
                                             tfrecords_filename=rootdir+'/training.tfrecords')
 
-    write_image_annotation_pairs_to_tfrecord(filename_pairs=testpairs,
+    write_image_annotation_pairs_to_tfrecord(filename_pairs=valpairs,
                                              tfrecords_filename=rootdir+'/validation.tfrecords')
 
 if __name__ == "__main__":

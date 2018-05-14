@@ -1,81 +1,56 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-
-def _discrete_matshow_adaptive(data, labels_names=[], orig_image=None, title=""):
+        
+def visualize_segmentation_adaptive(predictions, orig_image=None,
+                                    clabel2cname=None, od_class2color=None): #, cmap=None):
     """Displays segmentation results using colormap that is adapted
-    to a number of classes. Uses labels_names to write class names
-    aside the color label. Used as a helper function for 
-    visualize_segmentation_adaptive() function.
+    to a number of classes currently present in an image. Use constant colormap is given,
+     (adapted subset therein) otherwise create one.
     
     Parameters
     ----------
-    data : 2d numpy array (width, height)
+    orig_image : to blend with segmentation
+    predictions : 2d numpy array (width, height)
         Array with integers representing class predictions
-    labels_names : list
-        List with class_names
+    one of (A) or (B):  (will try first to use (A) so that to have colors...)
+    (A) od_class2color : ordered dict.
+            mapping class name to color vector, with the indices giving the class labels.
+    (B) clabel2cname : dict
+            A dict that maps class number to its name like
+            {0: 'background', 100: 'airplane'}
+    Note that both are sized bigger than num_classes, including also the 'unlabeled'
     """
-    
-    #fig_size = [7, 6]
-    #plt.rcParams["figure.figsize"] = fig_size
-    
-    # get discrete colormap
-    cmap = plt.get_cmap('Paired', np.max(data)-np.min(data)+1)
 
-    print 'cmap', cmap
-    #data2draw = data if orig_image is None else data + 0.01*np.mean(orig_image, 2)
+    unique_classes, _relabeled_image = np.unique(predictions, return_inverse=True)
+    rlbl_im = _relabeled_image.reshape(predictions.shape)
+
+    from matplotlib.colors import LinearSegmentedColormap as lsc
+    if od_class2color:
+        no255 = lambda x: len(od_class2color)-1 if x==255 else x
+        rlbl_classes_colors_itm = [od_class2color.items()[no255(c)] for c in unique_classes]
+        rlbl_colors =  [[y / 256.0 for y in cl_col[1]] for cl_col in rlbl_classes_colors_itm]
+        cmap = lsc.from_list('goo', rlbl_colors, len(rlbl_colors))
+        labels_names = [str(orig_lbl)+' '+cl_col[0] for orig_lbl, cl_col in zip(unique_classes, rlbl_classes_colors_itm)]
+    elif clabel2cname:
+        cmap = plt.get_cmap('Paired', len(clabel2cname))
+        no255 = lambda x: len(clabel2cname) - 1 if x == 255 else x
+        cmap = lsc.from_list('goo', [cmap.colors[no255(c)][:3] for c in unique_classes] , len(unique_classes))
+        labels_names = [str(c)+' '+clabel2cname[c] for c in unique_classes]
+    else :
+        assert 0
 
     # set limits .5 outside true range
-    # mat = plt.matshow(data, cmap=cmap, vmin=np.min(data)-.5, vmax=np.max(data)+.5)
-    mat = plt.imshow(data, cmap=cmap, vmin=np.min(data) - .5, vmax=np.max(data) + .5)
+    mat = plt.imshow(rlbl_im, cmap=cmap, alpha=0.8,
+                     vmin=np.min(rlbl_im)-.5, vmax=np.max(rlbl_im)+.5)
     if orig_image is not None:
         plt.imshow(orig_image, alpha=0.2)
+
     # tell the colorbar to tick at integers
-    cax = plt.colorbar(mat,
-                       ticks=np.arange(np.min(data), np.max(data)+1))
-    
+    cax = plt.colorbar(mat, ticks=np.arange(np.min(rlbl_im), np.max(rlbl_im)+1))
+
     # The names to be printed aside the colorbar
     if labels_names:
         cax.ax.set_yticklabels(labels_names)
-    
-    #if title:
-    #    plt.suptitle(title, fontsize=15, fontweight='bold')
-    
-    #plt.show()
 
-        
-def visualize_segmentation_adaptive(predictions, segmentation_class_lut,
-                                    orig_image=None, title="Segmentation"):
-    """Displays segmentation results using colormap that is adapted
-    to a number of classes currently present in an image, instead
-    of PASCAL VOC colormap where 21 values is used for
-    all images. Adds colorbar with printed names against each color.
-    Number of classes is renumerated starting from 0, depending
-    on number of classes that are present in the image.
-    
-    Parameters
-    ----------
-    predictions : 2d numpy array (width, height)
-        Array with integers representing class predictions
-    segmentation_class_lut : dict
-        A dict that maps class number to its name like
-        {0: 'background', 100: 'airplane'}
-        
-    """
-    
-    # TODO: add non-adaptive visualization function, where the colorbar
-    # will be constant with names
-    
-    unique_classes, relabeled_image = np.unique(predictions,
-                                                return_inverse=True)
-
-    relabeled_image = relabeled_image.reshape(predictions.shape)
-
-    labels_names = []
-
-    for index, current_class_number in enumerate(unique_classes):
-
-        labels_names.append(str(index) + ' ' + segmentation_class_lut[current_class_number])
-
-    _discrete_matshow_adaptive(data=relabeled_image, labels_names=labels_names,
-                               title=title, orig_image=orig_image)
+    return cmap

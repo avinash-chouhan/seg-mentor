@@ -17,53 +17,97 @@ else:
 log_folder = "tmp/logs"
 image_train_size = [512, 512]
 
-PASCAL_NUM_CLASSES = 21
-# ...assumes "mode 2" in utils.pascal_voc.get_augmented_pascal_image_annotation_filename_pairs()
-#     was used on creation of the tfrecord file
-PASCAL_TRAIN_DATASET_SIZE = utils.pascal_voc.BERKELY_U_PASCAL12_TRAINING # 11127
 
-CAMVID_NUM_CLASSES = 11
-CAMVID_TRAIN_DATASET_SIZE = 367 # train only..
+
+# PASCAL_TRAIN_DATASET_SIZE =
+#
+# CAMVID_NUM_CLASSES = 11
+# CAMVID_TRAIN_DATASET_SIZE = 367 # train only..
 
 #pascal_voc_lut = utils.pascal_voc.pascal_segmentation_lut()
 #pascal_class_labels = pascal_voc_lut.keys() # ==range(PASCAL_NUM_CLASSES)+[255]
 #camvid_class_labels = range(CAMVID_NUM_CLASSES)+[CAMVID_NUM_CLASSES]
 
-pascal_label2name = utils.pascal_voc.pascal_segmentation_lut() # ==range(PASCAL_NUM_CLASSES)+[255]
+#pascal_label2name = utils.pascal_voc.pascal_segmentation_lut() # ==range(PASCAL_NUM_CLASSES)+[255]
 
-# NOTE: num_classes and 255 are used interchangeable for the masked-out aka ambiguous aka unlabeled
-camvid_label2name = utils.camvid.camvid_lut
+#camvid_label2name = utils.camvid.camvid_lut
 #camvid_label2name = {lb:str(lb) for lb in range(CAMVID_NUM_CLASSES+1)}  # TODO names...
-camvid_label2name[255] = 'unlabeled'
 
-#print 'pascal_class_labels ', pascal_class_labels
-#print 'camvid_class_labels ', camvid_class_labels
+
+PASCAL_VAL_SET_SIZE = utils.pascal_voc.PASCAL12_VALIDATION_WO_BERKELEY_TRAINING  # 904 RV-VOC12
+
+CAMVID_VAL_DATA_SIZE = 237 # 107
+
+def resolve_dataset_family(args):
+    # resolve num_classes, clabel2cname, colors (4viz) if available...
+    args = fcn_train.resolve_dataset_family(args)
+
+    if args.dataset_family == 'pascal':
+        args.total_val_images = PASCAL_VAL_SET_SIZE
+    elif args.dataset_family == 'camvid':
+        args.total_val_images = CAMVID_VAL_DATA_SIZE
+    else:
+        assert 0, "dataset family " + args.dataset_family + " not supported"
+    return args
+
+def resolve_dataset_family(args):
+    '''
+        Given a dataset family, set the properties of the dataset (if not set explicitely)
+        to the corresponding defaults of the family..
+
+    :param args: arguments to fcn_train - both if we run from taining session.
+                 or from test session given a folder resultant of a training session
+                 (in this case the dataset family
+
+    :return: aumgneted args
+
+    # TODO - read num (of train/val) images from the tfrecord itself,
+         thus removing reliance on consistency with tfrecord-ification done previously w. ext. script
+    '''
+
+    # Note: maintaining backwards compatibility for trains performed w.o. this args
+    #        default to pascal... note you can also edit the json of training folder to circumvent defaults @test
+    if not hasattr(args,'dataset_family'):
+        args.dataset_family = 'pascal_seg'
+
+    if args.dataset_family == 'pascal_seg':
+        args.clabel2cname = utils.pascal_voc.pascal_segmentation_lut()
+        #args.od_classes_colors = pascal_od_class2color # TODO set consistent colors
+        if not hasattr(args,'num_classes') or args.num_classes == 0:
+            args.num_classes = utils.pascal_voc.PASCAL_NUM_CLASSES
+        # Note - assumes "mode 2" in utils.pascal_voc.get_augmented_pascal_image_annotation_filename_pairs()
+        #     was used on creation of the tfrecord file
+        if not hasattr(args,'total_train_images') or args.total_train_images == 0 :
+            # ...assumes "mode 2" was used on creation of the tfrecord file (see pascal_voc.py)
+            args.total_train_images = utils.pascal_voc.BERKELY_U_PASCAL12_TRAINING # 11127
+        if not hasattr(args, 'total_val_images') or args.total_val_images == 0:
+            args.total_val_images =utils.pascal_voc. PASCAL12_VALIDATION_WO_BERKELEY_TRAINING # 904 RV-VOC12
+
+    elif args.dataset_family == 'camvid':
+        args.clabel2cname = utils.camvid.camvid_lut # camvid_label2name
+        args.od_class2color = utils.camvid.camvid11_od_class2color
+        if args.num_classes == 0:
+            args.num_classes = utils.camvid.NUM_CLASSES
+        if args.total_train_images == 0:
+            args.total_train_images = utils.camvid.TRAIN_DATASET_SIZE
+        if not hasattr(args, 'total_val_images') or args.total_val_images == 0:
+            args.total_val_images = utils.camvid.VAL_DATASET_SIZE
+    else:
+        assert 0, "dataset family " + args.dataset_family + " not supported"
+
+    # NOTE: num_classes and 255 are used interchangeably for the masked-out a.k.a ambiguous a.k.a unlabeled
+    args.clabel2cname[args.num_classes] = args.clabel2cname[255] = 'unlabeled'
+
+    if not hasattr(args,'datapath') or args.datapath == '':
+        args.datapath = '/data/' + args.dataset_family
+    #print args.num_classes, args.total_train_images; exit()
+    return args
+
 
 # For mode of "go overfit over first images"
 #  (a.k.a "training convergence sanity test")
 #  - set a number here...
 debug_loop_over_few_first_images = None  # 30
-
-def resolve_dataset_family(args):
-    if args.dataset_family == 'pascal':
-        args.label2name = pascal_label2name
-        if args.total_train_images == 0:
-            args.total_train_images = PASCAL_TRAIN_DATASET_SIZE
-        if args.num_classes == 0:
-            args.num_classes = PASCAL_NUM_CLASSES
-    elif args.dataset_family == 'camvid':
-        args.label2name = camvid_label2name
-        if args.total_train_images == 0:
-            args.total_train_images = CAMVID_TRAIN_DATASET_SIZE
-        if args.num_classes == 0:
-            args.num_classes = CAMVID_NUM_CLASSES
-    else:
-        assert 0, "dataset family " + args.dataset_family + " not supported"
-
-    if args.datapath == '':
-        args.datapath = '/data/' + args.dataset_family
-    #print args.num_classes, args.total_train_images; exit()
-    return args
 
 
 class Trainer:
@@ -352,8 +396,8 @@ if __name__ == "__main__":
                         help='size of the training set; if not set will use dataset-damily default',
                         default=0)
     parser.add_argument('--dataset_family', type=str,
-                        help='pascal/ camvid / coco / ...',
-                        default='pascal')
+                        help='pascal_seg/ camvid / coco / ...',
+                        default='pascal_seg')
     parser.add_argument('--modelspath', type=str,
                         help='path where imagenet-pretrained FE checkpoints are located',
                         default='/data/models/')

@@ -8,13 +8,11 @@ import pascal_voc
 import camvid
 
 '''
-    Credits:
-    The majority of this package should be credited to Daniil of http://warmspringwinds.github.io/,
-     (or to one of his own spiritual fathers). A healthy round of applaud is in place, really.
+    Package originated from Daniil of http://warmspringwinds.github.io/ (and his predecessors), 
      
-    We at Hailo added some adaptaions:
+    We at Hailo improved on the following parts:
         - updated tf_records.py to work with TF Datasets (the modern way of feeding data in tensorflow)
-        - somewhat improved visualization
+        - significanly improved visualization
         - records creation as script vs. notebook, with some doc
         - Added recordization for more datasets - COCO(stuff&things), CamVid, ...?
 '''

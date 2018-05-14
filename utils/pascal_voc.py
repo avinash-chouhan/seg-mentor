@@ -7,6 +7,7 @@ import os
 PASCAL12_VALIDATION_WO_BERKELEY_TRAINING = 904
 BERKELY_U_PASCAL12_TRAINING = 11127
 
+PASCAL_NUM_CLASSES = 21
 
 def pascal_segmentation_lut():
     """Return look-up table with number and correspondng class names
@@ -26,16 +27,12 @@ def pascal_segmentation_lut():
                    'sheep', 'sofa', 'train', 'tv/monitor', 'ambigious']
     
     enumerated_array = enumerate(class_names[:-1])
-    
     classes_lut = list(enumerated_array)
     
-    # Add a special class representing ambigious regions
-    # which has index 255.
+    # Add a special class representing ambigious regions which has index 255.
     classes_lut.append((255, class_names[-1]))
-    
-    classes_lut = dict(classes_lut)
 
-    return classes_lut
+    return dict(classes_lut)
 
 
 def get_pascal_segmentation_images_lists_txts(pascal_root):
@@ -55,18 +52,11 @@ def get_pascal_segmentation_images_lists_txts(pascal_root):
     """
     
     segmentation_images_lists_relative_folder = 'ImageSets/Segmentation'
+    segmentation_images_lists_folder = os.path.join(pascal_root, segmentation_images_lists_relative_folder)
     
-    segmentation_images_lists_folder = os.path.join(pascal_root,
-                                                    segmentation_images_lists_relative_folder)
-    
-    pascal_train_list_filename = os.path.join(segmentation_images_lists_folder,
-                                              'train.txt')
-
-    pascal_validation_list_filename = os.path.join(segmentation_images_lists_folder,
-                                                   'val.txt')
-    
-    pascal_trainval_list_filname = os.path.join(segmentation_images_lists_folder,
-                                                'trainval.txt')
+    pascal_train_list_filename =      os.path.join(segmentation_images_lists_folder, 'train.txt')
+    pascal_validation_list_filename = os.path.join(segmentation_images_lists_folder, 'val.txt')
+    pascal_trainval_list_filname =    os.path.join(segmentation_images_lists_folder, 'trainval.txt')
     
     return [
             pascal_train_list_filename,
