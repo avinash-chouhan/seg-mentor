@@ -38,17 +38,6 @@ PASCAL_VAL_SET_SIZE = utils.pascal_voc.PASCAL12_VALIDATION_WO_BERKELEY_TRAINING 
 
 CAMVID_VAL_DATA_SIZE = 237 # 107
 
-def resolve_dataset_family(args):
-    # resolve num_classes, clabel2cname, colors (4viz) if available...
-    args = fcn_train.resolve_dataset_family(args)
-
-    if args.dataset_family == 'pascal':
-        args.total_val_images = PASCAL_VAL_SET_SIZE
-    elif args.dataset_family == 'camvid':
-        args.total_val_images = CAMVID_VAL_DATA_SIZE
-    else:
-        assert 0, "dataset family " + args.dataset_family + " not supported"
-    return args
 
 def resolve_dataset_family(args):
     '''
@@ -135,13 +124,20 @@ class Trainer:
 
         chkpnt2save_path = trainfolder + '/fcn.ckpt'
 
-        valid_labels_batch_tensor, valid_logits_batch_tensor = \
-            utils.training.get_valid_logits_and_labels(annotation_batch_tensor=self.annotation_batch,
-                                                       logits_batch_tensor=self.upsampled_logits_batch,
-                                                       class_labels=self.args.label2name.keys())
+        #import ipdb; ipdb.set_trace()
+        filtered_labels_1hot_flat, filtered_logits_flat = \
+            utils.training.get_goodpixel_logits_and_1hot_labels(self.annotation_batch,
+                                                                self.upsampled_logits_batch,  self.args.num_classes)
 
-        cross_entropies = tf.nn.softmax_cross_entropy_with_logits(logits=valid_logits_batch_tensor,
-                                                                  labels=valid_labels_batch_tensor)
+        cross_entropies = tf.nn.softmax_cross_entropy_with_logits(labels=filtered_labels_1hot_flat,
+                                                                  logits=filtered_logits_flat
+                                                                  )
+        if self.args.dataset_family=='camvid':
+            pxl_classes_flat = tf.argmax(filtered_labels_1hot_flat, axis=1)
+            weights = tf.to_float(tf.gather_nd(utils.camvid.camvid11_class_weights,
+                                               tf.expand_dims(pxl_classes_flat, -1)))
+            cross_entropies = tf.multiply(cross_entropies, weights)
+
 
         # Normalize the cross entropy -- the number of elements
         # is different during each step due to mask out regions

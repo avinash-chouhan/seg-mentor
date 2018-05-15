@@ -89,8 +89,8 @@ def find_weights(trainannot = '/data/camvid/trainannot'):
     ''' compute stats for class weighting'''
     from matplotlib import pyplot as plt
     tot_count = np.zeros(12)
-    for imn in os.listdir('/data/camvid/trainannot'):
-        im1 = plt.imread('/data/camvid/trainannot/' + imn, np.uint8)
+    for imn in os.listdir(trainannot):
+        im1 = plt.imread(trainannot+'/'+imn, np.uint8)
         vals, counts = np.unique(im1, return_counts=True)
         tot_count[vals] += counts
 
@@ -98,4 +98,7 @@ camvid11_train_pxl_counts_by_class = \
    np.array([10682767., 14750079.,623349., 20076880., 2845085.,  6166762.,
              743859.,    714595.,  3719877.,405385.,   184967.,  2503995.])
 
+camvid11_train_pxl_counts_by_class /= np.sum(camvid11_train_pxl_counts_by_class)
 camvid11_class_weights = 1/np.log(camvid11_train_pxl_counts_by_class+1.02)
+camvid11_class_weights /= np.mean(camvid11_class_weights)
+# print camvid11_class_weights
