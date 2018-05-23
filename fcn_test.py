@@ -78,16 +78,16 @@ def iter_test(annotation, predictions, checkpoint, iterator, args,
 def visualize(image_np, upsampled_predictions, annotation_np=None, i=0,
               od_class2color=None, clabel2cname=None):
 
-    plt.figure(figsize=(8, 32))
+    plt.figure(figsize=(40, 5))
     subplots = 2 if annotation_np is None else 3
     plt.suptitle('image #{0}'.format(i))
-    plt.subplot(subplots, 1, 1); plt.title("orig image")
+    plt.subplot(1, subplots, 1); plt.title("orig image")
     plt.imshow(image_np)
-    plt.subplot(subplots, 1, 2); plt.title("segmentation")
+    plt.subplot(1, subplots, 2); plt.title("segmentation")
     utils.visualization.visualize_segmentation_adaptive(upsampled_predictions.squeeze(), image_np,
                                                         od_class2color=od_class2color, clabel2cname=clabel2cname)
     if annotation_np is not None:
-        plt.subplot(subplots, 1, 3); plt.title("ground truth")
+        plt.subplot(1, subplots, 3); plt.title("ground truth")
         utils.visualization.visualize_segmentation_adaptive(annotation_np.squeeze(), image_np,
                                                             od_class2color=od_class2color, clabel2cname=clabel2cname)
     plt.show()

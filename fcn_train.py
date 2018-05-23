@@ -231,7 +231,7 @@ class Trainer:
             sess.run(self.train_iter.initializer)
             sess.run(self.test_iter.initializer)
             t0 = time.time()
-            for trainstep in range(total_iterations):
+            for iter_count in range(total_iterations):
                 # print '--full loop ', time.time() - t0
                 t0 = time.time()
                 sess.run(running_metric_initializer)
@@ -246,8 +246,8 @@ class Trainer:
                 #   http://ronny.rest/blog/post_2017_09_11_tf_metrics/
                 miou_score, miou_summary = sess.run([miou_score_op, miou_summary_op])
                 #print 'post miou sess run ', time.time() - t0
-                summary_string_writer.add_summary(cross_entropy_summary, trainstep)
-                summary_string_writer.add_summary(learnrate_summary, trainstep)
+                summary_string_writer.add_summary(cross_entropy_summary, iter_count)
+                summary_string_writer.add_summary(learnrate_summary, iter_count)
                 # summary_string_writer.add_summary(miou_summary, trainstep).
                 """ NOTE: on second thought, this "single batch train mIoU" computed on line above is meanignless,
                   and the low-pass filter in tensorboard (this was the first thought...) doesn't help.
@@ -255,12 +255,12 @@ class Trainer:
 
                 print("Batch loss: {0:.2f}, Batch mIOU (%): {1:.2f}".format(cross_entropy, miou_score * 100))
                 periodic_test_eval_steps = 100
-                if (trainstep + 1) % periodic_test_eval_steps == 0:
+                if (iter_count + 1) % periodic_test_eval_steps == 0:
                     """ Here we do a periodic evaluation on a valdiation (SUB)set,
                       on each step running the miou update op (updating the confusion matrix under the hood),
                       and computing the loss (which, in contrast to mIoU, is OK to just average over the batches)"""
                     save_path = saver.save(sess, chkpnt2save_path)
-                    print("step ", trainstep, time.ctime(), "updated model in: %s" % save_path)
+                    print("step ", iter_count, time.ctime(), "updated model in: %s" % save_path)
                     sess.run(running_metric_initializer)
                     num_test_images = 240  # 15 batches, ~1/4 of valid. set (shuffled..)
                     num_test_batches = num_test_images / self.args.batch_size
@@ -275,17 +275,17 @@ class Trainer:
                     test_loss_summary.value.add(tag='test cross entropy loss', simple_value=test_loss)
                     for _prevstep in range(periodic_test_eval_steps)[::-1]:
                         # write same value for all prev. steps, for compatibility with filters, etc.
-                        summary_string_writer.add_summary(test_loss_summary, trainstep - _prevstep)
-                        summary_string_writer.add_summary(test_miou_summary, trainstep - _prevstep)
+                        summary_string_writer.add_summary(test_loss_summary, iter_count - _prevstep)
+                        summary_string_writer.add_summary(test_miou_summary, iter_count - _prevstep)
                     print("----test mIOU: ", test_miou_score)
                     print("----test loss: ", test_loss)
                     print("----finished test eval...", time.ctime())
                 # make a copy once in a while for case we start to overfit and model becomes worse...
-                if trainstep % 3000 == 0:
-                    saver.save(sess, chkpnt2save_path + '_{0}'.format(trainstep))
+                if iter_count % 3000 == 0:
+                    saver.save(sess, chkpnt2save_path + '_{0}'.format(iter_count))
 
                 # Nice example of usage Dataset iterators advantage.. (with queues it would be way more messy)
-                if debug_loop_over_few_first_images and (trainstep + 1) % debug_loop_over_few_first_images == 0:
+                if debug_loop_over_few_first_images and (iter_count + 1) % debug_loop_over_few_first_images == 0:
                     print '---'
                     sess.run(self.train_iter.initializer)
 
