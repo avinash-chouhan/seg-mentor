@@ -8,6 +8,9 @@ from preprocessing.vgg_preprocessing import _R_MEAN, _G_MEAN, _B_MEAN
 
 slim = tf.contrib.slim
 
+def test():
+    pass
+
 
 def vgg_preprocess(image):
     # Convert image to float32 before subtracting the
