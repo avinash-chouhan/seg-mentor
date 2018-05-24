@@ -8,9 +8,9 @@
 
 #### Hey amigo!
 <div align="center">
-<img src="https://github.com/hailotech/seg-mentor/blob/master/media/office.gif" width="80%" height="80%"><br><br>
+<img src="https://github.com/hailotech/seg-mentor/blob/master/media/office.gif" width="60%" height="60%"><br><br>
  </div>
-```yellowish - person; greenish - chair; reddish - TV/monitor```
+```this would be us, segmented with custom Inception_v1+FCN trained on Pascal-VOC.```
 
 ## WELCOME!
 to **seg-mentor** - a flexible semantic segmentation framework built in tensorflow.
@@ -44,12 +44,11 @@ We trained a few combinations therein; see [Results](#results-and-discussion) be
  and use them to color-up stuff as follows:
 
 Here's some stuff we segmented with ResNet18-LinkNet trained on CamVid:
-![picture alt](https://github.com/hailotech/seg-mentor/releases/download/v0.5/CamVidLinkNet1.png)
+![picture alt](https://github.com/hailotech/seg-mentor/blob/defcn/media/CamVidLinkNet1.png)
 
-![picture alt](https://orig00.deviantart.net/f8f9/f/2009/254/4/d/zhopa_concept_for_erfworld_by_elddonnemar.png)
+![picture alt](https://github.com/hailotech/seg-mentor/blob/defcn/media/camvid_seg.gif)
 
-...And here's some action from our office, segmented with Inception_v1-FCN trained on Pascal-VOC.
-
+...And here's some action from our office,
 
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
 <br>and offer a modular code for semantic segmentation with FCN-based meta-architectures. Our goal was to make it simple to:
