@@ -6,6 +6,12 @@
 - [Results & Discussion](#results-and-discussion)
 - [Previous, similar and future work](#previous-and-similar-work)
 
+#### Hey amigo!
+<div align="center">
+<img src="https://github.com/hailotech/seg-mentor/blob/master/media/office.gif" width="60%" height="60%"><br><br>
+ </div>
+```this would be us, segmented with custom Inception_v1+FCN trained on Pascal-VOC.```
+
 ## WELCOME!
 to **seg-mentor** - a flexible semantic segmentation framework built in tensorflow.
 We're making the world a better place by offering a modular sandbox in which you can tinker with semantic segmentation networks.
@@ -38,17 +44,11 @@ We trained a few combinations therein; see [Results](#results-and-discussion) be
  and use them to color-up stuff as follows:
 
 Here's some stuff we segmented with ResNet18-LinkNet trained on CamVid:
-![picture alt](https://github.com/hailotech/seg-mentor/releases/download/v0.5/CamVidLinkNet.png)
+![picture alt](https://github.com/hailotech/seg-mentor/blob/defcn/media/CamVidLinkNet1.png)
 
-![picture alt](https://github.com/hailotech/seg-mentor/releases/download/v0.5/camvid_seg.gif)
+![picture alt](https://github.com/hailotech/seg-mentor/blob/defcn/media/camvid_seg.gif)
 
-...And here's some action from our office, segmented with Inception_v1-FCN trained on Pascal-VOC.
-
-<div align="center">
-<img src="https://github.com/hailotech/seg-mentor/blob/master/media/office.gif" width="80%" height="80%"><br><br>
- </div>
-
-```Coloring: yellowish - person; greenish - chair; reddish - TV/monitor```
+...And here's some action from our office,
 
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
 <br>and offer a modular code for semantic segmentation with FCN-based meta-architectures. Our goal was to make it simple to:
