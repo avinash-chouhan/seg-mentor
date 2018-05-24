@@ -9,27 +9,46 @@
 ## WELCOME!
 to **seg-mentor** - a flexible semantic segmentation framework built in tensorflow.
 We're making the world a better place by offering a modular sandbox in which you can tinker with semantic segmentation networks.
- 
-<br>The work here happily relies on some great open-source projects, e.g. [[Pakhomov](http://warmspringwinds.github.io/about/)], see full *[Credits](#previous-and-similar-work)* below
+<br>Seg-mentor is quite self-contained, albeit happily reusing code bits and ideas from great open-source contribs by [D.Pakhomov](http://warmspringwinds.github.io/about/) and [others](#previous-and-similar-work)...
 
-<div align="center">
-<img src="https://github.com/hailotech/seg-mentor/blob/master/media/ResNet18_Apr02_HorseRider1.png" width="90%" height="90%"><br><br>
-</div>
+We're going to support mix&match across a rich choice of :
 
-```
-Left - original image || Center - segmented with ResNet18-FCN || Right - ground truth segmentation 
-```
-Some moving pictures from our office:
+**Feature Extractor (aka Encoder ) architecture**
+- [x] ResNet(s).
+- [x] Inception_v1, MobileNet_v1
+- [x] ...any [tfslim](https://github.com/tensorflow/models/tree/master/research/slim) model with minimal effort.
+- [ ] MobileNet_v2
+
+**Segmentation (aka Decoder) architecture**
+- [x] FCN
+- [ ] U-Net
+- [x] LinkNet
+- [ ] Dilation, DeepLab(v1,2,3)
+- [ ] ..what would you suggest?
+
+**Dataset**:
+- [x] Pascal (VOC12)
+- [x] CamVid
+- [x] COCO (stuff&things)
+- [ ] Cityccapes
+- [ ] ..what would you suggest?
+
+We trained a few combinations therein; see [Results](#results-and-discussion) below;
+ and feel free to grab pre-trained models from [Releases](https://github.com/hailotech/seg-mentor/releases)
+ and use them to color-up stuff as follows:
+
+Here's some stuff we segmented with ResNet18-LinkNet trained on CamVid:
+![picture alt](https://github.com/hailotech/seg-mentor/releases/download/v0.5/CamVidLinkNet.png)
+
+![picture alt](https://github.com/hailotech/seg-mentor/releases/download/v0.5/camvid_seg.gif)
+
+...And here's some action from our office, segmented with Inception_v1-FCN trained on Pascal-VOC.
 
 <div align="center">
 <img src="https://github.com/hailotech/seg-mentor/blob/master/media/office.gif" width="80%" height="80%"><br><br>
  </div>
 
-```
-segmented with Inception_v1-FCN.
-
-Coloring: yellowish - person; greenish - chair; reddish - TV/monitor
-```
+```Coloring: yellowish - person; greenish - chair; reddish - TV/monitor```
 
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
 <br>and offer a modular code for semantic segmentation with FCN-based meta-architectures. Our goal was to make it simple to:
@@ -41,7 +60,7 @@ We embrace the Tensorflow framework and specifically the tf-slim API (and associ
 We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
  and offer some nice monitoring leveraging this api's advanced features. Pre-conversion scripts for Pascal VOC and COCO-Stuff is provided.
  
-As a baseline, we trained & tested classic FCNs with different feature extractors on the Pascal VOC dataset.
+
 
 The state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
 and there are many nets which are both faster and with better accuracy, and implementing some of these over our framework is surely part of the roadmap here.
@@ -87,37 +106,49 @@ To all the gals out there with semants to segment,
     git clone https://github.com/hailotech/seg-mentor
     git clone https://github.com/hailotech/tf-models-hailofork
     ```
-    (to let fcn net builder code call into slim FEs implementations in ```models/research/slim/nets```)
+    (to let net builder code call into slim FEs implementations in ```models/research/slim/nets```)
 
-1. **Play** with segmentation using with our pre-trained models, by downloading them from [seg-mentor/Releases](https://github.com/hailotech/seg-mentor/releases/tag/v0.5), and jumping to **Test** below. Or, check out the [play-with-me notebook](play-with-me.ipynb) using [*jupyter*](http://jupyter.org/install).
-
+1. **Play** with segmentation using with our pre-trained models,
+by downloading them from [seg-mentor/Releases](https://github.com/hailotech/seg-mentor/releases/tag/v0.5),
+and jumping to **Test** below.
+ Or, check out the [play-with-me notebook](play-with-me.ipynb) using [*jupyter*](http://jupyter.org/install).
 
 <br> If you want to train a segmentation net:
 1. **Download** :
-    1. Get checkpoints for ImageNet-pretrained slim FE(s) using link(s) in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)
+    1. Grab checkpoints for ImageNet-pretrained slim FE(s) using link(s) in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)
         . If needed, get missing ones (ResNet18, ..) from [seg-mentor/Releases](https://github.com/hailotech/seg-mentor/releases/tag/v0.5) (translated from pytorch-vision by benevolent Hailo ML team).
-    1. Get the dataset - [Pascal VOC12 trainval](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) and [Berkely SBD ](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tg)
-    1.  Note: scripts below assume ```/data/models``` as the dir with FE checkpoints,
-       and ```/data``` as root dir for dataset (under which *VOCdevkit/VOC2012*, *SBD/benchmark_RELEASE* reside).
+    1. Grab the dataset(s) - e.g. [Pascal VOC12 trainval](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) and [Berkely SBD ](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tg)
+    1.  Note: train/test scripts below assume ```/data/models``` as the dir with FE checkpoints,
+       and ```/data``` as root dir for datasets
+       (under which ```<dataset_family>/(training/validation).tfrecords``` reside).
        <br>If you (or your admin..) don't agree than ```/data/``` is the greatest root dir ever,
        use ```--datapath, --modelspath``` cli arg to inform the scripts where you've put stuff.
 
-1. **Convert** the train/val Pascal data to tfrecords format by running [utils/pascal_voc_augmented_to_records.py](utils/pascal_voc_augmented_to_records.py). 
+1. **Convert** the train/val data (e.g. Pascal) to tfrecords format by running [utils/pascal_voc_augmented_to_records.py](utils/pascal_voc_augmented_to_records.py),
+   or corresponding funcs for other datasets in [utils/tf_records.py](utils/tf_records.py).
+   Change paths accordingly.
 
 1. **Prepare** to run by ```cd seg-mentor && mkdir tmp```
 <br>The ```tmp``` folder will host "training folders", one per run,
- to be created the training script.
+ to be created by ```train.py``` upon start (see next stage).
  A "training folder" will contatin all relevant outputs -
       a basic log (```runlog```), config used (```runargs```), the checkpoint(s)
       (the bleeding edge and previous saved each few K iteration), *events* file
       for *tensorboard* visualization.<br>
-      **Naming convention** for is ```tmp/<TODAY>_<NETNAME>__<#RUN>``` <br>
+      **Naming convention** for the folder name is ```tmp/<TODAY>_<NETNAME>__<#RUN>``` <br>
 
-1. **Run** ```python fcn_train.py --g 0 --basenet inception_v1 ```
+1. **Launch** ```python train.py --g 0 --basenet inception_v1 --dataset_family=pascal &```
 to start training something - here a FCN32-INCEPTION_V1 with default params (assumes default dirpaths!),
 using only 1st GPU if you're filthy rich and got a few of 'em (see *Tinker* below for more).
-Check out ``` --help``` for mor options, flags but don't be
- that person who doesn't read the code she is using (or at least the ``` --help```).
+Note:
+    1. Output is printed to ```tmp/<this_train_run_folder>/runlog``` rather then to console.
+    1. Use ```--extended_arch=LinkNet``` to upgrade from FCN to LinkNet
+        (or other modern architectures, coming soon..).
+    1. Switch to other datasets with ```--dataset-family```;
+    if you converted data to path other then ```/data/<dataset_family>/training.tfrecords```
+    use the ```--datapath``` arg to adjust.
+    1. Check out ``` --help``` for more options and full usage notes;
+       if not enough - the code isn't very convoluted, hopefully (-;).
 
 1. **Monitor** your training by :
     1. **Sanity checks**: using the folder documenting this training run:<br>
@@ -132,14 +163,19 @@ Check out ``` --help``` for mor options, flags but don't be
      comparison. Check out the noise around the ***test mIoU*** curve (incorporating randomness of both instantaneous checkpoint and 1/4 of test set used for evaluation) as a crude proxy for the typical deviation of the mIoU a.k.a "error-bars" that would be reported in ideal world
       (w.o. the high stakes on framing a +1% improvement as a tectonic shift of SoA).
 
-2. **Test** the monster you've grown so far by ```python fcn_test.py --traindir <THIS-RUN-FOLDER> --g 1```
+1. **Test** the monster you've grown so far by ```python test.py --traindir <THIS-RUN-FOLDER> --g 1```
 <br> leveraging your second GPU (first  one is busy training..), as you can't wait... <br>
-Now seriously, give it a **20-30 hours** of training
-(use tensorboard to see *test-mIoU* flattening), then test and behold the converged IoU results.
-<br> Note: the mIoU of full test may surprise you with ~+5% discrepancy w.r.t the tensorboard plot. see Discussion below.
-Don't be shy and kill the process (find pid by ```ps aux | grep fcn_train```)
- if it burns your precious GPU cycles for no good reason. 
- Checkout [test](fcn_test.py) options with ```python fcn_test.py --help``` (or [click](fcn_test.py) for code), use them to e.g.:
+    * Now seriously, give it a **20-30 hours** of training; use tensorboard to see *test-mIoU* flattening; then consider killing the process
+ (find pid by ```ps aux | grep train``` )
+ that now burns your precious GPU cycles for no further gains),
+test and behold the converged IoU results.
+<br> Note: the mIoU of full test may surprise you with ~+5% discrepancy
+w.r.t the tensorboard plot. see Discussion below.
+
+    * Note that all net&dataset config (and weights of course) is taken from <train_dir>.
+ That's our way to enable using the result of any given training run @test-time.
+    * Check out [test](test.py) options with ```python test.py --help```
+ (or [click](test.py) for code), use them to e.g.:
     1. Check convergence-status/robustness by using ```--afteriter X```
 to test an intermediate checkpoint after X batches (check out your options by ```ls tmp/<THIS-TRAIN-DIR>```).
     1. Get a feeling for what it means by visualizing some val images, e.g. ##20-25 by ```--first2viz=20 --last2viz=25```.
@@ -147,13 +183,13 @@ to test an intermediate checkpoint after X batches (check out your options by ``
     1. Play with the pre-(up/down)-scaling with ```--pixels``` (default is what train used; use 0 for no-prescale).
 ...Or use [play-with-me notebook](play-with-me.ipynb) instead of CLI. See more rants there..
 
-1. **Tinker** - check out [train](fcn_train.py) train options with ```python fcn_train.py --help```,
+1. **Tinker** - check out [train](train.py) train options with ```python train.py --help```,
 play with training other net(s), and training process(es), e.g.:
     ```
-    python fcn_train.py --basenet=resnet_v1_18 --batch_size=20 --learnrate=3e-4 --decaylr=True &
+    python train.py --basenet=resnet_v1_18 --batch_size=20 --learnrate=3e-4 --decaylr=True &
     ```
     Think of interesting variations to test, convince your boss/supervisor to buy you 1K gpu-hours, run hyperparameter scan, reach cool insights.. ..publish, credit our help:)
-1. **Architect** - dive into [fcn_arch.py](fcn_arch.py) code, check out the ```BaseFcnArch``` interface, write your own subclass, train you own brand new net - with decoding path augmented and modified to your fancy, reach record-breaking mIoU reflecting your unique genius..
+1. **Architect** - dive into [arch.py](arch.py) code, check out the ```BaseFcnArch``` interface, write your own subclass, train you own brand new net - with decoding path augmented and modified to your fancy, reach record-breaking mIoU reflecting your unique genius..
 1. **Develop** - read ***future work*** below and lend a hand:)
 1. [...](http://knowyourmeme.com/memes/profit)
 1. [...](http://knowyourmeme.com/memes/profit)
@@ -186,7 +222,7 @@ Note that if you choose the red script across the decoder blocks, you get the or
 This is what's implemented in the ```FcnArch``` class, provided as the baseline example of the ```BaseFcnArch``` interface.
 
 Also, note the dashed (..dotted) FCN8 (..4) optional skip connections.
-<br>(toggled by ```--fcn8, --fcn4``` flags to [fcn_train.py](fcn_train.py); got ```--fcn16``` too but we treat that as the norm).
+<br>(toggled by ```--fcn8, --fcn4``` flags to [train.py](train.py); got ```--fcn16``` too but we treat that as the norm).
 
 Switching feature extractor (FE) is done **without code change among the currently supported FEs** (VGG, ResNet18/50, Inception_V1 aka googlenet, Mobilenet_V1, ... - can't commit to having this sentence updated, so just check out the dictionary at the top of ```fcn_arch.py``` -:). **To add support for another FE** you'll need an incremental change in the dict and similar places (we're sure you can figure it out), AND a modification of the net in the sister repo (fork of slim-models); like [we did it for inception etc.](https://github.com/hailotech/tf-models-hailofork/commit/c3280c1433f8b64bb0ed28acf191d6c4c777210b):
 1. Change net func signature from ```logits = net(images, ...)``` to ```logits = net(images, ..., base_only=False, **kwargs)``` to add bare-FE option while preserving compatibility..
@@ -200,8 +236,14 @@ between feature extracting stage and global-pool/fully-connected classification 
 
 ## Results and Discussion
 
-We report the results of train+test with the following breakup (see also Appendix A):
-- train with all SBD annotations (11K images)
+We report the results of train+test on several datasets: :
+
+***CamVid***
+- train on 376 "train" images
+- test on 234 "test" images
+
+***Pascal-VOC***: (see also Appendix A)
+- train with all SBD annotations (~11K images)
 - test with all VOC12-val annotations disjoint from SBD (907 images),
   <br>(some call it RV-VOC12 ("restricted validation") while others use this name for other set.)
 
@@ -227,9 +269,14 @@ Input images were scaled so larger side becomes 512 pixels, then padded to 512x5
 
 Some flip and strech augmentations were applied...
 
+### LinkNet Results
+| Architecture   | CamVid <br>mIoU %  |
+| ------------- | ---------------: |
+| ResNet18  | **68.0**               |
+
 ### Baseline FCN Results
 
-| Net name      | GOPS (512x512 img)      | Params (*1e6)  | Pascal <br>mIoU %  |
+| Architecture (FE, decoder variant)  | GOPS (512x512 img)      | Params (*1e6)  | Pascal <br>mIoU %  |
 | ------------- |:-------------:| -----:  | ---------------: |
 | VGG16 - FCN16 [ts1](#ts1) (**) |   ~92         |  ~135    | **66.5**               |
 | VGG16 - FCN32 [ts1](#ts1) (***) |   ~92        |  ~135    | **65.5**               |
