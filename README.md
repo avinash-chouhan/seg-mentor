@@ -64,7 +64,7 @@ We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
  
 ## Contribution
 
-#### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring some of the [open questions](#appendix-a:-semantic-segmentation-terra-incognita), or deploying a lightweight solution to a practical app.  
+#### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring some of the [open questions](#appendix-a-semantic-segmentation-terra-incognita), or deploying a lightweight solution to a practical app.  
 
 As an example of such a project, we're researching some minimal decoder enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN, with architectural insight in mind. Stay tuned :)
 
@@ -364,7 +364,7 @@ FCN based Semantic Segmentation
 1. ['RTSEG: Real-time semantic segmentation comparative study', Mar 2018](https://arxiv.org/pdf/1803.02758.pdf)
 1. [LinkNet: Exploiting Encoder Representations for Efficient Semantic Segmentation, Chaurasia et. al., 2017](https://arxiv.org/abs/1707.03718)
 
- ## Appendix A:  Semantic Segmentation Terra Incognita
+## Appendix A:  Semantic Segmentation Terra Incognita
 The state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
 with more accurate nets.
 
