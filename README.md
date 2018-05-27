@@ -11,7 +11,7 @@
 <img src="https://github.com/hailotech/seg-mentor/blob/master/media/office.gif" width="60%" height="60%"><br><br>
  </div>
 
- -                   ```  ...this would be us, segmented with custom Inception_v1+FCN trained on Pascal-VOC.```
+ -    ```  ...this would be us, segmented with custom Inception_v1+FCN trained on Pascal-VOC.```
 
 ## WELCOME!
 to **seg-mentor** - a flexible semantic segmentation framework built in tensorflow.
