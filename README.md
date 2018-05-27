@@ -11,7 +11,7 @@
 <img src="https://github.com/hailotech/seg-mentor/blob/master/media/office.gif" width="60%" height="60%"><br><br>
  </div>
 
- ..    ```  ...this would be us, segmented with custom Inception_v1+FCN trained on Pascal-VOC.```
+ .      ```  ...this would be us, segmented with custom Inception_v1+FCN trained on Pascal-VOC.```
 
 ## WELCOME!
 to **seg-mentor** - a flexible semantic segmentation framework built in tensorflow.
@@ -45,10 +45,12 @@ We trained a few combinations therein; see [Results](#results-and-discussion) be
  and use them to get stuff colored like this:
 
 ![picture alt](https://github.com/hailotech/seg-mentor/blob/defcn/media/CamVidLinkNet1.png)
- ..  ``` segmented with ResNet18-LinkNet trained on CamVid ```
+ .    ```..segmented with ResNet18-LinkNet trained on CamVid ```
  
-![picture alt align="center" width="60%" height="60%"](https://github.com/hailotech/seg-mentor/blob/defcn/media/camvid_seg.gif)
-
+<div align="center">
+<img src="https://github.com/hailotech/seg-mentor/blob/defcn/media/camvid_seg.gif" width="60%" height="60%"><br><br>
+ </div>
+ 
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
 <br>and offer a modular code for semantic segmentation with FCN-based meta-architectures. Our goal was to make it simple to:
  - *Choose* the base Feature Extractor (FE) aka Encoder from a selection of [pretrained models](https://github.com/tensorflow/models/tree/master/research/slim)
@@ -62,7 +64,7 @@ We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
  
 ## Contribution
 
-#### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring some of the [open questions](#appendix-a-semantic-segmentation-terra-incognita), or deploying a lightweight solution to a practical app.  
+#### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring some of the [open questions](#appendix-a:-semantic-segmentation-terra-incognita), or deploying a lightweight solution to a practical app.  
 
 As an example of such a project, we're researching some minimal decoder enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN, with architectural insight in mind. Stay tuned :)
 
