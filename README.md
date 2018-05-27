@@ -46,9 +46,8 @@ We trained a few combinations therein; see [Results](#results-and-discussion) be
 
 ![picture alt](https://github.com/hailotech/seg-mentor/blob/defcn/media/CamVidLinkNet1.png)
  -  ```ResNet18-LinkNet trained on CamVid ```
-![picture alt](https://github.com/hailotech/seg-mentor/blob/defcn/media/camvid_seg.gif)
-
-...And here's some action from our office,
+ 
+![picture alt width="60%" height="60%"](https://github.com/hailotech/seg-mentor/blob/defcn/media/camvid_seg.gif)
 
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
 <br>and offer a modular code for semantic segmentation with FCN-based meta-architectures. Our goal was to make it simple to:
@@ -58,35 +57,9 @@ We embrace the Tensorflow framework and specifically the tf-slim API (and associ
  - *Config* as much as possbile of architecture and training procedures thru CLI args, w.o. touching code.
 
 We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
- and offer some nice monitoring leveraging this api's advanced features. Pre-conversion scripts for Pascal VOC and COCO-Stuff is provided.
+ and offer some nice monitoring leveraging this api's advanced features. 
+ :Pre-conversion scripts are provided for supported datasets (see checklist above).
  
-
-
-The state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
-and there are many nets which are both faster and with better accuracy, and implementing some of these over our framework is surely part of the roadmap here.
-
-However, there's a lot of terra incognita that seems worth exploring before rushing to state-of-the-art nets.
- Playing with a simple-no-thrills decoder can still give us insight into some fundemantal questions:
-
- - ***What's the influence of the base Feature Extractor (FE) a.k.a Encoder on the segmentation task?
-   <br>To which extent does the performance of a FE on a classfication task correlate
-with its performance on a segmentation task? is this meta-architecture (a.k.a Decoder) dependent?
-Are there seg.-performance gains to be made by designing FE specifically for usage as seg. encoder
-(trading off classification performance)?***
- - ***Regarding the training/fine-tuning of segmentation nets based on pre-trained FEs,
-how does the optimal choice of hyper-parameters depend on choice of FE, decoder?***
- - ***How to optimally build a decoder for segmentation when using lightweight (e.g. mobilenet) FEs?***
- - ***What are the failure modes of the net? How do they depend on the FE or the decoder used?
- How can this be quantified (beyond stamp-collecting visual examples and gross-averaged metrics s.a. mIoU)?***
- - ***How the datafeed (resolution, augmentations) and pre-training on other sets influences the failure modes,
- and here too, are there synergistic effects with arhcitecture (FE, decoder)***
-
-We don't have the answers to any of the above but we feel that a good infrastructure for running quick experiments can help. And if it doesn't - well at least we all had fun, right?
-<br> And even before open research questions, there are important practical issues,
-worked-out examples of which are hard to come by.
-For instance - how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, how robust are the mIoU numbers to exact freeze point of training, test subset, etc. These are important for adaptations and deployments to real-life and real-stakes problems (quite possibly more than another +3% in the metric) - especially to the resource-constraint ones which call for lightweight nets anyways.
-
-
 ## Contribution
 
 #### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring one of the open questions above, or deploying a lightweight solution to a practical app.  
@@ -389,18 +362,44 @@ FCN based Semantic Segmentation
 1. ['RTSEG: Real-time semantic segmentation comparative study', Mar 2018](https://arxiv.org/pdf/1803.02758.pdf)
 1. [LinkNet: Exploiting Encoder Representations for Efficient Semantic Segmentation, Chaurasia et. al., 2017](https://arxiv.org/abs/1707.03718)
 
-## Appendix A: Dataset Rants
+ ## Appendix A:  Semantic Segmentation Terra Incognita
+The state-of-the-art in semantic segmentation took long strides (pun intended) since the FCN paper,
+with more accurate nets.
 
-If you have an hour, do read ```utils/pascal_voc.py``` whose author should be lauded.
-(be it Daniil of http://warmspringwinds.github.io/ or one of his spiritual fathers..)
+However, understanding is still lacking, even in the epsilon-vicinity of the baseline FCN.
+There's a lot of terra incognita that seems worth exploring before rushing to state-of-the-art nets.
+ Playing with a simple-no-thrills decoder can give us clean insight into some fundemantal questions:
 
-If you have a minute, do read the rant below, it should summarize the status&spirit of things.
+ - ***What's the influence of the base Feature Extractor (FE) a.k.a Encoder on the segmentation task?
+   <br>To which extent does the performance of a FE on a classfication task correlate
+with its performance on a segmentation task? is this meta-architecture (a.k.a Decoder) dependent?
+Are there seg.-performance gains to be made by designing FE specifically for usage as seg. encoder
+(trading off classification performance)?***
+ - ***Regarding the training/fine-tuning of segmentation nets based on pre-trained FEs,
+how does the optimal choice of hyper-parameters depend on choice of FE, decoder?***
+ - ***How to optimally build a decoder for segmentation when using lightweight (e.g. mobilenet) FEs?***
+ - ***What are the failure modes of the net? How do they depend on the FE or the decoder used?
+ How can this be quantified (beyond stamp-collecting visual examples and gross-averaged metrics s.a. mIoU)?***
+ - ***How the datafeed (resolution, augmentations) and pre-training on other sets influences the failure modes,
+ and here too, are there synergistic effects with arhcitecture (FE, decoder)***
 
-...So, VOC PASCAL is kind of mess, the files train/val/test sets X3 challenges (07', 11', 12'),
+We don't have the answers to any of the above but we feel that a good infrastructure for running quick experiments can help. And if it doesn't - well at least we all had fun, right?
+
+<br> And even before open research questions, there are important practical issues,
+worked-out examples of which are hard to come by.
+<br>  For instance - how to monitor training, how to estimate the actual variance/"error-bars" around the reported numbers, how robust are the mIoU numbers to exact freeze point of training, test subset, etc. These are important for adaptations and deployments to real-life and real-stakes problems (quite possibly more than another +3% in the metric) - especially to the resource-constraint ones which call for lightweight nets anyways.
+
+Most importantly, this kind of investigation can be undertaken with resources normally available for a researcher of a small team - in stark contrast to acheiving the SoA on high-profile targets which is increasingly prohibitive for non-Google/Facebook players (e.g. requiring search in architecture space..).
+
+## Appendix B: Dataset Rants
+
+### VOC-Pascal
+
+This multi-generation dataset is a bit of mess, the files train/val/test sets X3 challenges (07', 11', 12'),
   with various intersections between the sets of different years/challenges..
 then come additional annotations on original files...
 
-Eventually the widest segmentation-relevant stuff seems to come from Berkely project called SBD:
+Eventually the widest ***segmentation-relevant*** stuff seems to come from Berkely project called SBD:
 http://home.bharathh.info/pubs/codes/SBD/download.html
 Ignore their own rant re non-intersecting train/test with 5623 images.
 Here it's done better, using more for train and a bit less for test.
