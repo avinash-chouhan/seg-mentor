@@ -44,7 +44,7 @@ We trained a few combinations therein; see [Results](#results-and-discussion) be
  and feel free to grab pre-trained models from [Releases](https://github.com/hailotech/seg-mentor/releases)
  and use them to get stuff colored like this:
 
-![picture alt width="60%" height="60%"](https://github.com/hailotech/seg-mentor/blob/defcn/media/CamVidLinkNet1.png)
+![picture alt width="70%" height="70%"](https://github.com/hailotech/seg-mentor/blob/defcn/media/CamVidLinkNet1.png)
  .    ```..segmented with ResNet18-LinkNet trained on CamVid ```
  
 <div align="center">
