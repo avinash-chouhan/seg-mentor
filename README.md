@@ -18,7 +18,7 @@ to **seg-mentor** - a flexible semantic segmentation framework built in tensorfl
 We're making the world a better place by offering a modular sandbox in which you can tinker with semantic segmentation networks.
 <br>Seg-mentor is quite self-contained, albeit happily reusing code bits and ideas from great open-source contribs by [D.Pakhomov](http://warmspringwinds.github.io/about/) and [others](#previous-and-similar-work)...
 
-We're going to support mix&match across a rich choice of :
+We support mix&match across a choice of :
 
 **Feature Extractor (aka Encoder ) architecture**
 - [x] ResNet(s).
@@ -40,13 +40,12 @@ We're going to support mix&match across a rich choice of :
 - [ ] Cityccapes
 - [ ] ..what would you suggest?
 
-We trained a few combinations therein; see [Results](#results-and-discussion) below;
+We trained a few combinations therein; see [Results](#results-and-discussion) below, 
  and feel free to grab pre-trained models from [Releases](https://github.com/hailotech/seg-mentor/releases)
- and use them to color-up stuff as follows:
+ and use them to get stuff colored like this:
 
-Here's some stuff we segmented with ResNet18-LinkNet trained on CamVid:
 ![picture alt](https://github.com/hailotech/seg-mentor/blob/defcn/media/CamVidLinkNet1.png)
-
+ -  ```ResNet18-LinkNet trained on CamVid ```
 ![picture alt](https://github.com/hailotech/seg-mentor/blob/defcn/media/camvid_seg.gif)
 
 ...And here's some action from our office,
