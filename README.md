@@ -44,7 +44,7 @@ We trained a few combinations therein; see [Results](#results-and-discussion) be
  and feel free to grab pre-trained models from [Releases](https://github.com/hailotech/seg-mentor/releases)
  and use them to get stuff colored like this:
 
-![picture alt](https://github.com/hailotech/seg-mentor/blob/defcn/media/CamVidLinkNet1.png)
+![picture alt width="60%" height="60%"](https://github.com/hailotech/seg-mentor/blob/defcn/media/CamVidLinkNet1.png)
  .    ```..segmented with ResNet18-LinkNet trained on CamVid ```
  
 <div align="center">
@@ -217,7 +217,7 @@ We report the results of train+test on several datasets: :
 - train on 376 "train" images
 - test on 234 "test" images
 
-***Pascal-VOC***: (see also [Appendix B](appendix-b--dataset-rants) )
+***Pascal-VOC***: (see also [Appendix B](#appendix-b--dataset-rants) )
 - train with all SBD annotations (~11K images)
 - test with all VOC12-val annotations disjoint from SBD (907 images),
   <br>(some call it RV-VOC12 ("restricted validation") while others use this name for other set.)
