@@ -48,7 +48,7 @@ We trained a few combinations therein; see [Results](#results-and-discussion) be
  .    ```..segmented with ResNet18-LinkNet trained on CamVid ```
  
 <div align="center">
-<img src="https://github.com/hailotech/seg-mentor/blob/defcn/media/camvid_seg.gif" width="60%" height="60%"><br><br>
+<img src="https://github.com/hailotech/seg-mentor/blob/defcn/media/camvid_seg.gif" width="50%" height="50%"><br><br>
  </div>
  
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
@@ -64,7 +64,7 @@ We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
  
 ## Contribution
 
-#### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring some of the [open questions](#appendix-a-semantic-segmentation-terra-incognita), or deploying a lightweight solution to a practical app.  
+#### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring some of the [open questions](#appendix-a--semantic-segmentation-terra-incognita), or deploying a lightweight solution to a practical app.  
 
 As an example of such a project, we're researching some minimal decoder enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN, with architectural insight in mind. Stay tuned :)
 
@@ -217,7 +217,7 @@ We report the results of train+test on several datasets: :
 - train on 376 "train" images
 - test on 234 "test" images
 
-***Pascal-VOC***: (see also Appendix B)
+***Pascal-VOC***: (see also [Appendix B](appendix-b--dataset-rants) )
 - train with all SBD annotations (~11K images)
 - test with all VOC12-val annotations disjoint from SBD (907 images),
   <br>(some call it RV-VOC12 ("restricted validation") while others use this name for other set.)
