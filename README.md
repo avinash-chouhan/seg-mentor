@@ -92,7 +92,13 @@ and jumping to **Test** below.
 1. **Download** :
     1. Grab checkpoints for ImageNet-pretrained slim FE(s) using link(s) in [tensorflow/models/research/slim](https://github.com/hailotech/tf-models-hailofork/tree/master/research/slim)
         . If needed, get missing ones (ResNet18, ..) from [seg-mentor/Releases](https://github.com/hailotech/seg-mentor/releases/tag/v0.5) (translated from pytorch-vision by benevolent Hailo ML team).
-    1. Grab the dataset(s) - e.g. [Pascal VOC12 trainval](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar) and [Berkely SBD ](http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tg)
+    1. Grab the dataset(s) - e.g.
+        1. [Pascal VOC](https://github.com/shelhamer/fcn.berkeleyvision.org/tree/master/data/pascal) : ```wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar.gz``` for images and ``` wget http://www.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/semantic_contours/benchmark.tgz``` (a.k.a [Berkely SBD](http://home.bharathh.info/pubs/codes/SBD/download.html) for labels.
+        1. [CamVid](http://mi.eng.cam.ac.uk/research/projects/VideoRec/CamVid/): 
+            ```
+               git clone https://github.com/alexgkendall/SegNet-Tutorial
+               mv SegNet-Tutorial/CamVid /data/camvid
+            ``` 
     1.  Note: train/test scripts below assume ```/data/models``` as the dir with FE checkpoints,
        and ```/data``` as root dir for datasets
        (under which ```<dataset_family>/(training/validation).tfrecords``` reside).
