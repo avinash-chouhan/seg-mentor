@@ -203,13 +203,14 @@ def parse_record(serialized_example):
     return image, annotation
 
 
-def tfrecordify_coco_stuff_things(imgsdir = '/data/coco',
-                                  labelsdir='/data/coco/stuffthings_pixellabels',
+def tfrecordify_coco_stuff_things(imgsdir = '/data/coco/',
+                                  labels_subfolder='stuffthings_pixellabels',
                                   traindir='train2017', valdir='val2017'):
     '''
         Assumes stuff (pardon the pun) is downloaded & extracted
          from https://github.com/nightrome/cocostuff#downloads (3 top files)
     '''
+    labelsdir = imgsdir + labels_subfolder
     import os
     trainpairs = [(os.path.join(imgsdir, traindir, fname.replace('png', 'jpg')),
                    os.path.join(labelsdir, traindir, fname)) \
@@ -225,7 +226,7 @@ def tfrecordify_coco_stuff_things(imgsdir = '/data/coco',
     write_image_annotation_pairs_to_tfrecord(filename_pairs=valpairs,
                                              tfrecords_filename=imgsdir+'/validation.tfrecords')
 
-def tfrecordify_camvid(rootdir = '/data/camvid'):
+def tfrecordify_camvid(datadir = '/data/camvid'):
     '''
         Assumes stuff is e.g. cloned from https://github.com/alexgkendall/SegNet-Tutorial // CamVid
          - 11-class version encoded as the usual #class (not color-code)
@@ -233,23 +234,67 @@ def tfrecordify_camvid(rootdir = '/data/camvid'):
         TODO 32-class version
     '''
     import os
-    trainpairs = [(os.path.join(rootdir, 'train', fname),
-                   os.path.join(rootdir, 'trainannot', fname)) \
-                    for fname in os.listdir(os.path.join(rootdir, 'train'))]
+    trainpairs = [(os.path.join(datadir, 'train', fname),
+                   os.path.join(datadir, 'trainannot', fname)) \
+                    for fname in os.listdir(os.path.join(datadir, 'train'))]
 
-    valpairs = [(os.path.join(rootdir, 'val', fname),
-                   os.path.join(rootdir, 'valannot', fname)) \
-                  for fname in os.listdir(os.path.join(rootdir, 'val'))]
+    valpairs = [(os.path.join(datadir, 'val', fname),
+                   os.path.join(datadir, 'valannot', fname)) \
+                  for fname in os.listdir(os.path.join(datadir, 'val'))]
 
-    testpairs = [(os.path.join(rootdir, 'test', fname),
-                 os.path.join(rootdir, 'testannot', fname)) \
-                for fname in os.listdir(os.path.join(rootdir, 'test'))]
+    testpairs = [(os.path.join(datadir, 'test', fname),
+                 os.path.join(datadir, 'testannot', fname)) \
+                for fname in os.listdir(os.path.join(datadir, 'test'))]
 
     write_image_annotation_pairs_to_tfrecord(filename_pairs=trainpairs,
-                                            tfrecords_filename=rootdir+'/training.tfrecords')
+                                            tfrecords_filename=datadir+'/training.tfrecords')
 
     write_image_annotation_pairs_to_tfrecord(filename_pairs=valpairs,
-                                             tfrecords_filename=rootdir+'/validation.tfrecords')
+                                             tfrecords_filename=datadir+'/validation.tfrecords')
 
+def tfrecordify_pascal_seg(voc_path, sbd_path, tfrec_path):
+    from pascal_voc import get_augmented_pascal_image_annotation_filename_pairs,\
+                       convert_pascal_berkeley_augmented_mat_annotations_to_png
+    
+    convert_pascal_berkeley_augmented_mat_annotations_to_png(sbd_path)
+    # Returns a list of (image, annotation) filename pairs (filename.jpg, filename.png)
+    overall_train_image_annotation_filename_pairs, overall_val_image_annotation_filename_pairs = \
+                    get_augmented_pascal_image_annotation_filename_pairs(pascal_root=voc_path,
+                                                                         pascal_berkeley_root=sbd_path,
+                                                                         mode=2)
+
+    write_image_annotation_pairs_to_tfrecord(filename_pairs=overall_val_image_annotation_filename_pairs,
+                                             tfrecords_filename=tfrec_path+'/validation.tfrecords')
+
+    write_image_annotation_pairs_to_tfrecord(filename_pairs=overall_train_image_annotation_filename_pairs,
+                                             tfrecords_filename=tfrec_path+'/training.tfrecords')
+
+    
 if __name__ == "__main__":
-    tfrecordify_camvid()
+    parser = argparse.ArgumentParser(description="tf-record-ify a dataset",
+                                    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    parser.add_argument('--datapath', '-p', type=str,
+                        default='',
+                        help='Optional - the path to the dataset (defaults to /data/<dataset_family>)'
+                       )
+    parser.add_argument('--dataset_family', type=str,
+                        default='camvid',
+                        help='Mandatory - the dataset to tf-recordify in this run: (A) pascal-seg (B) camvid (C) coco, etc.'
+                       )
+    parser.add_argument('--voc_path', type=str, default='',
+                       help='set if you have existing VOC folder not under the dir '+
+                            ' (e.g. "pascal-seg") to be used for segmentation work, and you dont want to change that')
+    
+    args = parser.parse_args()
+    
+    datapath = args.datapath if args.datapath != '' else '/data/'+args.dataset_family
+    
+    if args.dataset_family=='camvid':         
+        tfrecordify_camvid(datapath)
+    elif args.dataset_family=='coco':
+        tfrecordify_coco_stuff_things(datapath, 'stuffthings_pixellabels')
+    elif args.dataset_family=='pascal-seg':
+        voc_path = args.voc_path if args.voc_path != '' else os.path.join(datapath, 'VOCdevkit/VOC2012')
+        sbd_path = os.path.join(datapath, 'SBD/benchmark_RELEASE')
+        tfrecordify_pascal_seg(voc_path, sbd_path, datapath)
