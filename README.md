@@ -11,12 +11,12 @@
 <img src="https://github.com/hailotech/seg-mentor/blob/master/media/office.gif" width="60%" height="60%"><br><br>
  </div>
 
- .      ```  ...this would be us, segmented with custom Inception_v1+FCN trained on Pascal-VOC.```
+ .      ```      ...authors, segmented with custom Inception_v1+FCN trained on Pascal-VOC.```
 
 ## WELCOME!
 to **seg-mentor** - a flexible semantic segmentation framework built in tensorflow.
 We're making the world a better place by offering a modular sandbox in which you can tinker with semantic segmentation networks.
-<br>Seg-mentor is quite self-contained, albeit happily reusing code bits and ideas from great open-source contribs by [D.Pakhomov](http://warmspringwinds.github.io/about/) and [others](#previous-and-similar-work)...
+<br>Seg-mentor is quite self-contained, albeit happily reusing code bits and ideas from open-source contribs, see [prev. work](#previous-and-similar-work)...
 
 We support mix&match across a choice of :
 
@@ -328,12 +328,12 @@ but that doesn't mean some improvement of IoU (and insight on the side) couldn't
 ...Coming soon...
 
 ## Previous and similar work
-Some healthy chunks of our code are borrowed from Daniil Pakhomov's repo[tf-image-segmentation](https://github.com/warmspringwinds/tf-image-segmentation]).
-mostly those ```/utils```  package.
 
-Beyond those, it was very useful as a headstart; we went far beyond a fork though, 
- since we felt a better and up-to-date design will yield a repo more widely and deeply useful.
- If it does the trick for you, please do credit our contribution :)
+Some structure ideas and chunks of the code are borrowed from [Daniil Pakhomov](http://warmspringwinds.github.io/)'s repo [tf-image-segmentation](https://github.com/warmspringwinds/tf-image-segmentation).
+
+It was very useful as a headstart; we went far beyond a fork though, 
+since we felt a better and up-to-date design will yield a repo more widely and deeply useful.
+If it does the trick for you, please do credit our contribution :)
 
 An up-to-date work similar to ours is [RTSeg](https://github.com/MSiam/TFSegmentation) (see also ref. to paper below);
 Their 'SkipNet' architecture is in fact an FCN (altouhgh some details are not as in the original paper), 
@@ -352,10 +352,9 @@ Alex Finkelstein ([github](https://github.com/falex-ml)) & Mark Grobman ([github
 - Incorporate more FEs - both those in slim-models, s.a. Mobilenet_V2, NASnet and others, e.g. ShuffleNet - by bringing/creating a tf-slim implementation into our slim-models fork.
 - Train on [COCO stuff&things](https://github.com/nightrome/cocostuff), transfer to pascal.. 
 - Road datasets - Cityscapes, Mapillary Vistas, ApolloScape.. check out cross-transfer..
-- Implement a (few) known architecture(s) over the framework:
+- Implement a few more known architecture(s) over the framework:
     - DeepLab(3?) - barebones w.o. ASPP branches. Test Mobilenets 1/2, ResNet18
-    - LinkNet - original ResNet18, then attempt to switch FE?
-    - U-net - similarly..
+    - LinkNet - DONE. add U-net...?
   <br>reproduce published results and start testing and reporting on mix&match effects (e.g. LinkNet + Mobilenet V2).
 - Multiple-scale (aka pyramid) testing, robustness exploration.
 - Multi-GPU training
