@@ -4,10 +4,14 @@
 # to actual rgb values. This is specific to PASCAL VOC
 # dataset data. If you don't want thit type of behaviour
 # consider using skimage.io.imread()
+
 from PIL import Image
 import numpy as np
 import skimage.io as io
 import tensorflow as tf
+import argparse
+import os
+
 
 # Helper functions for defining tf types
 def _bytes_feature(value):
@@ -280,7 +284,7 @@ if __name__ == "__main__":
                        )
     parser.add_argument('--dataset_family', type=str,
                         default='camvid',
-                        help='Mandatory - the dataset to tf-recordify in this run: (A) pascal-seg (B) camvid (C) coco, etc.'
+                        help='Mandatory - the dataset to tf-recordify in this run: (A) pascal_seg (B) camvid (C) coco, etc.'
                        )
     parser.add_argument('--voc_path', type=str, default='',
                        help='set if you have existing VOC folder not under the dir '+
@@ -294,7 +298,7 @@ if __name__ == "__main__":
         tfrecordify_camvid(datapath)
     elif args.dataset_family=='coco':
         tfrecordify_coco_stuff_things(datapath, 'stuffthings_pixellabels')
-    elif args.dataset_family=='pascal-seg':
+    elif args.dataset_family=='pascal_seg':
         voc_path = args.voc_path if args.voc_path != '' else os.path.join(datapath, 'VOCdevkit/VOC2012')
-        sbd_path = os.path.join(datapath, 'SBD/benchmark_RELEASE')
+        sbd_path = os.path.join(datapath, 'benchmark_RELEASE')
         tfrecordify_pascal_seg(voc_path, sbd_path, datapath)
