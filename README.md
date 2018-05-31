@@ -112,9 +112,7 @@ and jumping to **Test** below.
        <br>If you (or your admin..) don't agree than ```/data/``` is the greatest root dir ever,
        use ```--datapath, --modelspath``` cli arg to inform the scripts where you've put stuff.
 
-1. **Convert** the train/val data (e.g. Pascal) to tfrecords format by running [utils/pascal_voc_augmented_to_records.py](utils/pascal_voc_augmented_to_records.py),
-   or corresponding funcs for other datasets in [utils/tf_records.py](utils/tf_records.py).
-   Change paths accordingly.
+1. **Convert** the dataset to (training/validation).tfrecord by running [utils/tf_records.py](utils/tf_records.py) with command-line args appropriate to the dataset family and paths you use.
 
 1. **Prepare** to run by ```cd seg-mentor && mkdir tmp```
 <br>The ```tmp``` folder will host "training folders", one per run,
@@ -329,9 +327,9 @@ but that doesn't mean some improvement of IoU (and insight on the side) couldn't
 
 ## Previous and similar work
 
-Some structure ideas and chunks of the code are borrowed from [Daniil Pakhomov](http://warmspringwinds.github.io/)'s repo [tf-image-segmentation](https://github.com/warmspringwinds/tf-image-segmentation).
+Some structure ideas and chunks of the code are borrowed from [Daniil Pakhomov](http://warmspringwinds.github.io/)'s great (if a bit dated now..) repo [tf-image-segmentation](https://github.com/warmspringwinds/tf-image-segmentation).
 
-It was very useful as a headstart; we went far beyond a fork though, 
+It was greatly useful as a headstart; we went far beyond a fork though, 
 since we felt a better and up-to-date design will yield a repo more widely and deeply useful.
 If it does the trick for you, please do credit our contribution :)
 
