@@ -20,29 +20,30 @@ We're making the world a better place by offering a modular sandbox in which you
 
 We support mix&match across a choice of :
 
-**Feature Extractor (aka Encoder ) architecture**
+**Feature Extractor (aka Encoder ) architectures**
 - [x] ResNet(s).
-- [x] Inception_v1, MobileNet_v1
+- [x] Inception_v1
+- [x] MobileNet_v1
 - [x] ...any [tfslim](https://github.com/tensorflow/models/tree/master/research/slim) model with minimal effort.
 - [ ] MobileNet_v2
 
-**Segmentation (aka Decoder) architecture**
+**Segmentation (aka Decoder) architectures**
 - [x] FCN
 - [ ] U-Net
 - [x] LinkNet
 - [ ] Dilation, DeepLab(v1,2,3)
-- [ ] ..what would you suggest?
+
 
 **Dataset**:
 - [x] Pascal (VOC12)
 - [x] CamVid
 - [x] COCO (stuff&things)
 - [ ] Cityccapes
-- [ ] ..what would you suggest?
+
 
 We trained a few combinations therein; see [Results](#results-and-discussion) below, 
  and feel free to grab pre-trained models from [Releases](https://github.com/hailotech/seg-mentor/releases)
- and use them to get stuff colored like this:
+ and use them to segment stuff:
 
 ![picture alt width="70%" height="70%"](https://github.com/hailotech/seg-mentor/blob/defcn/media/CamVidLinkNet1.png)
  .    ```..segmented with ResNet18-LinkNet trained on CamVid ```
@@ -52,7 +53,7 @@ We trained a few combinations therein; see [Results](#results-and-discussion) be
  </div>
  
 We embrace the Tensorflow framework and specifically the tf-slim API (and associated pre-trained classification nets),
-<br>and offer a modular code for semantic segmentation with FCN-based meta-architectures. Our goal was to make it simple to:
+<br>and offer a modular code for semantic segmentation with different meta-architectures. Our goal was to make it simple to:
  - *Choose* the base Feature Extractor (FE) aka Encoder from a selection of [pretrained models](https://github.com/tensorflow/models/tree/master/research/slim)
  - *Tinker* with the segmentation meta-architecture (aka Decoder) building on the FE. Currently we support FCN out-of-the-box + a path to upgrade the decoding blocks in 2-3 lines of code along a simple [abstraction](#architecture)
  - *Share* the datafeed/train/test boilerplate between all variants (vs. taming yet-another repo per net/paper).
@@ -65,8 +66,6 @@ We use ```tfrecords``` files and the new TF ```Datasets``` api for data feeding,
 ## Contribution
 
 #### We hope that the repo will be a strong base for your own cool semantic-segmentation project, e.g. exploring some of the [open questions](#appendix-a--semantic-segmentation-terra-incognita), or deploying a lightweight solution to a practical app.  
-
-As an example of such a project, we're researching some minimal decoder enhancements (***FCN+W***) aimed at making FCN based off Lightweight FEs perform on par with the original VGG-FCN, with architectural insight in mind. Stay tuned :)
 
 We also share some practical training tips and thoughts - see *Discussion* below
 
@@ -210,7 +209,7 @@ This is what's implemented in the ```FcnArch``` class, provided as the baseline 
 Also, note the dashed (..dotted) FCN8 (..4) optional skip connections.
 <br>(toggled by ```--fcn8, --fcn4``` flags to [train.py](train.py); got ```--fcn16``` too but we treat that as the norm).
 
-Switching feature extractor (FE) is done **without code change among the currently supported FEs** (VGG, ResNet18/50, Inception_V1 aka googlenet, Mobilenet_V1, ... - can't commit to having this sentence updated, so just check out the dictionary at the top of ```fcn_arch.py``` -:). **To add support for another FE** you'll need an incremental change in the dict and similar places (we're sure you can figure it out), AND a modification of the net in the sister repo (fork of slim-models); like [we did it for inception etc.](https://github.com/hailotech/tf-models-hailofork/commit/c3280c1433f8b64bb0ed28acf191d6c4c777210b):
+Switching feature extractor (FE) is done **without code change among the currently supported FEs** (VGG, ResNet18/50, Inception_V1 aka googlenet, Mobilenet_V1 - can't commit to having this sentence updated, so just check out the dictionary at the top of ```fcn_arch.py``` ). **To add support for another FE** you'll need an incremental change in the dict and similar places (we're sure you can figure it out), AND a modification of the net in the sister repo (fork of slim-models); like [we did it for inception etc.](https://github.com/hailotech/tf-models-hailofork/commit/c3280c1433f8b64bb0ed28acf191d6c4c777210b):
 1. Change net func signature from ```logits = net(images, ...)``` to ```logits = net(images, ..., base_only=False, **kwargs)``` to add bare-FE option while preserving compatibility..
 1. In the body of the function add :
 ```
@@ -255,12 +254,12 @@ Input images were scaled so larger side becomes 512 pixels, then padded to 512x5
 
 Some flip and strech augmentations were applied...
 
-### LinkNet Results
+### CamVid Results
 | Architecture   | CamVid <br>mIoU %  |
 | ------------- | ---------------: |
-| ResNet18  | **68.0**               |
+| ResNet18- LinkNet  | **68.0**               |
 
-### Baseline FCN Results
+### VOC Results
 
 | Architecture (FE, decoder variant)  | GOPS (512x512 img)      | Params (*1e6)  | Pascal <br>mIoU %  |
 | ------------- |:-------------:| -----:  | ---------------: |
@@ -321,9 +320,6 @@ Note that all params mentioned are involved in how gradients are computed.
 but that doesn't mean some improvement of IoU (and insight on the side) couldn't be found with a disciplined parameter scan.
 
 <br><br>Once again - Contributions are welcome! 
-
-### FCN+W results
-...Coming soon...
 
 ## Previous and similar work
 
