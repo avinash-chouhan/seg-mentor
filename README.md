@@ -111,7 +111,49 @@ and jumping to **Test** below.
        <br>If you (or your admin..) don't agree than ```/data/``` is the greatest root dir ever,
        use ```--datapath, --modelspath``` cli arg to inform the scripts where you've put stuff.
 
-1. **Convert** the dataset to (training/validation).tfrecord by running [utils/tf_records.py](utils/tf_records.py) with command-line args appropriate to the dataset family and paths you use.
+1. **Convert** the dataset to TF records format
+  (will appear as ```training.tfrecords, validation.tfrecord``` under the datapath dir)
+ by running [utils/tfrecordify.py](utils/tfrecordify.py) with command-line args appropriate
+ to the dataset family and paths you use. E.g. I had VOC images in separate folder, already in place and used by unrelated obj-det projects..,
+ so did ```python tf_records.py --dataset_family=pascal_seg --voc_path=/data/VOCdevkit/VOC2012```)
+ <br>Example dir tree (from my server) after downloading extracting and converting camvid and pascal
+ (with  to convert):
+
+    ```
+         /data/camvid
+        ├── test
+        ├── testannot
+        ├── test.txt
+        ├── train
+        ├── trainannot
+        ├── training.tfrecords
+        ├── train.txt
+        ├── val
+        ├── valannot
+        ├── validation.tfrecords
+        └── val.txt
+        /data/pascal_seg
+        ├── benchmark_RELEASE
+        │   ├── benchmark_code_RELEASE
+        │   ├── BharathICCV2011.pdf
+        │   ├── dataset
+        │   └── README
+        ├── benchmark.tgz
+        ├── training.tfrecords
+        └── validation.tfrecords
+        /data/VOCdevkit
+        └── VOC2012
+        │   ├── Annotations
+        │   ├── ImageSets
+        │   ├── JPEGImages
+        │   ├── labels
+        ├── annotations_cache
+        ├── results
+        ├── test_2007
+        ├── test_2012
+        ├── VOC2007
+     ```
+
 
 1. **Prepare** to run by ```cd seg-mentor && mkdir tmp```
 <br>The ```tmp``` folder will host "training folders", one per run,

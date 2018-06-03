@@ -242,12 +242,10 @@ def main(args):
     args.num_images = args.num_images or args.total_val_images
     net_builder = netclass(number_of_classes=args.num_classes, is_training=False, net=args.basenet,
                            trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16, fcn8=args.fcn8)
-    # fcn_builder = fcn_arch.FcnArch(number_of_classes=number_of_classes, is_training=False, net=args.basenet,
-    #                                trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
 
     # ..From logits to class predictions
     if pixels > 0 and pixels == (pixels/32)*32.0 :
-        def fcnfunc_img2labels(img):
+        def netfunc_img2labels(img):
             tmp = tf.argmax(net_builder.build_net(img), dimension=3)
             return tf.expand_dims(tmp, 3)
     else:
@@ -259,9 +257,9 @@ def main(args):
 
     if args.moviepath:
         # (!) this fails for "native" res. not a biggy i think. TODO retry fix
-        segment_movie(fcnfunc_img2labels, checkpoint, args.moviepath, pixels)
+        segment_movie(netfunc_img2labels, checkpoint, args.moviepath, pixels)
     elif args.imagepath:
-        segment_image(fcnfunc_img2labels, checkpoint, args.imagepath, pixels, args.clabel2cname)
+        segment_image(netfunc_img2labels, checkpoint, args.imagepath, pixels, args.clabel2cname)
 
     # run over the validation set
     else:
@@ -270,7 +268,7 @@ def main(args):
         orig_shape_f, scale, image_t, annotation_t = iterator.get_next()
         if args.hquant:
             print("Coming soon - quantized version for real-time deployments...")
-        prediction_t = fcnfunc_img2labels(tf.expand_dims(image_t, axis=0))
+        prediction_t = netfunc_img2labels(tf.expand_dims(image_t, axis=0))
 
         shape2crop_f = orig_shape_f*scale if pixels else orig_shape_f
         shape2crop = tf.cast(tf.round(shape2crop_f), tf.int32)

@@ -2,7 +2,7 @@ import sys
 import tensorflow as tf
 from utils.upsampling import bilinear_upsample_weights
 
-# assuming our fork of tf-models is cloned side-by-side with current repo
+# assuming our fork of tensorflow models/research/slim is cloned side-by-side with current repo
 sys.path.append("../tf-models-hailofork/research/slim/")
 from nets import vgg, mobilenet_v1, inception_v1, resnet_v1, resnet_utils
 from preprocessing import vgg_preprocessing, pytorch_resnet_preprocessing
