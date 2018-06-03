@@ -6,12 +6,9 @@
 # consider using skimage.io.imread()
 
 from PIL import Image
-import numpy as np
-import skimage.io as io
+import numpy as np, argparse, os
+# import skimage.io as io
 import tensorflow as tf
-import argparse
-import os
-
 
 # Helper functions for defining tf types
 def _bytes_feature(value):
@@ -198,7 +195,7 @@ def parse_record(serialized_example):
     elif annotation_dims==3:
         annotation_shape = tf.stack([height, width, 1])
     else:
-        raise Exception("WTF bad flag")
+        raise Exception("bad flag")
 
     image = tf.reshape(image, image_shape)
     annotation = tf.reshape(annotation, annotation_shape)
@@ -232,12 +229,12 @@ def tfrecordify_coco_stuff_things(imgsdir = '/data/coco/',
 
 def tfrecordify_camvid(datadir = '/data/camvid'):
     '''
-        Assumes stuff is e.g. cloned from https://github.com/alexgkendall/SegNet-Tutorial // CamVid
-         - 11-class version encoded as the usual #class (not color-code)
+        Assumes you cloned from https://github.com/alexgkendall/SegNet-Tutorial,
+           and passing path to a copy of the "CamVid" subfolder (of said repo) to this func
+         - 11-class version encoded as the usual #class.
 
         TODO 32-class version
     '''
-    import os
     trainpairs = [(os.path.join(datadir, 'train', fname),
                    os.path.join(datadir, 'trainannot', fname)) \
                     for fname in os.listdir(os.path.join(datadir, 'train'))]
