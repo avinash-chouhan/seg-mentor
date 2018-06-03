@@ -14,7 +14,7 @@ if tf_ver >= 1.4:
 else:
     data = tf.contrib.data
 
-import fcn_arch, fcn_train, utils
+import arch, train, utils
 
 
 def iter_test(annotation, predictions, checkpoint, iterator, args,
@@ -78,16 +78,17 @@ def iter_test(annotation, predictions, checkpoint, iterator, args,
 def visualize(image_np, upsampled_predictions, annotation_np=None, i=0,
               od_class2color=None, clabel2cname=None):
 
-    plt.figure(figsize=(40, 5))
+    fsize = (20, 8) if annotation_np is None else (40, 5)
+    plt.figure(figsize=fsize)
     subplots = 2 if annotation_np is None else 3
-    plt.suptitle('image #{0}'.format(i))
-    plt.subplot(1, subplots, 1); plt.title("orig image")
+    plt.suptitle('image #{0}'.format(i), fontsize=16)
+    plt.subplot(1, subplots, 1); plt.title("orig image", fontsize=16)
     plt.imshow(image_np)
-    plt.subplot(1, subplots, 2); plt.title("segmentation")
+    plt.subplot(1, subplots, 2); plt.title("segmentation", fontsize=16)
     utils.visualization.visualize_segmentation_adaptive(upsampled_predictions.squeeze(), image_np,
                                                         od_class2color=od_class2color, clabel2cname=clabel2cname)
     if annotation_np is not None:
-        plt.subplot(1, subplots, 3); plt.title("ground truth")
+        plt.subplot(1, subplots, 3); plt.title("ground truth", fontsize=16)
         utils.visualization.visualize_segmentation_adaptive(annotation_np.squeeze(), image_np,
                                                             od_class2color=od_class2color, clabel2cname=clabel2cname)
     plt.show()
@@ -172,8 +173,11 @@ def segment_movie(fcnfunc, checkpoint, video_file_in, pixels=None):
     with tf.Session() as sess:
         sess.run(tf.local_variables_initializer())
         tf.train.Saver().restore(sess, checkpoint)
-        ext = '.mp4'
+        #ext = '.mp4'
+        ext = video_file_in[video_file_in.find('.') :]
         video_file_out = video_file_in.replace(ext, '_segmented'+ext)
+        video_file_out = video_file_out.replace('.avi', '.mp4')
+        #print video_file_out
 
         input_clip = VideoFileClip(video_file_in)
 
@@ -231,33 +235,31 @@ def main(args):
         import newer_arch
         netclass = eval('newer_arch.' + args.extended_arch)
     else:
-        netclass = fcn_arch.FcnArch
+        netclass = arch.FcnArch
     print("Using architecture " + netclass.__name__)
 
-    args = fcn_train.resolve_dataset_family(args)
+    args = train.resolve_dataset_family(args)
     args.num_images = args.num_images or args.total_val_images
-    fcn_builder = netclass(number_of_classes=args.num_classes, is_training=False, net=args.basenet,
+    net_builder = netclass(number_of_classes=args.num_classes, is_training=False, net=args.basenet,
                            trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16, fcn8=args.fcn8)
-    # fcn_builder = fcn_arch.FcnArch(number_of_classes=number_of_classes, is_training=False, net=args.basenet,
-    #                                trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16)
 
     # ..From logits to class predictions
     if pixels > 0 and pixels == (pixels/32)*32.0 :
-        def fcnfunc_img2labels(img):
-            tmp = tf.argmax(fcn_builder.build_net(img), dimension=3)
+        def netfunc_img2labels(img):
+            tmp = tf.argmax(net_builder.build_net(img), dimension=3)
             return tf.expand_dims(tmp, 3)
     else:
         print('..."native" mode or size not multiple of 32, doing the generic adaptation...')
-        fcnfunc_img2labels = utils.inference.adapt_network_for_any_size_input(fcn_builder.build_net, 32)
+        fcnfunc_img2labels = utils.inference.adapt_network_for_any_size_input(net_builder.build_net, 32)
 
     # OK, let's get data build graph and run stuff!
     tf.reset_default_graph()
 
     if args.moviepath:
         # (!) this fails for "native" res. not a biggy i think. TODO retry fix
-        segment_movie(fcnfunc_img2labels, checkpoint, args.moviepath, pixels)
+        segment_movie(netfunc_img2labels, checkpoint, args.moviepath, pixels)
     elif args.imagepath:
-        segment_image(fcnfunc_img2labels, checkpoint, args.imagepath, pixels, args.clabel2cname)
+        segment_image(netfunc_img2labels, checkpoint, args.imagepath, pixels, args.clabel2cname)
 
     # run over the validation set
     else:
@@ -266,7 +268,7 @@ def main(args):
         orig_shape_f, scale, image_t, annotation_t = iterator.get_next()
         if args.hquant:
             print("Coming soon - quantized version for real-time deployments...")
-        prediction_t = fcnfunc_img2labels(tf.expand_dims(image_t, axis=0))
+        prediction_t = netfunc_img2labels(tf.expand_dims(image_t, axis=0))
 
         shape2crop_f = orig_shape_f*scale if pixels else orig_shape_f
         shape2crop = tf.cast(tf.round(shape2crop_f), tf.int32)

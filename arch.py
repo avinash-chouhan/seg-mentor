@@ -1,7 +1,9 @@
+import sys
 import tensorflow as tf
 from utils.upsampling import bilinear_upsample_weights
 
-# ..assumes slim_models is added to path
+# assuming our fork of tensorflow models/research/slim is cloned side-by-side with current repo
+sys.path.append("../tf-models-hailofork/research/slim/")
 from nets import vgg, mobilenet_v1, inception_v1, resnet_v1, resnet_utils
 from preprocessing import vgg_preprocessing, pytorch_resnet_preprocessing
 from preprocessing.vgg_preprocessing import _R_MEAN, _G_MEAN, _B_MEAN
@@ -34,10 +36,10 @@ def decoder_arg_scope_func(weight_decay=1e-4, use_batch_norm=True):
 
 class BaseFcnArch:
     """
-    Manages the FCN meta-architecture.
-    having the original similar to http://arxiv.org/pdf/1605.06211.pdf
-      ('Fully Convolutional Networks for Semantic Segmentation' by Long,Shelhamer et al., 2016)
-    as the default, while enabling plug-in replacements and augmentations of decoder by subclassing,
+    Manages the generic FCN-derived meta-meta-architecture.
+
+    Default subclass is FcnArch, see below.
+    Enabling plug-in replacements and augmentations of decoder by subclassing,
       also enabling base feature extractors mix&match, accepting many TF-SLIM nets
       (and hopefully easily extendable to all of them)
 
@@ -51,10 +53,10 @@ class BaseFcnArch:
     :number_of_classes: int, e.g. 21 for PASCAL VOC
     :is_training: boolean, to be propagated into the net_func()
         Affects dropout and batchnorm layers of the feature extractor
-     ->>>>> now some flags switching on/off features of architecture
+     ---------- now some flags switching on/off features of architecture -------
     :fcn16: - boolean, if True add skip connection. Note that we don't use two-stage training,
               if necessary we can emulated that via differential learning schedule...
-    :trainable_upsampling: - ...
+    :trainable_upsampling: - in FCN, whether to use learnable deconv or simple bilinear-interpolation
     """
 
     def __init__(self, number_of_classes=21, is_training=True, net='vgg_16',
@@ -261,7 +263,9 @@ class BaseFcnArch:
 
 class FcnArch(BaseFcnArch):
     '''
-        Default implementation per our understanding of the paper
+        Implementation of FCN:
+        http://arxiv.org/pdf/1605.06211.pdf
+        ('Fully Convolutional Networks for Semantic Segmentation' by Long,Shelhamer et al., 2016)
     '''
     def __init__(self, *args, **kwargs):
         BaseFcnArch.__init__(self, *args, **kwargs)

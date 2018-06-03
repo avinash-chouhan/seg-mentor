@@ -2,9 +2,9 @@ import tensorflow as tf, numpy as np
 import os, sys, time, argparse
 
 # assuming our fork of tf-models is cloned side-by-side with current repo
-sys.path.append("../tf-models-hailofork/research/slim/")
+# sys.path.append("../tf-models-hailofork/research/slim/")
 
-import fcn_arch, utils
+import arch, utils
 
 slim = tf.contrib.slim
 #make small fixes to work with older version of TF
@@ -14,25 +14,7 @@ if tf_ver >= 1.4:
 else:
     data = tf.contrib.data
 
-log_folder = "tmp/logs"
 image_train_size = [512, 512]
-
-
-
-# PASCAL_TRAIN_DATASET_SIZE =
-#
-# CAMVID_NUM_CLASSES = 11
-# CAMVID_TRAIN_DATASET_SIZE = 367 # train only..
-
-#pascal_voc_lut = utils.pascal_voc.pascal_segmentation_lut()
-#pascal_class_labels = pascal_voc_lut.keys() # ==range(PASCAL_NUM_CLASSES)+[255]
-#camvid_class_labels = range(CAMVID_NUM_CLASSES)+[CAMVID_NUM_CLASSES]
-
-#pascal_label2name = utils.pascal_voc.pascal_segmentation_lut() # ==range(PASCAL_NUM_CLASSES)+[255]
-
-#camvid_label2name = utils.camvid.camvid_lut
-#camvid_label2name = {lb:str(lb) for lb in range(CAMVID_NUM_CLASSES+1)}  # TODO names...
-
 
 PASCAL_VAL_SET_SIZE = utils.pascal_voc.PASCAL12_VALIDATION_WO_BERKELEY_TRAINING  # 904 RV-VOC12
 
@@ -41,7 +23,7 @@ CAMVID_VAL_DATA_SIZE = 237 # 107
 
 def resolve_dataset_family(args):
     '''
-        Given a dataset family, set the properties of the dataset (if not set explicitely)
+        Given a dataset family, set the properties of the dataset (if not set explicitly)
         to the corresponding defaults of the family..
 
     :param args: arguments to fcn_train - both if we run from taining session.
@@ -113,7 +95,7 @@ class Trainer:
             import newer_arch
             netclass = eval('newer_arch.'+args.extended_arch)
         else:
-            netclass = fcn_arch.FcnArch
+            netclass = arch.FcnArch
         print("Using architecture "+netclass.__name__)
 
         self.fcn_builder = netclass(number_of_classes=self.args.num_classes, is_training=True, net=args.basenet,
@@ -124,7 +106,6 @@ class Trainer:
 
         chkpnt2save_path = trainfolder + '/fcn.ckpt'
 
-        #import ipdb; ipdb.set_trace()
         filtered_labels_1hot_flat, filtered_logits_flat = \
             utils.training.get_goodpixel_logits_and_1hot_labels(self.annotation_batch,
                                                                 self.upsampled_logits_batch,  self.args.num_classes)
@@ -200,14 +181,13 @@ class Trainer:
 
         learning_rate_summary_op = tf.summary.scalar('weak learning rate', weak_learning_rate)
 
-        # Note: we can't use the merged summary because we want to separate the actual (forward/backward) run
-        #   from the calculation of the metric because of the way TensorFlow works
-        #   see http://ronny.rest/blog/post_2017_09_11_tf_metrics/
-        # merged_summary_op = tf.summary.merge_all()
-
-        # Create the log folder if doesn't exist yet
-        if not os.path.exists(log_folder):
-            os.makedirs(log_folder)
+        '''
+        Note: we can't use the merged summary like this:
+           merged_summary_op = tf.summary.merge_all() 
+        because we want to separate the actual (forward/backward) run
+        from the calculation of the metric because of the way TensorFlow works
+        see http://ronny.rest/blog/post_2017_09_11_tf_metrics/        
+        '''
 
         # The op for initializing the variables.
         global_vars_init_op = tf.global_variables_initializer()
