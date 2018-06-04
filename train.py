@@ -2,7 +2,7 @@ import tensorflow as tf, numpy as np
 import os, sys, time, argparse
 
 # assuming our fork of tf-models is cloned side-by-side with current repo
-# sys.path.append("../tf-models-hailofork/research/slim/")
+sys.path.append("../tf-models-hailofork/research/slim/")
 
 import arch, utils
 
