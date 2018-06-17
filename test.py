@@ -1,6 +1,7 @@
 import tensorflow as tf
 import os, sys, argparse
 from matplotlib import pyplot as plt
+import ipdb
 
 import numpy as np
 slim = tf.contrib.slim
@@ -79,6 +80,7 @@ def visualize(image_np, upsampled_predictions, annotation_np=None, i=0,
               od_class2color=None, clabel2cname=None):
 
     fsize = (20, 8) if annotation_np is None else (40, 5)
+    # ipdb.set_trace()
     plt.figure(figsize=fsize)
     subplots = 2 if annotation_np is None else 3
     plt.suptitle('image #{0}'.format(i), fontsize=16)

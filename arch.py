@@ -5,8 +5,10 @@ from utils.upsampling import bilinear_upsample_weights
 # assuming our fork of tensorflow models/research/slim is cloned side-by-side with current repo
 sys.path.append("../tf-models-hailofork/research/slim/")
 from nets import vgg, mobilenet_v1, inception_v1, resnet_v1, resnet_utils
+from nets.mobilenet import mobilenet_v2, mobilenet
 from preprocessing import vgg_preprocessing, pytorch_resnet_preprocessing
 from preprocessing.vgg_preprocessing import _R_MEAN, _G_MEAN, _B_MEAN
+import ipdb
 
 slim = tf.contrib.slim
 
@@ -109,6 +111,15 @@ class BaseFcnArch:
                                     'tname_s16_skipconn': 'Conv2d_11_pointwise'
                                     # TODO FCN8
                                     #'logits_opname': 'Conv2d_1c_1x1'
+                                    },
+                   'mobilenet_v2': {'net_func': mobilenet_v2.mobilenet,
+                                    'arg_scope_func': mobilenet.training_scope,
+                                    'preproc_func': inception_preprocess,
+                                    # ..end of layer 13 - before the stride-2 layer 14 and stride-1 layer 13 (and last)
+                                    'tname_s16_skipconn': 'layer_14/depthwise_output',
+                                    'tname_s8_skipconn':  'layer_7/depthwise_output'
+                                    # TODO FCN8
+                                    # 'logits_opname': 'Conv2d_1c_1x1'
                                     },
             }.get(net)
 
