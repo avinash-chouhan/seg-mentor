@@ -25,7 +25,7 @@ We support mix&match across a choice of :
 - [x] Inception_v1
 - [x] MobileNet_v1
 - [x] ...any [tfslim](https://github.com/tensorflow/models/tree/master/research/slim) model with minimal effort.
-- [ ] MobileNet_v2
+- [x] MobileNet_v2
 
 **Segmentation (aka Decoder) architectures**
 - [x] FCN
@@ -313,7 +313,7 @@ Some flip and strech augmentations were applied...
 | ResNet_v1_18 - FCN32 [ts1](#ts1)   |   9.5         |  10.9    | **59.5**           |
 | MobileNet V1 - FCN16 [ts1](#ts1)   |   2.9         | 3.12  | **57.6**            |
 | MobileNet V1 - FCN32 [ts1](#ts1)   |   2.8         | 3.1   | **55.5**            |
-| MobileNet V2  | coming        | soon    | (hopefully)      |
+| MobileNet V2 - FCN16 [ts1](#ts1) | 1.3        | 2.6    | **58.6**      |
 
 #### ts1
 (training schedule 1): <br>

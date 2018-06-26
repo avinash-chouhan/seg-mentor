@@ -118,7 +118,6 @@ class BaseFcnArch:
                                     # ..end of layer 13 - before the stride-2 layer 14 and stride-1 layer 13 (and last)
                                     'tname_s16_skipconn': 'layer_14/depthwise_output',
                                     'tname_s8_skipconn':  'layer_7/depthwise_output'
-                                    # TODO FCN8
                                     # 'logits_opname': 'Conv2d_1c_1x1'
                                     },
             }.get(net)
