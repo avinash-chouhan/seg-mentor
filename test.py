@@ -99,7 +99,7 @@ def get_data_feed(val_rec_fname, pixels=None):
 
         TODO: unify parts with with prepare_graph()
     '''
-    dataset = data.TFRecordDataset([val_rec_fname]).map(utils.tf_records.parse_record)  # .batch(1)
+    dataset = data.TFRecordDataset([val_rec_fname]).map(utils.tfrecordify.parse_record)  # .batch(1)
     # note - saving shape before rescale
     dataset = dataset.map(lambda img, ann: (tf.to_float(tf.shape(img)), img, ann))
     if pixels is not None:
