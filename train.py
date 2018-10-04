@@ -389,7 +389,8 @@ if __name__ == "__main__":
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
 
     vgg_checkpoint_path = os.path.join(args.modelspath, 'vgg_16.ckpt')
-    mobilenet_checkpoint_path = os.path.join(args.modelspath, 'mobilenet_v1_224/mobilenet_v1_1.0_224.ckpt')
+    mobilenet_checkpoint_path = os.path.join(args.modelspath, 'mobilenet_v1_1.0_224.ckpt')
+    mobilenet_v2_checkpoint_path = os.path.join(args.modelspath, 'mobilenet_v2/mobilenet_v2_1.0_224.ckpt')
     inception_checkpoint_path = os.path.join(args.modelspath, 'inception_v1.ckpt')
     resnet50_checkpoint_path = os.path.join(args.modelspath, 'resnet_v1_50.ckpt')
     resnet18_checkpoint_path = os.path.join(args.modelspath, 'resnet_v1_18/model.ckpt')
@@ -399,6 +400,7 @@ if __name__ == "__main__":
                        'resnet_v1_18': resnet18_checkpoint_path,
                        'inception_v1': inception_checkpoint_path,
                        'mobilenet_v1': mobilenet_checkpoint_path,
+                       'mobilenet_v2': mobilenet_v2_checkpoint_path,
                        }.get(args.basenet)
     if not checkpoint_path:
         raise Exception("Not yet supported feature extractor")
@@ -431,3 +433,4 @@ if __name__ == "__main__":
                              learning_rate=args.learnrate,
                              decaylr=args.decaylr,
                              )
+

@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow.python.ops import control_flow_ops
 
+
 # assumes slim_models was appended to sys.path
 from preprocessing.inception_preprocessing import distort_color, apply_with_random_selector
 
