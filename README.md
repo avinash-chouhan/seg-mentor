@@ -11,7 +11,7 @@
 <img src="https://github.com/hailotech/seg-mentor/blob/master/media/office.gif" width="60%" height="60%"><br><br>
  </div>
 
- .      ```      ...authors, segmented with custom Inception_v1+FCN trained on Pascal-VOC.```
+ .           ```authors team (chairs, ppl, monitors..:), segmented with custom Inception_v1+FCN trained on Pascal-VOC.```
 
 ## WELCOME!
 to **seg-mentor** - a flexible semantic segmentation framework built in tensorflow.
@@ -115,7 +115,7 @@ and jumping to **Test** below.
   (will appear as ```training.tfrecords, validation.tfrecord``` under the datapath dir)
  by running [utils/tfrecordify.py](utils/tfrecordify.py) with command-line args appropriate
  to the dataset family and paths you use. E.g. I had VOC images in separate folder, already in place and used by unrelated obj-det projects..,
- so did ```python tf_records.py --dataset_family=pascal_seg --voc_path=/data/VOCdevkit/VOC2012```)
+ so did ```python utils/tfrecordify.py --dataset_family=pascal_seg --voc_path=/data/VOCdevkit/VOC2012```)
  <br>Example dir tree (from my server) after downloading extracting and converting camvid and pascal
  (with  to convert):
 

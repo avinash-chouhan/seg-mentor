@@ -2,7 +2,7 @@ import tensorflow as tf, numpy as np
 import os, sys, time, argparse
 
 # assuming our fork of tf-models is cloned side-by-side with current repo
-# sys.path.append("../tf-models-hailofork/research/slim/")
+sys.path.append("../tf-models-hailofork/research/slim/")
 
 import arch, utils
 
@@ -277,7 +277,7 @@ class Trainer:
     def setup(self):
 
         train_dataset = data.TFRecordDataset([self.train_tfrec])
-        train_dataset = train_dataset.map(utils.tf_records.parse_record)
+        train_dataset = train_dataset.map(utils.tfrecordify.parse_record)
 
         # do data augmentation (unless we're in the debug mode of "go overfit over first images")
         shuffle_and_augment = not debug_loop_over_few_first_images
