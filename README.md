@@ -342,8 +342,7 @@ The resources needed by additional bilinear interpolations (for upsampling) are 
 
 #### Technical issues:
 * Monitor vs. final result - we monitor a *test-mIoU* estimate during training by running the net on a quarter (1/4) of the validation set; the resulting signal reflects both data(sub)set and param-point variability in its noise, thus giving a kinda-realistic rough estimate of the error bars on the value.
- <br> However, we reused the same computational graph as the train, switching between train/val data feed - leveraging the  *[feedable iterator](https://www.tensorflow.org/programmers_guide/datasets)* of TF ```Datasets``` (probably designed for this exact purpose). This is different from what happens at test time, since the BatchNorm/Dropout layers use.
- <br>We may fix this in the future but currently we feel that it serves the purpose of monitoring - relative comparison, detect flattening etc. and in fact may be be an opportunity for insights..
+ <br> We reuse the same computational graph as the train, switching between train/val data feed - leveraging the  *[feedable iterator](https://www.tensorflow.org/programmers_guide/datasets)* of TF ```Datasets``` (probably designed for this exact purpose). We also switch the BatchNorm/Dropout behavior by giving the is_training as a placeholder.
 
 #### Stuff we tried and didn't work
 Note these are still coded and can be enabled via command-line params.
