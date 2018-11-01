@@ -70,7 +70,7 @@ def resolve_dataset_family(args):
     args.clabel2cname[args.num_classes] = args.clabel2cname[255] = 'unlabeled'
 
     if not hasattr(args,'datapath') or args.datapath == '':
-        args.datapath = '/data/' + args.dataset_family
+        args.datapath = '/local/data/' + args.dataset_family
     #print args.num_classes, args.total_train_images; exit()
     return args
 
@@ -167,11 +167,11 @@ class Trainer:
 
         # assuming the "ambiguous/ unlabeled" is either num_classes or 255 (or whatever in between:))
         mask = tf.to_int32(tf.less(self.annotation_batch, self.args.num_classes))
-
+        clipped_labels =tf.clip_by_value(self.annotation_batch, 0, self.args.num_classes-1)
         miou_score_op, miou_update_op = tf.metrics.mean_iou(predictions=predictions,
-                                                            labels=tf.multiply(self.annotation_batch, mask),
+                                                            labels=clipped_labels,
                                                             num_classes=self.args.num_classes,
-                                                            name='my_miou')  # , weights=mask)
+                                                            name='my_miou', weights=mask)
         running_metric_vars = tf.get_collection(tf.GraphKeys.LOCAL_VARIABLES, scope="my_miou")
         running_metric_initializer = tf.variables_initializer(var_list=running_metric_vars)
 
@@ -219,7 +219,8 @@ class Trainer:
                 _, __, cross_entropy, cross_entropy_summary, learnrate_summary = \
                     sess.run([train_step, miou_update_op, cross_entropy_loss,
                               cross_entropy_loss_summary_op, learning_rate_summary_op],
-                             feed_dict={self.masterhandle: training_handle})
+                             feed_dict={self.masterhandle: training_handle,
+                                        self.fcn_builder.is_training:True})
                 # print 'post lost&trainstep sess run ', time.time() - t0
 
                 # this was helpful to get the mIOU metric work:
@@ -248,7 +249,8 @@ class Trainer:
                     for _tb in range(num_test_batches):
                         _, test_cross_entropy_arr[_tb] = \
                             sess.run([miou_update_op, cross_entropy_loss],
-                                     feed_dict={self.masterhandle: test_handle})
+                                     feed_dict={self.masterhandle: test_handle, 
+                                                self.fcn_builder.is_training:False})
                     test_miou_score, test_miou_summary = sess.run([miou_score_op, test_miou_summary_op])
                     test_loss = np.mean(test_cross_entropy_arr)
                     test_loss_summary = tf.Summary()
@@ -297,7 +299,7 @@ class Trainer:
                                                                                    image_train_size))
         train_dataset = train_dataset.batch(self.args.batch_size)
 
-        test_dataset = data.TFRecordDataset([self.test_tfrec]).map(utils.tf_records.parse_record)
+        test_dataset = data.TFRecordDataset([self.test_tfrec]).map(utils.tfrecordify.parse_record)
         test_dataset = test_dataset.map(lambda img, ann:
                                         utils.augmentation.nonrandom_rescale(img, ann, image_train_size))
         test_dataset = test_dataset.map(lambda image_, annotation_: (image_, tf.squeeze(annotation_)))
@@ -363,7 +365,7 @@ if __name__ == "__main__":
                              ' by up(down)sampling larger side and padding the other to get square shape',
                         default=512)
     parser.add_argument('--datapath', type=str,
-                        help='path where tfrecords are located; if not set will use /data/<dataset-family>',
+                        help='path where tfrecords are located; if not set will use /local/data/<dataset-family>',
                         default='')
     parser.add_argument('--num_classes', type=int,
                         help='number of classes (dataset dependent); if not set will use dataset-damily default',
@@ -376,7 +378,7 @@ if __name__ == "__main__":
                         default='pascal_seg')
     parser.add_argument('--modelspath', type=str,
                         help='path where imagenet-pretrained FE checkpoints are located',
-                        default='/data/models/')
+                        default='/local/data/models/')
     parser.add_argument('--gpu', '-g', type=int,
                         help='which GPU to run on (note: possibly opposite of nvidia-smi..)',
                         default=0)

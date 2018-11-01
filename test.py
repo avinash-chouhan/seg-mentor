@@ -18,7 +18,7 @@ import arch, train, utils
 
 
 def iter_test(annotation, predictions, checkpoint, iterator, args,
-              more_tensors_to_eval=[], callback=None):
+              more_tensors_to_eval=[], callback=None, fd={}):
     """
         iterate over the validation set, and compute overall (m)IoU metric(s)
 
@@ -53,7 +53,7 @@ def iter_test(annotation, predictions, checkpoint, iterator, args,
         saver.restore(sess, checkpoint)
 
         for i in range(args.num_images):
-            _eval_res = sess.run([conf_op, update_op]+more_tensors_to_eval)
+            _eval_res = sess.run([conf_op, update_op]+more_tensors_to_eval, feed_dict=fd)
             conf_tmp = _eval_res[0]
             if callback: # a placeholder to inject more functionality w.o. changing this func
                 callback(i, _eval_res[2:])
@@ -240,7 +240,9 @@ def main(args):
 
     args = train.resolve_dataset_family(args)
     args.num_images = args.num_images or args.total_val_images
-    net_builder = netclass(number_of_classes=args.num_classes, is_training=False, net=args.basenet,
+    is_training = False
+    #is_training = 'placeholder' # TEMP!!! SDK hack
+    net_builder = netclass(number_of_classes=args.num_classes, is_training=is_training, net=args.basenet,
                            trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16, fcn8=args.fcn8)
 
     # ..From logits to class predictions
@@ -250,7 +252,7 @@ def main(args):
             return tf.expand_dims(tmp, 3)
     else:
         print('..."native" mode or size not multiple of 32, doing the generic adaptation...')
-        fcnfunc_img2labels = utils.inference.adapt_network_for_any_size_input(net_builder.build_net, 32)
+        netfunc_img2labels = utils.inference.adapt_network_for_any_size_input(net_builder.build_net, 32)
 
     # OK, let's get data build graph and run stuff!
     tf.reset_default_graph()
@@ -283,7 +285,8 @@ def main(args):
 
         # run over the images, sending some to visualization via the callback mechanism...
         iter_test(annotation_t, prediction_t, checkpoint, iterator, args,
-                  callback=viz_cb, more_tensors_to_eval=[imageT4viz, predT4viz, labelT4viz])
+                  callback=viz_cb, more_tensors_to_eval=[imageT4viz, predT4viz, labelT4viz],
+                  fd={net_builder.is_training:False})
 
 
 if __name__ == "__main__":
