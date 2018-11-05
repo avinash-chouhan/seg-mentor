@@ -1,4 +1,4 @@
-from fcn_arch import *
+from arch import *
 
 
 class LinkNet(BaseFcnArch):

@@ -196,6 +196,9 @@ class BaseFcnArch:
         with slim.arg_scope(self.fe['arg_scope_func']()):
 
             with tf.variable_scope("base_fe_scope") as self.base_fe_scope:
+                #if self.is_training == 'placeholder': # SDK workaround
+                self.is_training = tf.placeholder(tf.bool, name='is_training')
+                    #mean_centered_image_batch = tf.placeholder(shape=[1,512,512,3], dtype=tf.float32)
                 fe_out32s_pre_pool, end_points = self.fe['net_func'](mean_centered_image_batch,
                                                                      fc_conv_padding='SAME', # relevant for VGG only
                                                                      is_training=self.is_training,
