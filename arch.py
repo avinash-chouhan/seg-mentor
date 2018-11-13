@@ -145,19 +145,27 @@ class BaseFcnArch:
     # ------------------------------------------------------------------------
 
     def _upsample_fixed_bilinear(self, input_tensor, upsample_factor=2, num_channels=None):
-        input_shape = tf.shape(input_tensor)
-        output_shape = tf.stack([
-            input_shape[0],
-            input_shape[1] * upsample_factor,
-            input_shape[2] * upsample_factor,
-            input_shape[3]
-        ])
-        num_channels = num_channels or self.number_of_classes
-        upsample_filter_np = bilinear_upsample_weights(upsample_factor, num_channels)
-        upsample_filter_tensor = tf.constant(upsample_filter_np)
-        upsampled = tf.nn.conv2d_transpose(input_tensor, upsample_filter_tensor, output_shape=output_shape,
-                                           strides=[1, upsample_factor, upsample_factor, 1])
-        return upsampled
+        '''Use bilinear interpolation to upsamlpe an image by a given upsample_factor'''
+        input_shape = input_tensor.shape
+        upsampled_tensor = tf.image.resize_bilinear(
+                images=input_tensor,
+                size=[input_shape[1]*upsample_factor, input_shape[2]*upsample_factor],
+                align_corners=True
+                )
+        return upsampled_tensor
+        # input_shape = tf.shape(input_tensor)
+        # output_shape = tf.stack([
+        #     input_shape[0],
+        #     input_shape[1] * upsample_factor,
+        #     input_shape[2] * upsample_factor,
+        #     input_shape[3]
+        # ])
+        # num_channels = num_channels or self.number_of_classes
+        # upsample_filter_np = bilinear_upsample_weights(upsample_factor, num_channels)
+        # upsample_filter_tensor = tf.constant(upsample_filter_np)
+        # upsampled = tf.nn.conv2d_transpose(input_tensor, upsample_filter_tensor, output_shape=output_shape,
+        #                                    strides=[1, upsample_factor, upsample_factor, 1])
+        # return upsampled
 
     def _upsample_learnable(self, input_tensor, upsample_factor=2, num_channels=None, scope='deconv'):
         num_channels = num_channels or self.number_of_classes
