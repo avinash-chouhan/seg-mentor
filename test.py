@@ -240,9 +240,8 @@ def main(args):
 
     args = train.resolve_dataset_family(args)
     args.num_images = args.num_images or args.total_val_images
-    is_training = False
-    #is_training = 'placeholder' # TEMP!!! SDK hack
-    net_builder = netclass(number_of_classes=args.num_classes, is_training=is_training, net=args.basenet,
+    force_is_training_val = False
+    net_builder = netclass(number_of_classes=args.num_classes, net=args.basenet, force_is_training_val=force_is_training_val,
                            trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16, fcn8=args.fcn8)
 
     # ..From logits to class predictions
@@ -276,7 +275,7 @@ def main(args):
         shape2crop = tf.cast(tf.round(shape2crop_f), tf.int32)
         imageT4viz, predT4viz, labelT4viz = \
             [tf.squeeze(tf.image.resize_image_with_crop_or_pad(x, shape2crop[0], shape2crop[1]))
-                for x in image_t, prediction_t, annotation_t]
+                for x in (image_t, prediction_t, annotation_t)]
 
         def viz_cb(i, (image_np, predictions_np, annotation_np)):
             if args.first2viz <= i < args.last2viz:
@@ -286,7 +285,7 @@ def main(args):
         # run over the images, sending some to visualization via the callback mechanism...
         iter_test(annotation_t, prediction_t, checkpoint, iterator, args,
                   callback=viz_cb, more_tensors_to_eval=[imageT4viz, predT4viz, labelT4viz],
-                  fd={net_builder.is_training:False})
+                  fd = None if force_is_training_val is not None else {net_builder.is_training_ph:False} )
 
 
 if __name__ == "__main__":

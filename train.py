@@ -220,7 +220,7 @@ class Trainer:
                     sess.run([train_step, miou_update_op, cross_entropy_loss,
                               cross_entropy_loss_summary_op, learning_rate_summary_op],
                              feed_dict={self.masterhandle: training_handle,
-                                        self.fcn_builder.is_training:True})
+                                        self.fcn_builder.is_training_ph:True})
                 # print 'post lost&trainstep sess run ', time.time() - t0
 
                 # this was helpful to get the mIOU metric work:
@@ -250,7 +250,7 @@ class Trainer:
                         _, test_cross_entropy_arr[_tb] = \
                             sess.run([miou_update_op, cross_entropy_loss],
                                      feed_dict={self.masterhandle: test_handle, 
-                                                self.fcn_builder.is_training:False})
+                                                self.fcn_builder.is_training_ph:False})
                     test_miou_score, test_miou_summary = sess.run([miou_score_op, test_miou_summary_op])
                     test_loss = np.mean(test_cross_entropy_arr)
                     test_loss_summary = tf.Summary()

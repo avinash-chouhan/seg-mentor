@@ -59,11 +59,11 @@ class BaseFcnArch:
     :trainable_upsampling: - in FCN, whether to use learnable deconv or simple bilinear-interpolation
     """
 
-    def __init__(self, number_of_classes=21, is_training=True, net='vgg_16',
+    def __init__(self, number_of_classes=21, force_is_training_val=None, net='vgg_16',
                  fcn16=True, fcn8=False, fcn4=False, trainable_upsampling=False):
 
         self.number_of_classes = number_of_classes
-        self.is_training = is_training
+        self.is_training_val = force_is_training_val
         self.fcn16 = fcn16
         self.fcn8 = fcn8
         self.fcn4 = fcn4
@@ -173,7 +173,7 @@ class BaseFcnArch:
                                      kernel_size=[upsample_factor*2, upsample_factor*2],
                                      stride=[upsample_factor, upsample_factor])
 
-    def build_net(self, image_batch_tensor):
+    def build_net(self, image_batch_tensor): #, force_is_training=None):
         """
             :arg
                 image_batch_tensor : [batch_size, height, width, depth] tensor
@@ -194,12 +194,11 @@ class BaseFcnArch:
         with slim.arg_scope(self.fe['arg_scope_func']()):
 
             with tf.variable_scope("base_fe_scope") as self.base_fe_scope:
-                #if self.is_training == 'placeholder': # SDK workaround
-                self.is_training = tf.placeholder(tf.bool, name='is_training')
-                    #mean_centered_image_batch = tf.placeholder(shape=[1,512,512,3], dtype=tf.float32)
+                self.is_training_ph = tf.placeholder(tf.bool, name='is_training')
+                is_training = self.is_training_val if self.is_training_val is not None else self.is_training_ph
                 fe_out32s_pre_pool, end_points = self.fe['net_func'](mean_centered_image_batch,
                                                                      fc_conv_padding='SAME', # relevant for VGG only
-                                                                     is_training=self.is_training,
+                                                                     is_training=is_training,
                                                                      base_only=True)
             # Add more arg-scoping for decoder
             with slim.arg_scope(self.decoder_arg_scope_func()):
