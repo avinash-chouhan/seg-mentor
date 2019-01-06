@@ -14,7 +14,7 @@ if tf_ver >= 1.4:
 else:
     data = tf.contrib.data
 
-image_train_size = [512, 512]
+# image_train_size = [512, 512]
 
 PASCAL_VAL_SET_SIZE = utils.pascal_voc.PASCAL12_VALIDATION_WO_BERKELEY_TRAINING  # 904 RV-VOC12
 
@@ -98,7 +98,7 @@ class Trainer:
             netclass = arch.FcnArch
         print("Using architecture "+netclass.__name__)
 
-        self.fcn_builder = netclass(number_of_classes=self.args.num_classes, is_training=True, net=args.basenet,
+        self.fcn_builder = netclass(number_of_classes=self.args.num_classes, net=args.basenet, #is_training=True,
                                     trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16, fcn8=args.fcn8)
 
     def run_training(self, trainfolder, num_epochs=10, learning_rate=1e-6, decaylr=True,
@@ -360,10 +360,14 @@ if __name__ == "__main__":
     parser.add_argument('--decaylr', type=bool,
                         help='if True decay learn rate from x10 to x0.1 base LR',
                         default=False)
-    parser.add_argument('--pixels', type=int,
-                        help=' normalize images (&labels) to [pixels X pixels] before shoving them down the net''s throat,'
-                             ' by up(down)sampling larger side and padding the other to get square shape',
-                        default=512)
+    # parser.add_argument('--pixels', type=int,
+    #                     help=' normalize images (&labels) to [pixels X pixels] before shoving them down the net''s throat,'
+    #                          ' by up(down)sampling larger side and padding the other to get square shape',
+    #                     default=512)
+    parser.add_argument('--net_inp_shape', dest='net_inp_shape', type=str,
+                        help='A.) if >0, normalize images (&annotation) to height, width = net_inp_shape'
+                             ' before shoving them down the net''s throat,'
+                             ' by up(down)sampling larger side and padding the other to get square shape')
     parser.add_argument('--datapath', type=str,
                         help='path where tfrecords are located; if not set will use /local/data/<dataset-family>',
                         default='')
@@ -405,7 +409,8 @@ if __name__ == "__main__":
     if not checkpoint_path:
         raise Exception("Not yet supported feature extractor")
 
-    image_train_size = [args.pixels, args.pixels]
+    # image_train_size = [args.pixels, args.pixels]
+    image_train_size = [int(x) for x in args.net_inp_shape.split(',')]
 
     trainer = Trainer(args, checkpoint_path)
     trainer.setup()

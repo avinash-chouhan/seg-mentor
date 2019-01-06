@@ -93,7 +93,7 @@ def visualize(image_np, upsampled_predictions, annotation_np=None, i=0,
                                                             od_class2color=od_class2color, clabel2cname=clabel2cname)
     plt.show()
 
-def get_data_feed(val_rec_fname, pixels=None):
+def get_data_feed(val_rec_fname, dims=None): # [224, 320]
     '''
         returning 4-element feed: orig_shape, scale, image, annotation.
 
@@ -102,10 +102,11 @@ def get_data_feed(val_rec_fname, pixels=None):
     dataset = data.TFRecordDataset([val_rec_fname]).map(utils.tfrecordify.parse_record)  # .batch(1)
     # note - saving shape before rescale
     dataset = dataset.map(lambda img, ann: (tf.to_float(tf.shape(img)), img, ann))
-    if pixels is not None:
+
+    if dims is not None:
         dataset = dataset.map(lambda orig_shape_f, img, ann:
-                              (orig_shape_f, tf.reduce_min(pixels/orig_shape_f)) +
-                              utils.augmentation.nonrandom_rescale(img, ann, [pixels, pixels]))
+                              (orig_shape_f, tf.reduce_min(np.array(dims)/orig_shape_f[:2])) +
+                              utils.augmentation.nonrandom_rescale(img, ann, dims))
     else:
         dataset = dataset.map(lambda shape, img, ann:
                               (shape, 1, img, tf.cast(ann, tf.int32)))
@@ -221,17 +222,19 @@ def main(args):
     import json
     trainargs = json.load(open(args.traindir+'/runargs'))
 
+    args.net_inp_shape = [int(x) for x in args.net_inp_shape.split(',')]
+
     # resolve the working resolution - passed as arg CLI / used in train / "native" of image
-    if args.pixels > 0:
-        pixels = args.pixels
-    elif args.pixels < 0:
-        pixels = trainargs['pixels']
+    if args.net_inp_shape == [-1]:
+        net_inp_shape = [trainargs['pixels'], trainargs['pixels']]
+    elif args.net_inp_shape == [0]:
+        net_inp_shape = None
     else:
-        pixels = None
+        net_inp_shape = args.net_inp_shape
 
     # Build net, using architecture flags which were used in train (test same net as trained)
     args.__dict__.update(trainargs)
-    if type(args.extended_arch)in [str, unicode] and args.extended_arch != '':
+    if type(args.extended_arch) in [str, unicode] and args.extended_arch != '':
         import newer_arch
         netclass = eval('newer_arch.' + args.extended_arch)
     else:
@@ -245,17 +248,20 @@ def main(args):
                            trainable_upsampling=args.trainable_upsampling, fcn16=args.fcn16, fcn8=args.fcn8)
 
     # ..From logits to class predictions
-    if pixels > 0 and pixels == (pixels/32)*32.0 :
+    net_inp_shape_np = np.array(net_inp_shape) if net_inp_shape is not None else None
+
+    if net_inp_shape is not None and np.all(net_inp_shape_np == (net_inp_shape_np/32)*32.0) :
         def netfunc_img2labels(img):
             tmp = tf.argmax(net_builder.build_net(img), dimension=3)
             return tf.expand_dims(tmp, 3)
     else:
-        print('..."native" mode or size not multiple of 32, doing the generic adaptation...')
+        print('..."native" mode or dimensions not multiple of 32, doing the generic adaptation...')
         netfunc_img2labels = utils.inference.adapt_network_for_any_size_input(net_builder.build_net, 32)
 
     # OK, let's get data build graph and run stuff!
     tf.reset_default_graph()
 
+    pixels = net_inp_shape[0] if net_inp_shape is not None else None # TODO adapt also movie/image to non-square input
     if args.moviepath:
         # (!) this fails for "native" res. not a biggy i think. TODO retry fix
         segment_movie(netfunc_img2labels, checkpoint, args.moviepath, pixels)
@@ -265,13 +271,13 @@ def main(args):
     # run over the validation set
     else:
         val_tfrec_fname = os.path.join(args.datapath, 'validation.tfrecords')
-        iterator = get_data_feed(val_tfrec_fname, pixels)
+        iterator = get_data_feed(val_tfrec_fname, net_inp_shape)
         orig_shape_f, scale, image_t, annotation_t = iterator.get_next()
         if args.hquant:
             print("Coming soon - quantized version for real-time deployments...")
         prediction_t = netfunc_img2labels(tf.expand_dims(image_t, axis=0))
 
-        shape2crop_f = orig_shape_f*scale if pixels else orig_shape_f
+        shape2crop_f = orig_shape_f*scale if net_inp_shape is not None else orig_shape_f
         shape2crop = tf.cast(tf.round(shape2crop_f), tf.int32)
         imageT4viz, predT4viz, labelT4viz = \
             [tf.squeeze(tf.image.resize_image_with_crop_or_pad(x, shape2crop[0], shape2crop[1]))
@@ -293,12 +299,12 @@ if __name__ == "__main__":
     parser.add_argument('--traindir', type=str,
                         help='the folder in which the results of the training run reside..',
                         default='')
-    # TODO add back an option to run "native" (without pre-scaling to pixels x pixels at all)
-    parser.add_argument('--pixels', dest='pixels', type=int,
-                         help='A.) if >0, normalize images (&annotation) to [pixels X pixels] '
+    # TODO work on the option to run "native" (without pre-scaling to any shape at all..)
+    parser.add_argument('--net_inp_shape', dest='net_inp_shape', type=str,
+                         help='A.) if >0, normalize images (&annotation) to height, width = net_inp_shape'
                                  ' before shoving them down the net''s throat,'
-                                 ' by up(down)sampling larger side and padding the other to get square shape'                              
-                              'B.) if -1 use the *pixels* used at train time (normally gives best results)'
+                                 ' by up(down)sampling larger side and padding the other to get desired shape'                              
+                              'B.) if -1 use the dimensions used at train time (normally gives best results)'
                               'C.) if 0 dont preprocess ("native")',
                          default=-1)
     parser.add_argument('--first2viz', type=int,
