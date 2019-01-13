@@ -222,15 +222,16 @@ def main(args):
     import json
     trainargs = json.load(open(args.traindir+'/runargs'))
 
-    args.net_inp_shape = [int(x) for x in args.net_inp_shape.split(',')]
-
     # resolve the working resolution - passed as arg CLI / used in train / "native" of image
-    if args.net_inp_shape == [-1]:
-        net_inp_shape = [trainargs['pixels'], trainargs['pixels']]
-    elif args.net_inp_shape == [0]:
+    if args.net_inp_shape == '-1': #'[-1]:
+        net_inp_shape = [int(x) for x in trainargs['net_inp_shape'].split(',')] if 'net_inp_shape' in trainargs.keys() \
+                   else [trainargs['pixels'], trainargs['pixels']] # legacy
+    elif args.net_inp_shape == '0':
         net_inp_shape = None
     else:
-        net_inp_shape = args.net_inp_shape
+        net_inp_shape = [int(x) for x in args.net_inp_shape.split(',')] #args.net_inp_shape
+
+    print("Testing with net_inp_shape=", net_inp_shape)
 
     # Build net, using architecture flags which were used in train (test same net as trained)
     args.__dict__.update(trainargs)
@@ -301,12 +302,12 @@ if __name__ == "__main__":
                         default='')
     # TODO work on the option to run "native" (without pre-scaling to any shape at all..)
     parser.add_argument('--net_inp_shape', dest='net_inp_shape', type=str,
-                         help='A.) if >0, normalize images (&annotation) to height, width = net_inp_shape'
+                         help='A.) if "x,y" normalize images (&annotation) to height, width = net_inp_shape'
                                  ' before shoving them down the net''s throat,'
                                  ' by up(down)sampling larger side and padding the other to get desired shape'                              
-                              'B.) if -1 use the dimensions used at train time (normally gives best results)'
-                              'C.) if 0 dont preprocess ("native")',
-                         default=-1)
+                              'B.) if "-1" use the dimensions used at train time (normally gives best results)'
+                              'C.) if "0" try to run on raw image w.o. preprocess ("native") ',
+                         default='-1')
     parser.add_argument('--first2viz', type=int,
                         help='set to X < size(val.set) to draw visualization for images between X and Y',
                         default=5555)
