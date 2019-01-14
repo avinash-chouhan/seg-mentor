@@ -115,12 +115,12 @@ def get_data_feed(val_rec_fname, dims=None): # [224, 320]
     return iterator
 
 
-def segment_image(fcnfunc, checkpoint, image_path, pixels=None, clabel2cname=None):
+def segment_image(fcnfunc, checkpoint, image_path, net_inp_shape=None, clabel2cname=None):
     image = tf.read_file(image_path)
     image = tf.image.decode_jpeg(image, channels=3)
     # TODO the generic line below would enable monochrome images but currently breaks other stuff...
     #  image = tf.image.decode_jpeg(image)
-    image_t3d, predictions = prepare_graph(fcnfunc, image, pixels)
+    image_t3d, predictions = prepare_graph(fcnfunc, image, net_inp_shape)
 
     with tf.Session() as sess:
         sess.run(tf.local_variables_initializer())
@@ -128,7 +128,7 @@ def segment_image(fcnfunc, checkpoint, image_path, pixels=None, clabel2cname=Non
         scaled_image, inferred_pixel_labels = sess.run([image_t3d, predictions])#, {image_ph: image_in})
         visualize(scaled_image, inferred_pixel_labels, clabel2cname=clabel2cname)
 
-def prepare_graph(fcnfunc, image_ph, pixels=None):
+def prepare_graph(fcnfunc, image_ph, net_inp_shape=None, resize_by_pad=True):
     '''
         Builds graph of preprocessing (scale large side to pixels, pad the other),
         running the segmentation and cropping the margins from the result.
@@ -137,20 +137,24 @@ def prepare_graph(fcnfunc, image_ph, pixels=None):
     '''
     image_t = tf.expand_dims(image_ph, 0)
 
-    if pixels is None:
+    if net_inp_shape is None:
         predictions = tf.squeeze(fcnfunc(image_t))
         image_t3d = tf.cast(tf.squeeze(image_t), tf.int32)
         return image_t3d, predictions
 
     input_shape = tf.to_float(tf.shape(image_ph))[:2]
-    scale = tf.reduce_min(pixels / input_shape)
+
+    if resize_by_pad:
+        scale = tf.reduce_min(net_inp_shape / input_shape)
+    else: # resize by crop
+        scale = tf.reduce_max(net_inp_shape / input_shape)
 
     inshape32 = tf.cast(tf.round(input_shape * scale), tf.int32)
     #image_t = tf.image.resize_nearest_neighbor(image_t, inshape32)
     image_t = tf.image.resize_area(image_t, inshape32) # better in case of downsampling (avoids aliasing a.k.a "moire")
 
-    image_t = tf.image.resize_image_with_crop_or_pad(image_t, pixels, pixels)
-    image_t3d = image_t = tf.reshape(image_t, [1,pixels,pixels,3])
+    image_t = tf.image.resize_image_with_crop_or_pad(image_t, *net_inp_shape)
+    image_t3d = image_t = tf.reshape(image_t, [1, net_inp_shape[0], net_inp_shape[1], 3])
 
     predictions = fcnfunc(image_t)
 
@@ -164,12 +168,12 @@ def prepare_graph(fcnfunc, image_ph, pixels=None):
 
     return image_t3d, predictions
 
-def segment_movie(fcnfunc, checkpoint, video_file_in, pixels=None):
+def segment_movie(fcnfunc, checkpoint, video_file_in, net_inp_shape=None):
     from PIL import Image
     from moviepy.editor import VideoFileClip
 
     image_ph = tf.placeholder(tf.int32)  # , shape = smth w. pixels (doesn't work..:)
-    image_t3d, predictions = prepare_graph(fcnfunc, image_ph, pixels)
+    image_t3d, predictions = prepare_graph(fcnfunc, image_ph, net_inp_shape)
 
     with tf.Session() as sess:
         sess.run(tf.local_variables_initializer())
@@ -262,12 +266,11 @@ def main(args):
     # OK, let's get data build graph and run stuff!
     tf.reset_default_graph()
 
-    pixels = net_inp_shape[0] if net_inp_shape is not None else None # TODO adapt also movie/image to non-square input
     if args.moviepath:
         # (!) this fails for "native" res. not a biggy i think. TODO retry fix
-        segment_movie(netfunc_img2labels, checkpoint, args.moviepath, pixels)
+        segment_movie(netfunc_img2labels, checkpoint, args.moviepath, net_inp_shape)
     elif args.imagepath:
-        segment_image(netfunc_img2labels, checkpoint, args.imagepath, pixels, args.clabel2cname)
+        segment_image(netfunc_img2labels, checkpoint, args.imagepath, net_inp_shape, args.clabel2cname)
 
     # run over the validation set
     else:

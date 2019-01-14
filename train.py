@@ -347,10 +347,10 @@ if __name__ == "__main__":
                         default=16)
     parser.add_argument('--epochs', type=int,
                         help='num of epochs to train for',
-                        default=36)
+                        default=60)
     parser.add_argument('--learnrate', type=float,
                         help='base learning rate',
-                        default=1e-4)
+                        default=3e-4)
     parser.add_argument('--momentum', type=float,
                         help='momentum - the beta1 of the Adam optimizer',
                         default=0.9)
@@ -367,7 +367,8 @@ if __name__ == "__main__":
     parser.add_argument('--net_inp_shape', dest='net_inp_shape', type=str,
                         help='A.) if >0, normalize images (&annotation) to height, width = net_inp_shape'
                              ' before shoving them down the net''s throat,'
-                             ' by up(down)sampling larger side and padding the other to get square shape')
+                             ' by up(down)sampling larger side and padding the other to get square shape',
+                        default='512,512')
     parser.add_argument('--datapath', type=str,
                         help='path where tfrecords are located; if not set will use /local/data/<dataset-family>',
                         default='')
