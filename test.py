@@ -14,7 +14,7 @@ if tf_ver >= 1.4:
 else:
     data = tf.contrib.data
 
-import arch, train, utils
+import arch, train, utils, traceback
 
 
 def iter_test(annotation, predictions, checkpoint, iterator, args,
@@ -51,6 +51,11 @@ def iter_test(annotation, predictions, checkpoint, iterator, args,
         sess.run(initializer)
         sess.run(iterator.initializer)
         saver.restore(sess, checkpoint)
+        
+        try:
+            saver.save(sess, 'nets/sdk_friendly/fcn.ckpt')
+        except:
+            traceback.print_exc()
 
         for i in range(args.num_images):
             _eval_res = sess.run([conf_op, update_op]+more_tensors_to_eval, feed_dict=fd)
@@ -128,7 +133,7 @@ def segment_image(fcnfunc, checkpoint, image_path, net_inp_shape=None, clabel2cn
         scaled_image, inferred_pixel_labels = sess.run([image_t3d, predictions])#, {image_ph: image_in})
         visualize(scaled_image, inferred_pixel_labels, clabel2cname=clabel2cname)
 
-def prepare_graph(fcnfunc, image_ph, net_inp_shape=None, resize_by_pad=True):
+def prepare_graph(fcnfunc, image_ph, net_inp_shape=None, resize_by_pad=False):
     '''
         Builds graph of preprocessing (scale large side to pixels, pad the other),
         running the segmentation and cropping the margins from the result.
